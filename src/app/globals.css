@@ -1,5 +1,5 @@
+
 @import "tailwindcss";
-@import "@heroui/styles"; 
 
 :root {
   --background: #ffffff;
@@ -26,53 +26,55 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* swiper-pagination */
-.swiper-pagination { 
-    position: absolute; 
-    top: 0% !important;
-    left: unset !important;
-    right: 66px !important;
-    width: 30px !important;
-    z-index: 2;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-    transform: translateY(-50%);
-    gap: 24px;
-    
+/* Swiper Pagination */
 
+.swiper-pagination {
+  position: absolute;
+  top: 0% !important;
+  left: unset !important;
+  right: 66px !important;
+  width: 30px !important;
+  z-index: 2;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  transform: translateY(-50%);
+  gap: 24px;
 }
-@media(max-width: 992px) {  
-.swiper-pagination { 
+
+@media (max-width: 992px) {
+  .swiper-pagination {
     display: none;
-}
+  }
 }
 
 .swiper-pagination-bullets .swiper-pagination-bullet {
-    display: inline-block;
-    --swiper-pagination-bullet-size: 12px;
-    --swiper-pagination-bullet-horizontal-gap: 8px;
-    margin: 5px 4px;
-    opacity: 1;
-    background-color: rgba(0,0,0,0);
-    border: 1px solid #fff;
-    color: var(--white-color);
-    border-radius: 50%;
-    position: relative;
-    cursor: pointer;
-    transition: all .4s ease-in-out;
+  display: inline-block;
+  --swiper-pagination-bullet-size: 12px;
+  --swiper-pagination-bullet-horizontal-gap: 8px;
+  margin: 5px 4px;
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0);
+  border: 1px solid #fff;
+  color: var(--white-color);
+  border-radius: 50%;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.4s ease-in-out;
 }
-.swiper-pagination-bullets .swiper-pagination-bullet.swiper-pagination-bullet-active {
-    background-color: #ff594d;
-    border-color: #ff594d;
-    -webkit-transform: scale(1.9);
-    transform: scale(1.9);
+
+.swiper-pagination-bullets
+  .swiper-pagination-bullet.swiper-pagination-bullet-active {
+  background-color: #ff594d;
+  border-color: #ff594d;
+  transform: scale(1.9);
 }
 
 .testimonial-pagination {
-  .swiper-pagination-bullet{
+  .swiper-pagination-bullet {
     background-color: #0a0a0a;
   }
 }
+
