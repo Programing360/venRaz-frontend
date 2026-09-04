@@ -10,6 +10,7 @@ import React from 'react';
 
 const page = () => {
     return (
+    // here i check my compoents are work or not properly 
         <div>
            <AddProductModal/>
            <CloudinarySettingsModal/>
