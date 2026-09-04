@@ -1,5 +1,5 @@
 import React from 'react';
-
+// import all things which are needed 
 import { 
   User, 
   Store, 
