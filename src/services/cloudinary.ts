@@ -15,8 +15,8 @@ export const getCloudinaryConfig = (): CloudinaryConfig => {
   }
 
   return {
-    cloudName: (import.meta as any).env?.VITE_CLOUDINARY_CLOUD_NAME || '',
-    uploadPreset: (import.meta as any).env?.VITE_CLOUDINARY_UPLOAD_PRESET || '',
+    cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || process.env.VITE_CLOUDINARY_CLOUD_NAME || '',
+    uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || process.env.VITE_CLOUDINARY_UPLOAD_PRESET || '',
     apiKey: '',
   };
 };
@@ -103,13 +103,13 @@ export async function uploadToCloudinary(
 
         xhr.send(formData);
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Exception during Cloudinary upload:', err);
       const dataUrl = await readFileAsDataUrl(file);
       return {
         url: dataUrl,
         isCloudinary: false,
-        error: err?.message || 'Upload exception. Local preview used.',
+        error: err instanceof Error ? err.message : 'Upload exception. Local preview used.',
       };
     }
   }

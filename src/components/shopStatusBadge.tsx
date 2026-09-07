@@ -25,7 +25,7 @@ export const ShopStatusBadge: React.FC<ShopStatusBadgeProps> = ({
   size = "md",
   showIcon = true,
 }) => {
-  const meta = STATUS_META[status as string] || STATUS_META.Draft;
+  const meta = (status && STATUS_META[status]) ? STATUS_META[status] : STATUS_META.Draft;
 
   const sizeClasses = {
     sm: "text-xs px-2 py-0.5 gap-1",

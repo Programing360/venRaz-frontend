@@ -83,7 +83,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           message: result.error || 'Preview loaded (Cloudinary not configured).',
         });
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
       setUploadStatus({
         type: 'error',

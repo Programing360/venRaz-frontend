@@ -1,6 +1,6 @@
 import React from 'react';
 import { ShopStatus } from '../types';
-import { ShopStatusBadge } from './ShopStatusBadge';
+import { ShopStatusBadge } from './shopStatusBadge';
 import { 
   Store, 
   User, 
