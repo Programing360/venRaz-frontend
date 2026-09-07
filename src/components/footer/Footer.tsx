@@ -38,7 +38,7 @@ export default function Footer() {
           <div>
             <Link
               href="/"
-              className="text-2xl font-bold text-indigo-400"
+              className="text-2xl font-bold text-[#ff594d]"
             >
               VenRaz
             </Link>
@@ -109,7 +109,7 @@ export default function Footer() {
 
               <button
                 type="submit"
-                className="rounded-r-lg bg-indigo-600 px-4 py-2 text-sm font-medium transition hover:bg-indigo-700"
+                className="rounded-r-lg bg-[#ff594d] px-4 py-2 text-sm font-medium transition hover:bg-[#ff594d]"
               >
                 Subscribe
               </button>
@@ -131,7 +131,7 @@ export default function Footer() {
             <Link
               href="#"
               aria-label="Facebook"
-              className="text-gray-400 transition hover:text-indigo-400"
+              className="text-gray-400 transition hover:text-[#ff594d]"
             >
               
             </Link>
@@ -139,7 +139,7 @@ export default function Footer() {
             <Link
               href="#"
               aria-label="Instagram"
-              className="text-gray-400 transition hover:text-indigo-400"
+              className="text-gray-400 transition hover:text-[#ff594d]"
             >
               
             </Link>
@@ -147,7 +147,7 @@ export default function Footer() {
             <Link
               href="#"
               aria-label="LinkedIn"
-              className="text-gray-400 transition hover:text-indigo-400"
+              className="text-gray-400 transition hover:text-[#ff594d]"
             >
             
             </Link>

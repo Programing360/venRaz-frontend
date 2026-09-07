@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "VenRaz",
-  description: "VenRaz — A modern e-commerce platform for electronics and tech products.",
+  description: "VenRaz — Multi-Vendor E-Commerce.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -28,6 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <Navbar></Navbar>
         {children}
+          
     
         <Footer></Footer>
         </body>

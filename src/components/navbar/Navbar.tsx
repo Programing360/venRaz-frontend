@@ -22,7 +22,7 @@ export default function Navbar() {
           <Link
             href="/"
             onClick={closeMenu}
-            className="shrink-0 text-xl font-bold text-indigo-600 sm:text-2xl"
+            className="shrink-0 text-xl font-bold text-[#ff594d] sm:text-2xl"
           >
             VenRaz
           </Link>
@@ -31,35 +31,35 @@ export default function Navbar() {
           <div className="hidden items-center gap-4 md:flex lg:gap-6">
             <Link
               href="/"
-              className="text-sm font-medium text-gray-700 transition hover:text-indigo-600 lg:text-base"
+              className="text-sm font-medium text-gray-700 transition hover:text-[#ff594d] lg:text-base"
             >
               Home
             </Link>
 
             <Link
               href="/shop"
-              className="text-sm font-medium text-gray-700 transition hover:text-indigo-600 lg:text-base"
+              className="text-sm font-medium text-gray-700 transition hover:text-[#ff594d] lg:text-base"
             >
               Shop
             </Link>
 
             <Link
               href="/categories"
-              className="text-sm font-medium text-gray-700 transition hover:text-indigo-600 lg:text-base"
+              className="text-sm font-medium text-gray-700 transition hover:text-[#ff594d] lg:text-base"
             >
               Categories
             </Link>
 
             <Link
               href="/about"
-              className="text-sm font-medium text-gray-700 transition hover:text-indigo-600 lg:text-base"
+              className="text-sm font-medium text-gray-700 transition hover:text-[#ff594d] lg:text-base"
             >
               About
             </Link>
 
             <Link
               href="/contact"
-              className="text-sm font-medium text-gray-700 transition hover:text-indigo-600 lg:text-base"
+              className="text-sm font-medium text-gray-700 transition hover:text-[#ff594d] lg:text-base"
             >
               Contact
             </Link>
@@ -71,7 +71,7 @@ export default function Navbar() {
             {/* Cart */}
             <Link
               href="/cart"
-              className="relative rounded-lg p-2 text-gray-700 transition hover:bg-gray-100 hover:text-indigo-600"
+              className="relative rounded-lg p-2 text-gray-700 transition hover:bg-gray-100 hover:text-[#ff594d]"
               aria-label="Shopping cart"
             >
               <ShoppingCart className="h-5 w-5" />
@@ -80,7 +80,7 @@ export default function Navbar() {
             {/* Login */}
             <Link
               href="/login"
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-indigo-600"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-[#ff594d]"
             >
               <UserIcon className="h-5 w-5" />
               <span>Login</span>
@@ -89,7 +89,7 @@ export default function Navbar() {
             {/* Register */}
             <Link
               href="/register"
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700"
+              className="rounded-lg bg-[#ff594d] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#ff594d]"
             >
               Register
             </Link>
@@ -121,7 +121,7 @@ export default function Navbar() {
             <Link
               href="/"
               onClick={closeMenu}
-              className="block rounded-lg px-4 py-3 text-base font-medium text-gray-700 transition hover:bg-indigo-50 hover:text-indigo-600"
+              className="block rounded-lg px-4 py-3 text-base font-medium text-gray-700 transition hover:bg-indigo-50 hover:text-[#ff594d]"
             >
               Home
             </Link>
@@ -129,7 +129,7 @@ export default function Navbar() {
             <Link
               href="/shop"
               onClick={closeMenu}
-              className="block rounded-lg px-4 py-3 text-base font-medium text-gray-700 transition hover:bg-indigo-50 hover:text-indigo-600"
+              className="block rounded-lg px-4 py-3 text-base font-medium text-gray-700 transition hover:bg-indigo-50 hover:text-[#ff594d]"
             >
               Shop
             </Link>
@@ -137,7 +137,7 @@ export default function Navbar() {
             <Link
               href="/categories"
               onClick={closeMenu}
-              className="block rounded-lg px-4 py-3 text-base font-medium text-gray-700 transition hover:bg-indigo-50 hover:text-indigo-600"
+              className="block rounded-lg px-4 py-3 text-base font-medium text-gray-700 transition hover:bg-indigo-50 hover:text-[#ff594d]"
             >
               Categories
             </Link>
@@ -145,7 +145,7 @@ export default function Navbar() {
             <Link
               href="/about"
               onClick={closeMenu}
-              className="block rounded-lg px-4 py-3 text-base font-medium text-gray-700 transition hover:bg-indigo-50 hover:text-indigo-600"
+              className="block rounded-lg px-4 py-3 text-base font-medium text-gray-700 transition hover:bg-indigo-50 hover:text-[#ff594d]"
             >
               About
             </Link>
@@ -153,7 +153,7 @@ export default function Navbar() {
             <Link
               href="/contact"
               onClick={closeMenu}
-              className="block rounded-lg px-4 py-3 text-base font-medium text-gray-700 transition hover:bg-indigo-50 hover:text-indigo-600"
+              className="block rounded-lg px-4 py-3 text-base font-medium text-gray-700 transition hover:bg-indigo-50 hover:text-[#ff594d]"
             >
               Contact
             </Link>
@@ -164,7 +164,7 @@ export default function Navbar() {
               <Link
                 href="/cart"
                 onClick={closeMenu}
-                className="flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-gray-700 transition hover:bg-gray-50 hover:text-indigo-600"
+                className="flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-gray-700 transition hover:bg-gray-50 hover:text-[#ff594d]"
               >
                 <ShoppingCart className="h-5 w-5" />
                 Shopping Cart
@@ -173,7 +173,7 @@ export default function Navbar() {
               <Link
                 href="/login"
                 onClick={closeMenu}
-                className="flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-gray-700 transition hover:bg-gray-50 hover:text-indigo-600"
+                className="flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-gray-700 transition hover:bg-gray-50 hover:text-[#ff594d]"
               >
                 <UserIcon className="h-5 w-5" />
                 Login
@@ -182,7 +182,7 @@ export default function Navbar() {
               <Link
                 href="/register"
                 onClick={closeMenu}
-                className="block rounded-lg bg-indigo-600 px-4 py-3 text-center text-base font-medium text-white transition hover:bg-indigo-700"
+                className="block rounded-lg bg-[#ff594d] px-4 py-3 text-center text-base font-medium text-white transition hover:bg-[#ff594d]"
               >
                 Register
               </Link>

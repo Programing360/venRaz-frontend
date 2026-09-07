@@ -40,10 +40,14 @@ const heroSlides: HeroSlide[] = [
 
 export default function Hero() {
   return (
-    <section
-      id="hero"
-      className="relative overflow-hidden bg-gray-100"
-    >
+    <section id="hero" className="relative overflow-hidden bg-gray-100">
+       <Image
+        src="/assets/hero_bg_1_1.jpg"
+        alt="Hero Background"
+        fill
+        priority
+        className="object-cover"
+      />
       <Swiper
         modules={[Autoplay,  Pagination]}
         effect="fade"
@@ -67,16 +71,16 @@ export default function Hero() {
                   {/* Content */}
                   <div className="text-center lg:text-left">
 
-                    <span className="mb-4 inline-block text-sm font-semibold uppercase tracking-wider text-indigo-600 sm:text-base">
+                    <span className="mb-4 inline-block text-sm font-semibold uppercase tracking-wider text-white sm:text-base">
                       {slide.subtitle}
                     </span>
 
-                    <h1 className="text-3xl font-bold leading-tight text-gray-900 sm:text-4xl md:text-5xl lg:text-6xl">
+                    <h1 className="text-3xl font-bold leading-tight text-white sm:text-4xl md:text-5xl lg:text-6xl">
                       {slide.title}
                     </h1>
 
-                    <p className="mt-5 text-2xl font-bold text-gray-900 sm:text-3xl">
-                      <span className="mr-2 text-base font-normal text-gray-500 sm:text-lg">
+                    <p className="mt-5 text-2xl font-bold text-white sm:text-3xl">
+                      <span className="mr-2 text-base font-normal text-white sm:text-lg">
                         From
                       </span>
                       {slide.price}
@@ -85,7 +89,7 @@ export default function Hero() {
                     <div className="mt-7">
                       <Link
                         href="/shop"
-                        className="inline-flex rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-indigo-700 sm:px-8 sm:py-4 sm:text-base"
+                        className="inline-flex rounded-lg bg-[#ff594d] px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#ff594d] sm:px-8 sm:py-4 sm:text-base"
                       >
                         START BUYING
                       </Link>
