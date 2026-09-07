@@ -109,7 +109,7 @@ const ProductsPage = async ({
 
             {search && (
               <a
-                href="/product"
+                href="/products"
                 className="rounded-xl border border-gray-300 px-6 py-3 text-center font-medium text-gray-600 transition hover:bg-gray-100"
               >
                 Clear
