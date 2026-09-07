@@ -3,21 +3,29 @@
 import Link from "next/link";
 import { Menu, X, User as UserIcon, ShoppingCart } from "lucide-react";
 import { useState } from "react";
+import { authClient } from "@/lib/auth-client";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-
+  const { data: session } = authClient.useSession();
+  // console.log(session);
   const closeMenu = () => {
     setIsOpen(false);
   };
 
+  const adminUser = 'fhlimon360@gmail.com'
+
+  // if(session?.user?.email === adminUser) {
+    
+  // }
+
+
+
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white shadow-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-
         {/* Navbar Main */}
         <div className="flex h-16 items-center justify-between">
-
           {/* Logo */}
           <Link
             href="/"
@@ -67,7 +75,6 @@ export default function Navbar() {
 
           {/* Desktop Actions */}
           <div className="hidden items-center gap-2 md:flex lg:gap-4">
-
             {/* Cart */}
             <Link
               href="/cart"
@@ -103,11 +110,7 @@ export default function Navbar() {
             aria-label={isOpen ? "Close menu" : "Open menu"}
             aria-expanded={isOpen}
           >
-            {isOpen ? (
-              <X className="h-6 w-6" />
-            ) : (
-              <Menu className="h-6 w-6" />
-            )}
+            {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
       </div>
@@ -116,7 +119,6 @@ export default function Navbar() {
       {isOpen && (
         <div className="border-t border-gray-200 bg-white md:hidden">
           <div className="mx-auto max-w-7xl space-y-1 px-4 py-4 sm:px-6">
-
             {/* Mobile Links */}
             <Link
               href="/"
@@ -160,7 +162,6 @@ export default function Navbar() {
 
             {/* Mobile Actions */}
             <div className="mt-3 space-y-2 border-t border-gray-200 pt-3">
-
               <Link
                 href="/cart"
                 onClick={closeMenu}
@@ -186,7 +187,6 @@ export default function Navbar() {
               >
                 Register
               </Link>
-
             </div>
           </div>
         </div>

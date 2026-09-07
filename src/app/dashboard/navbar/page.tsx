@@ -1,4 +1,3 @@
-
 "use client";
 
 import { authClient } from "@/lib/auth-client";
@@ -10,6 +9,7 @@ interface NavbarProps {
 
 export default function Navbar({ onMenuClick }: NavbarProps) {
   const { data: session } = authClient.useSession();
+  // console.log(session);
 
   const name = session?.user?.name || "User";
   const email = session?.user?.email || "";
@@ -97,4 +97,3 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     </header>
   );
 }
-
