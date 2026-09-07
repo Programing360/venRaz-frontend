@@ -42,6 +42,7 @@ export default function RegisterPage() {
         password,
         callbackURL: "/",
       });
+      console.log(data, error);
 
       if (error) {
         setError(error.message || "Unable to create your account. Please try again.");
