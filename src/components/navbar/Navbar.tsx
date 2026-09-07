@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { signOut, useSession } from "@/lib/auth-client";
+import { useCart } from "@/context/CartContext";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -23,6 +24,7 @@ export default function Navbar() {
 
   const router = useRouter();
   const { data: session, isPending } = useSession();
+  const { totalItems } = useCart();
 
   // ==============================
   // Get User Role
@@ -177,6 +179,11 @@ export default function Navbar() {
               aria-label="Shopping Cart"
             >
               <ShoppingCart className="h-5 w-5" />
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ff594d] px-1 text-[11px] font-bold text-white shadow-sm">
+                  {totalItems > 99 ? "99+" : totalItems}
+                </span>
+              )}
             </Link>
 
             {!isPending && !session ? (
@@ -332,11 +339,11 @@ export default function Navbar() {
             </Link>
 
             <Link
-              href="/product"
+              href="/products"
               onClick={closeMenu}
               className="block rounded-xl px-4 py-3 font-medium text-gray-700 transition hover:bg-gray-50 hover:text-[#ff594d]"
             >
-              Product
+              Products
             </Link>
 
             <Link
@@ -375,10 +382,17 @@ export default function Navbar() {
             <Link
               href="/cart"
               onClick={closeMenu}
-              className="flex items-center gap-3 rounded-xl bg-gray-50 px-4 py-3 font-medium text-gray-700 transition hover:text-[#ff594d]"
+              className="flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3 font-medium text-gray-700 transition hover:text-[#ff594d]"
             >
-              <ShoppingCart className="h-5 w-5" />
-              Shopping Cart
+              <div className="flex items-center gap-3">
+                <ShoppingCart className="h-5 w-5" />
+                <span>Shopping Cart</span>
+              </div>
+              {totalItems > 0 && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ff594d] px-1.5 text-[11px] font-bold text-white">
+                  {totalItems}
+                </span>
+              )}
             </Link>
 
             {/* Logged in links */}
