@@ -1,3 +1,4 @@
+
 import React from "react";
 
 import {
@@ -14,11 +15,13 @@ import { STATUS_META } from "@/data/mockdata";
 interface ShopStatusBadgeProps {
   status?: ShopStatus;
   size?: "sm" | "md" | "lg";
+
   showIcon?: boolean;
 }
 
 export const ShopStatusBadge: React.FC<ShopStatusBadgeProps> = ({
   status,
+
   size = "md",
   showIcon = true,
 }) => {
@@ -50,7 +53,9 @@ export const ShopStatusBadge: React.FC<ShopStatusBadgeProps> = ({
 
   return (
     <span
+
       id={`shop-status-badge-${(status || "Draft").toLowerCase()}`}
+
       className={`inline-flex items-center rounded-full border shadow-xs transition-colors duration-150 ${meta.badgeClass} ${sizeClasses}`}
     >
       {showIcon && getIcon()}
@@ -58,3 +63,4 @@ export const ShopStatusBadge: React.FC<ShopStatusBadgeProps> = ({
     </span>
   );
 };
+
