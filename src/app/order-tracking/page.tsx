@@ -1,18 +1,13 @@
 "use client";
 
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   Search,
   Package,
   Check,
-  Clock,
-  Truck,
-  MapPin,
   ArrowLeft,
-  Calendar,
-  DollarSign,
 } from "lucide-react";
 
 type OrderStatus =
@@ -78,21 +73,22 @@ const trackingSteps: TrackingStep[] = [
   },
 ];
 
-function getStatusIcon(status: OrderStatus) {
-  switch (status) {
-    case "Pending":
-      return <Clock size={18} />;
-    case "Confirmed":
-      return <Check size={18} />;
-    case "Processing":
-      return <Package size={18} />;
-    case "Shipped":
-      return <Truck size={18} />;
-    case "Out for Delivery":
-      return <MapPin size={18} />;
-    case "Delivered":
-      return <Check size={18} />;
-  }
+interface OrderCustomer {
+  fullName?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+}
+
+interface OrderRecord {
+  trackingId: string;
+  orderId: string;
+  status: OrderStatus;
+  total: number;
+  customer?: OrderCustomer;
+  placedAt: string;
+  estimatedDelivery: string;
+  createdAt?: string;
 }
 
 function TrackingContent() {
@@ -100,10 +96,10 @@ function TrackingContent() {
   const initialId = searchParams.get("id") || "";
 
   const [trackingId, setTrackingId] = useState(initialId);
-  const [activeOrder, setActiveOrder] = useState<any | null>(null);
+  const [activeOrder, setActiveOrder] = useState<OrderRecord | null>(null);
   const [error, setError] = useState("");
 
-  const trackOrderById = (idToTrack: string) => {
+  const trackOrderById = useCallback((idToTrack: string) => {
     const value = idToTrack.trim().toUpperCase();
 
     if (!value) {
@@ -116,9 +112,9 @@ function TrackingContent() {
     try {
       const stored = localStorage.getItem("venraz_orders");
       if (stored) {
-        const orders = JSON.parse(stored);
+        const orders: OrderRecord[] = JSON.parse(stored);
         const match = orders.find(
-          (o: any) =>
+          (o) =>
             o.trackingId?.toUpperCase() === value ||
             o.orderId?.toUpperCase() === value
         );
@@ -129,14 +125,15 @@ function TrackingContent() {
             status: match.status || "Pending",
             total: match.total,
             customer: match.customer,
-            items: match.items,
-            placedAt: new Date(match.createdAt).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
+            placedAt: match.createdAt
+              ? new Date(match.createdAt).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "Today",
             estimatedDelivery: "3 - 5 Business Days",
           });
           setError("");
@@ -148,7 +145,11 @@ function TrackingContent() {
     }
 
     // Fallback demo order
-    if (value === "TRK-2026-00125" || value.startsWith("TRK-") || value.startsWith("ORD-")) {
+    if (
+      value === "TRK-2026-00125" ||
+      value.startsWith("TRK-") ||
+      value.startsWith("ORD-")
+    ) {
       setActiveOrder({
         trackingId: value,
         orderId: "#" + value.replace("TRK-", "ORD-"),
@@ -161,16 +162,20 @@ function TrackingContent() {
       return;
     }
 
-    setError("No order found with tracking ID: " + value + ". Try 'TRK-2026-00125'.");
+    setError(
+      "No order found with tracking ID: " + value + ". Try 'TRK-2026-00125'."
+    );
     setActiveOrder(null);
-  };
+  }, []);
 
   useEffect(() => {
     if (initialId) {
-      setTrackingId(initialId);
-      trackOrderById(initialId);
+      const timer = setTimeout(() => {
+        trackOrderById(initialId);
+      }, 0);
+      return () => clearTimeout(timer);
     }
-  }, [initialId]);
+  }, [initialId, trackOrderById]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -178,7 +183,7 @@ function TrackingContent() {
   };
 
   const currentStatusIndex = activeOrder
-    ? statusOrder.indexOf(activeOrder.status as OrderStatus)
+    ? statusOrder.indexOf(activeOrder.status)
     : 0;
 
   return (
@@ -290,7 +295,6 @@ function TrackingContent() {
             <div className="relative pl-6 sm:pl-8 space-y-8 before:absolute before:left-[15px] sm:before:left-[19px] before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200">
               {trackingSteps.map((step, idx) => {
                 const isCompleted = idx <= currentStatusIndex;
-                const isCurrent = idx === currentStatusIndex;
 
                 return (
                   <div key={step.status} className="relative flex items-start gap-4">

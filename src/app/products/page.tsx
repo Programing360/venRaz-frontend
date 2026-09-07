@@ -1,5 +1,4 @@
-export const dynamic = "force-dynamic";
-
+import Link from "next/link";
 import ProductCard from "@/components/products/ProductCard";
 import { getHomeSections } from "@/lib/products/data";
 
@@ -108,12 +107,12 @@ const ProductsPage = async ({
             </button>
 
             {search && (
-              <a
+              <Link
                 href="/products"
                 className="rounded-xl border border-gray-300 px-6 py-3 text-center font-medium text-gray-600 transition hover:bg-gray-100"
               >
                 Clear
-              </a>
+              </Link>
             )}
           </div>
         </form>
@@ -164,12 +163,12 @@ const ProductsPage = async ({
             </p>
 
             {search && (
-              <a
+              <Link
                 href="/products"
                 className="mt-6 inline-block rounded-xl bg-[#132573] px-6 py-3 font-medium text-white transition hover:bg-[#184433]"
               >
                 View All Products
-              </a>
+              </Link>
             )}
           </div>
         )}

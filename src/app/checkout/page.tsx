@@ -6,13 +6,10 @@ import Link from "next/link";
 import {
   ArrowLeft,
   CheckCircle2,
-  CreditCard,
   MapPin,
   ShieldCheck,
   Tag,
-  Truck,
   Wallet,
-  Building,
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useToast } from "@/context/ToastContext";

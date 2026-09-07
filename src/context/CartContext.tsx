@@ -14,9 +14,22 @@ export interface CartItem {
   brand?: string;
 }
 
+export interface ProductInput {
+  _id?: string;
+  id?: string;
+  name?: string;
+  price?: number;
+  flashSalePrice?: number;
+  discount?: number;
+  image?: string;
+  images?: string[];
+  brand?: string;
+  stock?: number;
+}
+
 interface CartContextType {
   items: CartItem[];
-  addToCart: (product: any, quantity?: number) => void;
+  addToCart: (product: ProductInput, quantity?: number) => void;
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, type: "increase" | "decrease") => void;
   clearCart: () => void;
@@ -37,18 +50,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const { success, info } = useToast();
 
-  // Load cart from LocalStorage on client mount
+  // Load cart from LocalStorage safely on client mount
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(CART_STORAGE_KEY);
-      if (saved) {
-        setItems(JSON.parse(saved));
+    const timer = setTimeout(() => {
+      try {
+        const saved = localStorage.getItem(CART_STORAGE_KEY);
+        if (saved) {
+          setItems(JSON.parse(saved));
+        }
+      } catch (e) {
+        console.error("Failed to load cart from localStorage", e);
+      } finally {
+        setIsLoaded(true);
       }
-    } catch (e) {
-      console.error("Failed to load cart from localStorage", e);
-    } finally {
-      setIsLoaded(true);
-    }
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, []);
 
   // Save cart to LocalStorage on update
@@ -63,8 +80,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [items, isLoaded]);
 
   const addToCart = useCallback(
-    (product: any, quantity: number = 1) => {
-      const productId = String(product._id || product.id);
+    (product: ProductInput, quantity: number = 1) => {
+      const productId = String(product._id || product.id || `item-${Date.now()}`);
       const name = product.name || "Product";
       const price = Number(product.flashSalePrice || product.price || 0);
       const image =
@@ -153,11 +170,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const shipping = useMemo(() => {
     if (items.length === 0) return 0;
-    return subtotal > 100 ? 0 : 15; // Free shipping over $100
+    return subtotal > 100 ? 0 : 15;
   }, [items.length, subtotal]);
 
   const discountAmount = useMemo(() => {
-    return 0; // Can be enhanced with coupon codes
+    return 0;
   }, []);
 
   const total = useMemo(() => {

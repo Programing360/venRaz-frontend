@@ -71,7 +71,7 @@ export const getHomeSections = async (): Promise<HomeSections> => {
       mostSelling: data?.mostSelling?.length ? data.mostSelling : fallbackData.mostSelling,
       newArrivals: data?.newArrivals?.length ? data.newArrivals : fallbackData.newArrivals,
     };
-  } catch (error) {
+  } catch {
     // Graceful fallback if backend is offline
     return fallbackData;
   }

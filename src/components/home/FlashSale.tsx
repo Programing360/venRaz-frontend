@@ -515,9 +515,10 @@ export default function FlashSale() {
      ======================================================= */
 
   useEffect(() => {
-    setMounted(true);
-
-    setTime(getCountdown());
+    const timer = setTimeout(() => {
+      setMounted(true);
+      setTime(getCountdown());
+    }, 0);
 
     const interval =
       window.setInterval(() => {
@@ -525,6 +526,7 @@ export default function FlashSale() {
       }, 1000);
 
     return () => {
+      clearTimeout(timer);
       window.clearInterval(interval);
     };
   }, []);
