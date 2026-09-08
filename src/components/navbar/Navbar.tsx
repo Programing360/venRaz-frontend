@@ -2,40 +2,32 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   Menu,
   X,
-  User as UserIcon,
   ShoppingCart,
   User,
   LayoutDashboard,
   LogOut,
 } from "lucide-react";
-<<<<<<< HEAD
-import Image from "next/image";
-import { authClient } from "@/lib/auth-client";
 
-export default function Navbar() {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
-  const { data: session } = authClient.useSession();
-  const [scrolled, setScrolled] = useState<boolean>(false);
-=======
-
-import { signOut, useSession } from "@/lib/auth-client";
+import { authClient, signOut, useSession } from "@/lib/auth-client";
 import { useCart } from "@/context/CartContext";
 
+const ADMIN_EMAIL = "fhlimon360@gmail.com";
+
 export default function Navbar() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [role, setRole] = useState("");
 
   const router = useRouter();
-  const { data: session, isPending } = useSession();
+  const { data: session } = useSession();
   const { totalItems } = useCart();
 
-  // ==============================
-  // Get User Role
-  // ==============================
+  // Fetch user role dynamically if authenticated
   useEffect(() => {
     const getRole = async () => {
       try {
@@ -45,13 +37,12 @@ export default function Navbar() {
         }
 
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/users/${session.user.email}`
+          `${process.env.NEXT_PUBLIC_API_URL}/users/${session.user.email}`,
         );
 
         if (!res.ok) return;
 
         const data = await res.json();
-
         setRole(data?.role?.toLowerCase() || "");
       } catch (error) {
         console.error("Failed to get user role:", error);
@@ -61,16 +52,13 @@ export default function Navbar() {
     getRole();
   }, [session]);
 
-  // ==============================
   // Navbar Scroll Effect
-  // ==============================
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 30);
+      setScrolled(window.scrollY > 20);
     };
 
     handleScroll();
-
     window.addEventListener("scroll", handleScroll);
 
     return () => {
@@ -78,56 +66,27 @@ export default function Navbar() {
     };
   }, []);
 
-  // ==============================
-  // Logout
-  // ==============================
+  const closeMenu = () => setIsOpen(false);
+
   const handleLogout = async () => {
-    await signOut();
-    setIsMenuOpen(false);
+    try {
+      await signOut();
+    } catch {
+      await authClient.signOut();
+    }
+    closeMenu();
     router.push("/");
   };
 
-  // ==============================
-  // Dashboard Route
-  // ==============================
   const getDashboardRoute = () => {
-    if (role === "admin") return "/dashboard/admin";
-    if (role === "seller") return "/dashboard/seller";
-
-    return "/dashboard";
+    if (role === "admin" || session?.user?.email === ADMIN_EMAIL) {
+      return "/dashboard/admin";
+    }
+    if (role === "seller") {
+      return "/dashboard/seller";
+    }
+    return "/dashboard/user";
   };
->>>>>>> c959ef0a1f3aff1573a3368d72d52fdd7491d6e3
-
-  const closeMenu = () => {
-    setIsOpen(false);
-  };
-
-  const getDashboardRoute = () => {
-    return session?.user?.email === adminUser
-      ? "/dashboard/admin"
-      : "/dashboard/user";
-  };
-
-  // Handle scroll detection for sticky background effect
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const adminUser = "fhlimon360@gmail.com";
-
-  const handleLogout = () => {
-    // Implement your logout logic here
-    authClient.signOut();
-    closeMenu();
-  };
-  // if(session?.user?.email === adminUser) {
-
-  // }
 
   return (
     <nav
@@ -138,7 +97,6 @@ export default function Navbar() {
       }`}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Navbar Main */}
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link
@@ -151,9 +109,7 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* =========================
-              DESKTOP NAVIGATION
-          ========================== */}
+          {/* DESKTOP NAVIGATION */}
           <div className="hidden items-center gap-5 md:flex lg:gap-7">
             <Link
               href="/"
@@ -161,35 +117,30 @@ export default function Navbar() {
             >
               Home
             </Link>
-
             <Link
               href="/products"
               className="text-sm font-medium text-gray-700 transition hover:text-[#ff594d] lg:text-base"
             >
-              Product
+              Products
             </Link>
-
             <Link
               href="/shop"
               className="text-sm font-medium text-gray-700 transition hover:text-[#ff594d] lg:text-base"
             >
               Shop
             </Link>
-
             <Link
               href="/categories"
               className="text-sm font-medium text-gray-700 transition hover:text-[#ff594d] lg:text-base"
             >
               Categories
             </Link>
-
             <Link
               href="/about"
               className="text-sm font-medium text-gray-700 transition hover:text-[#ff594d] lg:text-base"
             >
               About
             </Link>
-
             <Link
               href="/contact"
               className="text-sm font-medium text-gray-700 transition hover:text-[#ff594d] lg:text-base"
@@ -198,9 +149,8 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* Desktop Actions */}
+          {/* DESKTOP ACTIONS */}
           <div className="hidden items-center gap-2 md:flex lg:gap-4">
-            {/* Cart */}
             <Link
               href="/cart"
               className="relative rounded-xl p-2.5 text-gray-700 transition hover:bg-gray-100 hover:text-[#ff594d]"
@@ -216,7 +166,6 @@ export default function Navbar() {
 
             {!session ? (
               <>
-                {/* LOGIN */}
                 <Link
                   href="/login"
                   className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-100 hover:text-[#ff594d]"
@@ -224,8 +173,6 @@ export default function Navbar() {
                   <User className="h-5 w-5" />
                   Login
                 </Link>
-
-                {/* REGISTER */}
                 <Link
                   href="/register"
                   className="rounded-xl bg-[#ff594d] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#e94d43]"
@@ -234,9 +181,6 @@ export default function Navbar() {
                 </Link>
               </>
             ) : (
-              /* =========================
-                 LOGGED IN USER
-              ========================== */
               <div className="group relative">
                 <div className="flex cursor-pointer items-center gap-2 rounded-xl px-2 py-1.5 transition hover:bg-gray-100">
                   <Image
@@ -249,7 +193,6 @@ export default function Navbar() {
                     alt="User"
                     className="h-9 w-9 rounded-full object-cover"
                   />
-
                   <span className="max-w-[120px] truncate text-sm font-semibold text-gray-700">
                     {session?.user?.name}
                   </span>
@@ -257,18 +200,15 @@ export default function Navbar() {
 
                 {/* USER DROPDOWN */}
                 <div className="invisible absolute right-0 top-12 w-56 translate-y-2 overflow-hidden rounded-2xl bg-white opacity-0 shadow-xl ring-1 ring-black/5 transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
-                  {/* User Info */}
                   <div className="border-b border-gray-100 bg-gray-50 px-4 py-3">
                     <p className="truncate font-semibold text-gray-900">
                       {session?.user?.name}
                     </p>
-
                     <p className="truncate text-xs text-gray-500">
                       {session?.user?.email}
                     </p>
                   </div>
 
-                  {/* Dashboard */}
                   <Link
                     href={getDashboardRoute()}
                     className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 hover:text-[#ff594d]"
@@ -277,7 +217,6 @@ export default function Navbar() {
                     Dashboard
                   </Link>
 
-                  {/* Profile */}
                   <Link
                     href="/profile"
                     className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 hover:text-[#ff594d]"
@@ -286,7 +225,6 @@ export default function Navbar() {
                     Profile
                   </Link>
 
-                  {/* Logout */}
                   <button
                     onClick={handleLogout}
                     className="flex w-full items-center gap-3 border-t border-gray-100 px-4 py-3 text-left text-sm font-medium text-red-500 transition hover:bg-red-50"
@@ -299,9 +237,7 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* =========================
-              MOBILE MENU BUTTON
-          ========================== */}
+          {/* MOBILE MENU BUTTON */}
           <button
             type="button"
             onClick={() => setIsOpen((prev) => !prev)}
@@ -313,11 +249,10 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* MOBILE MENU */}
       {isOpen && (
         <div className="border-t border-gray-200 bg-white md:hidden">
           <div className="mx-auto max-w-7xl space-y-1 px-4 py-4 sm:px-6">
-            {/* Mobile Links */}
             <Link
               href="/"
               onClick={closeMenu}
@@ -325,7 +260,6 @@ export default function Navbar() {
             >
               Home
             </Link>
-
             <Link
               href="/products"
               onClick={closeMenu}
@@ -333,7 +267,6 @@ export default function Navbar() {
             >
               Products
             </Link>
-
             <Link
               href="/shop"
               onClick={closeMenu}
@@ -341,7 +274,6 @@ export default function Navbar() {
             >
               Shop
             </Link>
-
             <Link
               href="/categories"
               onClick={closeMenu}
@@ -349,7 +281,6 @@ export default function Navbar() {
             >
               Categories
             </Link>
-
             <Link
               href="/about"
               onClick={closeMenu}
@@ -357,7 +288,6 @@ export default function Navbar() {
             >
               About
             </Link>
-
             <Link
               href="/contact"
               onClick={closeMenu}
@@ -366,15 +296,7 @@ export default function Navbar() {
               Contact
             </Link>
 
-<<<<<<< HEAD
-            {/* Mobile Actions */}
-            <div className="mt-3 space-y-2 border-t border-gray-200 pt-3">
-              <Link
-                href="/cart"
-                onClick={closeMenu}
-                className="flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-gray-700 transition hover:bg-gray-50 hover:text-[#ff594d]"
-=======
-            {/* Cart */}
+            {/* Mobile Cart */}
             <Link
               href="/cart"
               onClick={closeMenu}
@@ -391,7 +313,7 @@ export default function Navbar() {
               )}
             </Link>
 
-            {/* Logged in links */}
+            {/* Logged-In User Mobile Links */}
             {session && (
               <>
                 <Link
@@ -413,60 +335,37 @@ export default function Navbar() {
                 </Link>
               </>
             )}
-          </div>
 
-          {/* =========================
-              MOBILE AUTH
-          ========================== */}
-          <div className="border-t border-gray-100 p-4">
+            {/* Mobile Auth Buttons */}
+            <div className="border-t border-gray-100 pt-4">
+              {!session ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <Link
+                    href="/login"
+                    onClick={closeMenu}
+                    className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-3 font-semibold text-gray-700 transition hover:bg-gray-50"
+                  >
+                    <User className="h-5 w-5" />
+                    Login
+                  </Link>
 
-            {!session ? (
-              <div className="grid grid-cols-2 gap-3">
-
-                <Link
-                  href="/login"
-                  onClick={closeMenu}
-                  className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-3 font-semibold text-gray-700 transition hover:bg-gray-50"
+                  <Link
+                    href="/register"
+                    onClick={closeMenu}
+                    className="rounded-xl bg-[#ff594d] px-4 py-3 text-center font-semibold text-white transition hover:bg-[#e94d43]"
+                  >
+                    Register
+                  </Link>
+                </div>
+              ) : (
+                <button
+                  onClick={handleLogout}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-50 px-4 py-3 font-semibold text-red-500 transition hover:bg-red-100"
                 >
-                  <User className="h-5 w-5" />
-                  Login
-                </Link>
-
-                <Link
-                  href="/register"
-                  onClick={closeMenu}
-                  className="rounded-xl bg-[#ff594d] px-4 py-3 text-center font-semibold text-white transition hover:bg-[#e94d43]"
-                >
-                  Register
-                </Link>
-
-              </div>
-            ) : (
-              <button
-                onClick={handleLogout}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-50 px-4 py-3 font-semibold text-red-500 transition hover:bg-red-100"
->>>>>>> c959ef0a1f3aff1573a3368d72d52fdd7491d6e3
-              >
-                <ShoppingCart className="h-5 w-5" />
-                Shopping Cart
-              </Link>
-
-              <Link
-                href="/login"
-                onClick={closeMenu}
-                className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-3 font-semibold text-gray-700 transition hover:bg-gray-50"
-              >
-                <User className="h-5 w-5" />
-                Login
-              </Link>
-
-              <Link
-                href="/register"
-                onClick={closeMenu}
-                className="block rounded-lg bg-[#ff594d] px-4 py-3 text-center text-base font-medium text-white transition hover:bg-[#ff594d]"
-              >
-                Register
-              </Link>
+                  <LogOut className="h-5 w-5" />
+                  Logout
+                </button>
+              )}
             </div>
           </div>
         </div>
