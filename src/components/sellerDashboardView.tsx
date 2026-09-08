@@ -34,6 +34,7 @@ import Image from "next/image";
 import { ShopStatusBadge } from "./shopStatusBadge";
 
 
+
 interface SellerDashboardViewProps {
   shop?: Shop;
   products?: Product[];
@@ -75,12 +76,11 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
   const formatCurrency = (val?: number) => {
     const numericValue =
       typeof val === "number" && Number.isFinite(val) ? val : 0;
+
     console.log("Formatting currency:", numericValue);
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-    }).format(numericValue);
+
+
+    return `$${numericValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   };
   const formatDate = (dateValue?: string) => {

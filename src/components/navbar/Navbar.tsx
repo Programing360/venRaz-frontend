@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   LogOut,
 } from "lucide-react";
+<<<<<<< HEAD
 import Image from "next/image";
 import { authClient } from "@/lib/auth-client";
 
@@ -18,6 +19,84 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const { data: session } = authClient.useSession();
   const [scrolled, setScrolled] = useState<boolean>(false);
+=======
+
+import { signOut, useSession } from "@/lib/auth-client";
+import { useCart } from "@/context/CartContext";
+
+export default function Navbar() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [role, setRole] = useState("");
+
+  const router = useRouter();
+  const { data: session, isPending } = useSession();
+  const { totalItems } = useCart();
+
+  // ==============================
+  // Get User Role
+  // ==============================
+  useEffect(() => {
+    const getRole = async () => {
+      try {
+        if (!session?.user?.email) {
+          setRole("");
+          return;
+        }
+
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/users/${session.user.email}`
+        );
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+
+        setRole(data?.role?.toLowerCase() || "");
+      } catch (error) {
+        console.error("Failed to get user role:", error);
+      }
+    };
+
+    getRole();
+  }, [session]);
+
+  // ==============================
+  // Navbar Scroll Effect
+  // ==============================
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 30);
+    };
+
+    handleScroll();
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  // ==============================
+  // Logout
+  // ==============================
+  const handleLogout = async () => {
+    await signOut();
+    setIsMenuOpen(false);
+    router.push("/");
+  };
+
+  // ==============================
+  // Dashboard Route
+  // ==============================
+  const getDashboardRoute = () => {
+    if (role === "admin") return "/dashboard/admin";
+    if (role === "seller") return "/dashboard/seller";
+
+    return "/dashboard";
+  };
+>>>>>>> c959ef0a1f3aff1573a3368d72d52fdd7491d6e3
 
   const closeMenu = () => {
     setIsOpen(false);
@@ -128,6 +207,11 @@ export default function Navbar() {
               aria-label="Shopping Cart"
             >
               <ShoppingCart className="h-5 w-5" />
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ff594d] px-1 text-[11px] font-bold text-white shadow-sm">
+                  {totalItems > 99 ? "99+" : totalItems}
+                </span>
+              )}
             </Link>
 
             {!session ? (
@@ -243,11 +327,11 @@ export default function Navbar() {
             </Link>
 
             <Link
-              href="/product"
+              href="/products"
               onClick={closeMenu}
               className="block rounded-xl px-4 py-3 font-medium text-gray-700 transition hover:bg-gray-50 hover:text-[#ff594d]"
             >
-              Product
+              Products
             </Link>
 
             <Link
@@ -282,12 +366,86 @@ export default function Navbar() {
               Contact
             </Link>
 
+<<<<<<< HEAD
             {/* Mobile Actions */}
             <div className="mt-3 space-y-2 border-t border-gray-200 pt-3">
               <Link
                 href="/cart"
                 onClick={closeMenu}
                 className="flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-gray-700 transition hover:bg-gray-50 hover:text-[#ff594d]"
+=======
+            {/* Cart */}
+            <Link
+              href="/cart"
+              onClick={closeMenu}
+              className="flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3 font-medium text-gray-700 transition hover:text-[#ff594d]"
+            >
+              <div className="flex items-center gap-3">
+                <ShoppingCart className="h-5 w-5" />
+                <span>Shopping Cart</span>
+              </div>
+              {totalItems > 0 && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ff594d] px-1.5 text-[11px] font-bold text-white">
+                  {totalItems}
+                </span>
+              )}
+            </Link>
+
+            {/* Logged in links */}
+            {session && (
+              <>
+                <Link
+                  href={getDashboardRoute()}
+                  onClick={closeMenu}
+                  className="flex items-center gap-3 rounded-xl bg-[#ff594d]/10 px-4 py-3 font-semibold text-[#ff594d]"
+                >
+                  <LayoutDashboard className="h-5 w-5" />
+                  Dashboard
+                </Link>
+
+                <Link
+                  href="/profile"
+                  onClick={closeMenu}
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 font-medium text-gray-700 transition hover:bg-gray-50 hover:text-[#ff594d]"
+                >
+                  <User className="h-5 w-5" />
+                  Profile
+                </Link>
+              </>
+            )}
+          </div>
+
+          {/* =========================
+              MOBILE AUTH
+          ========================== */}
+          <div className="border-t border-gray-100 p-4">
+
+            {!session ? (
+              <div className="grid grid-cols-2 gap-3">
+
+                <Link
+                  href="/login"
+                  onClick={closeMenu}
+                  className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-3 font-semibold text-gray-700 transition hover:bg-gray-50"
+                >
+                  <User className="h-5 w-5" />
+                  Login
+                </Link>
+
+                <Link
+                  href="/register"
+                  onClick={closeMenu}
+                  className="rounded-xl bg-[#ff594d] px-4 py-3 text-center font-semibold text-white transition hover:bg-[#e94d43]"
+                >
+                  Register
+                </Link>
+
+              </div>
+            ) : (
+              <button
+                onClick={handleLogout}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-50 px-4 py-3 font-semibold text-red-500 transition hover:bg-red-100"
+>>>>>>> c959ef0a1f3aff1573a3368d72d52fdd7491d6e3
               >
                 <ShoppingCart className="h-5 w-5" />
                 Shopping Cart

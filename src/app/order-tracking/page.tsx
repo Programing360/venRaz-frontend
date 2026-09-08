@@ -1,21 +1,14 @@
 "use client";
 
+import React, { Suspense, useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   Search,
   Package,
   Check,
-  Clock,
-  Truck,
-  MapPin,
-  XCircle,
   ArrowLeft,
 } from "lucide-react";
-import { useState } from "react";
-
-/* =========================================================
-   TYPES
-========================================================= */
 
 type OrderStatus =
   | "Pending"
@@ -23,8 +16,7 @@ type OrderStatus =
   | "Processing"
   | "Shipped"
   | "Out for Delivery"
-  | "Delivered"
-  | "Cancelled";
+  | "Delivered";
 
 type TrackingStep = {
   status: OrderStatus;
@@ -32,10 +24,6 @@ type TrackingStep = {
   description: string;
   date?: string;
 };
-
-/* =========================================================
-   STATUS ORDER
-========================================================= */
 
 const statusOrder: OrderStatus[] = [
   "Pending",
@@ -46,488 +34,318 @@ const statusOrder: OrderStatus[] = [
   "Delivered",
 ];
 
-/* =========================================================
-   DEMO ORDER
-========================================================= */
-
-const demoOrder = {
-  trackingId: "TRK-2026-00125",
-  orderId: "#ORD-00125",
-  status: "Shipped" as OrderStatus,
-  estimatedDelivery: "September 06, 2026",
-  placedAt: "September 02, 2026",
-};
-
-/* =========================================================
-   TRACKING STEPS
-========================================================= */
-
 const trackingSteps: TrackingStep[] = [
   {
     status: "Pending",
     title: "Order Placed",
-    description:
-      "Your order has been placed successfully.",
-    date: "Sep 02, 2026 • 10:30 AM",
+    description: "Your order has been received and logged in our system.",
+    date: "Just now",
   },
   {
     status: "Confirmed",
-    title: "Confirmed",
-    description:
-      "Your order has been confirmed by the seller.",
-    date: "Sep 02, 2026 • 11:15 AM",
+    title: "Order Confirmed",
+    description: "Seller has accepted and verified the order.",
+    date: "Estimated +2 hours",
   },
   {
     status: "Processing",
-    title: "Processing",
-    description:
-      "Your order is being prepared for shipment.",
-    date: "Sep 03, 2026 • 09:20 AM",
+    title: "Processing & Packaging",
+    description: "Items are inspected, packaged, and labeled for dispatch.",
+    date: "Estimated next day",
   },
   {
     status: "Shipped",
-    title: "Shipped",
-    description:
-      "Your package has left the seller facility.",
-    date: "Sep 04, 2026 • 02:45 PM",
+    title: "Shipped & In Transit",
+    description: "Package has departed the distribution hub.",
+    date: "Estimated 2 days",
   },
   {
     status: "Out for Delivery",
     title: "Out for Delivery",
-    description:
-      "Your package is on the way to your address.",
+    description: "Delivery courier is heading towards your shipping address.",
+    date: "Estimated 3 days",
   },
   {
     status: "Delivered",
     title: "Delivered",
-    description:
-      "Your order has been delivered successfully.",
+    description: "Package handed over to the recipient.",
+    date: "Pending delivery",
   },
 ];
 
-/* =========================================================
-   ICON
-========================================================= */
-
-function getStatusIcon(
-  status: OrderStatus,
-) {
-  switch (status) {
-    case "Pending":
-      return <Clock size={18} />;
-
-    case "Confirmed":
-      return <Check size={18} />;
-
-    case "Processing":
-      return <Package size={18} />;
-
-    case "Shipped":
-      return <Truck size={18} />;
-
-    case "Out for Delivery":
-      return <MapPin size={18} />;
-
-    case "Delivered":
-      return <Check size={18} />;
-
-    case "Cancelled":
-      return <XCircle size={18} />;
-
-    default:
-      return <Package size={18} />;
-  }
+interface OrderCustomer {
+  fullName?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
 }
 
-/* =========================================================
-   PAGE
-========================================================= */
+interface OrderRecord {
+  trackingId: string;
+  orderId: string;
+  status: OrderStatus;
+  total: number;
+  customer?: OrderCustomer;
+  placedAt: string;
+  estimatedDelivery: string;
+  createdAt?: string;
+}
 
-export default function OrderTrackingPage() {
-  const [trackingId, setTrackingId] =
-    useState("");
+function TrackingContent() {
+  const searchParams = useSearchParams();
+  const initialId = searchParams.get("id") || "";
 
-  const [searchedId, setSearchedId] =
-    useState("");
+  const [trackingId, setTrackingId] = useState(initialId);
+  const [activeOrder, setActiveOrder] = useState<OrderRecord | null>(null);
+  const [error, setError] = useState("");
 
-  const [error, setError] =
-    useState("");
-
-  /* =======================================================
-     TRACK ORDER
-  ======================================================= */
-
-  function handleTrackOrder(
-    event: React.FormEvent<HTMLFormElement>,
-  ) {
-    event.preventDefault();
-
-    const value =
-      trackingId.trim().toUpperCase();
+  const trackOrderById = useCallback((idToTrack: string) => {
+    const value = idToTrack.trim().toUpperCase();
 
     if (!value) {
-      setError(
-        "Please enter your tracking ID.",
-      );
-      setSearchedId("");
+      setError("Please enter a valid tracking ID.");
+      setActiveOrder(null);
       return;
     }
 
+    // Check LocalStorage saved orders first
+    try {
+      const stored = localStorage.getItem("venraz_orders");
+      if (stored) {
+        const orders: OrderRecord[] = JSON.parse(stored);
+        const match = orders.find(
+          (o) =>
+            o.trackingId?.toUpperCase() === value ||
+            o.orderId?.toUpperCase() === value
+        );
+        if (match) {
+          setActiveOrder({
+            trackingId: match.trackingId,
+            orderId: match.orderId,
+            status: match.status || "Pending",
+            total: match.total,
+            customer: match.customer,
+            placedAt: match.createdAt
+              ? new Date(match.createdAt).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "Today",
+            estimatedDelivery: "3 - 5 Business Days",
+          });
+          setError("");
+          return;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to read orders from localStorage", e);
+    }
+
+    // Fallback demo order
     if (
-      value !==
-      demoOrder.trackingId
+      value === "TRK-2026-00125" ||
+      value.startsWith("TRK-") ||
+      value.startsWith("ORD-")
     ) {
-      setError(
-        "No order found with this tracking ID.",
-      );
-      setSearchedId("");
+      setActiveOrder({
+        trackingId: value,
+        orderId: "#" + value.replace("TRK-", "ORD-"),
+        status: "Processing",
+        total: 149.99,
+        placedAt: "Today",
+        estimatedDelivery: "September 10, 2026",
+      });
+      setError("");
       return;
     }
 
-    setError("");
-    setSearchedId(value);
-  }
-
-  /* =======================================================
-     STATUS INDEX
-  ======================================================= */
-
-  const currentStatusIndex =
-    statusOrder.indexOf(
-      demoOrder.status,
+    setError(
+      "No order found with tracking ID: " + value + ". Try 'TRK-2026-00125'."
     );
+    setActiveOrder(null);
+  }, []);
 
-  /* =======================================================
-     MAIN
-  ======================================================= */
+  useEffect(() => {
+    if (initialId) {
+      const timer = setTimeout(() => {
+        trackOrderById(initialId);
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [initialId, trackOrderById]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    trackOrderById(trackingId);
+  };
+
+  const currentStatusIndex = activeOrder
+    ? statusOrder.indexOf(activeOrder.status)
+    : 0;
 
   return (
-    <main className="min-h-screen bg-white py-12 md:py-16">
-      <div className="mx-auto max-w-5xl px-5">
+    <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10">
+      {/* Back Link */}
+      <div className="mb-6">
+        <Link
+          href="/shop"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-[#ff594d] transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Continue Shopping
+        </Link>
+      </div>
 
-        {/* =================================================
-            HEADER
-        ================================================= */}
+      {/* Header */}
+      <div className="text-center max-w-xl mx-auto mb-10">
+        <div className="w-16 h-16 bg-red-50 text-[#ff594d] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+          <Package className="w-8 h-8" />
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+          Track Your Order
+        </h1>
+        <p className="text-xs sm:text-sm text-slate-500">
+          Enter your Tracking ID or Order ID below to get real-time delivery status updates.
+        </p>
 
-        <div className="mx-auto max-w-2xl text-center">
-
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#fff1ef]">
-            <Package
-              size={30}
-              className="text-[#ff594d]"
+        {/* Input Form */}
+        <form onSubmit={handleSubmit} className="mt-6 flex flex-col sm:flex-row gap-2 max-w-md mx-auto">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={trackingId}
+              onChange={(e) => setTrackingId(e.target.value)}
+              placeholder="e.g. TRK-2026-00125"
+              className="w-full text-xs sm:text-sm border border-slate-200 rounded-xl pl-10 pr-4 py-3 bg-white outline-none focus:border-[#ff594d] shadow-sm uppercase font-mono"
             />
           </div>
-
-          <h1 className="mt-5 text-3xl font-bold tracking-tight text-gray-900 md:text-4xl">
-            Track Your Order
-          </h1>
-
-          <p className="mt-3 text-sm leading-6 text-gray-500">
-            Enter your tracking ID below to
-            check the current status of your
-            order.
-          </p>
-
-        </div>
-
-        {/* =================================================
-            TRACKING SEARCH
-        ================================================= */}
-
-        <div className="mx-auto mt-8 max-w-2xl">
-
-          <form
-            onSubmit={
-              handleTrackOrder
-            }
-            className="flex flex-col gap-3 sm:flex-row"
+          <button
+            type="submit"
+            className="bg-[#ff594d] hover:bg-black text-white px-6 py-3 rounded-xl font-bold text-xs sm:text-sm transition-colors shadow-md shadow-red-500/20 shrink-0"
           >
-
-            <div className="relative flex-1">
-
-              <Search
-                size={19}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-              />
-
-              <input
-                type="text"
-                value={trackingId}
-                onChange={(event) => {
-                  setTrackingId(
-                    event.target.value,
-                  );
-                  setError("");
-                }}
-                placeholder="Enter tracking ID"
-                className="w-full rounded-lg border border-gray-200 bg-white py-3.5 pl-11 pr-4 text-sm outline-none transition focus:border-[#ff594d] focus:ring-1 focus:ring-[#ff594d]"
-              />
-
-            </div>
-
-            <button
-              type="submit"
-              className="flex items-center justify-center gap-2 rounded-lg bg-[#ff594d] px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-black"
-            >
-              <Search size={17} />
-              Track Order
-            </button>
-
-          </form>
-
-          {error && (
-            <p className="mt-3 text-center text-sm text-red-500">
-              {error}
-            </p>
-          )}
-
-          <p className="mt-3 text-center text-xs text-gray-400">
-            Demo tracking ID:{" "}
-            <button
-              type="button"
-              onClick={() =>
-                setTrackingId(
-                  demoOrder.trackingId,
-                )
-              }
-              className="font-semibold text-[#ff594d] hover:underline"
-            >
-              {demoOrder.trackingId}
-            </button>
-          </p>
-
-        </div>
-
-        {/* =================================================
-            ORDER RESULT
-        ================================================= */}
-
-        {searchedId && (
-          <div className="mt-12">
-
-            {/* ORDER INFO */}
-
-            <div className="rounded-xl border border-gray-200 bg-white p-6">
-
-              <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-
-                <div>
-
-                  <p className="text-xs uppercase tracking-wider text-gray-400">
-                    Tracking ID
-                  </p>
-
-                  <h2 className="mt-1 text-lg font-bold text-gray-900">
-                    {demoOrder.trackingId}
-                  </h2>
-
-                  <p className="mt-1 text-sm text-gray-500">
-                    Order {demoOrder.orderId}
-                  </p>
-
-                </div>
-
-                <div className="text-left sm:text-right">
-
-                  <p className="text-xs text-gray-400">
-                    Current Status
-                  </p>
-
-                  <span className="mt-2 inline-flex rounded-full bg-[#fff1ef] px-4 py-1.5 text-xs font-semibold text-[#ff594d]">
-                    {demoOrder.status}
-                  </span>
-
-                </div>
-
-              </div>
-
-              <div className="mt-6 grid grid-cols-1 gap-4 border-t border-gray-100 pt-6 sm:grid-cols-2">
-
-                <div>
-                  <p className="text-xs text-gray-400">
-                    Order Date
-                  </p>
-
-                  <p className="mt-1 text-sm font-medium text-gray-900">
-                    {demoOrder.placedAt}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs text-gray-400">
-                    Estimated Delivery
-                  </p>
-
-                  <p className="mt-1 text-sm font-medium text-gray-900">
-                    {demoOrder.estimatedDelivery}
-                  </p>
-                </div>
-
-              </div>
-
-            </div>
-
-            {/* =================================================
-                STATUS TIMELINE
-            ================================================= */}
-
-            <div className="mt-8 rounded-xl border border-gray-200 p-6 md:p-8">
-
-              <h2 className="text-xl font-bold text-gray-900">
-                Order Status
-              </h2>
-
-              <p className="mt-1 text-sm text-gray-500">
-                Follow your order's progress
-                below.
-              </p>
-
-              <div className="mt-8">
-
-                {trackingSteps.map(
-                  (step, index) => {
-                    const stepIndex =
-                      statusOrder.indexOf(
-                        step.status,
-                      );
-
-                    const isCompleted =
-                      stepIndex <=
-                      currentStatusIndex;
-
-                    const isCurrent =
-                      step.status ===
-                      demoOrder.status;
-
-                    const isLast =
-                      index ===
-                      trackingSteps.length -
-                        1;
-
-                    return (
-                      <div
-                        key={step.status}
-                        className="relative flex gap-4"
-                      >
-
-                        {/* CONNECTOR */}
-
-                        {!isLast && (
-                          <div
-                            className={`absolute left-5 top-11 h-[calc(100%-20px)] w-px ${
-                              stepIndex <
-                              currentStatusIndex
-                                ? "bg-[#ff594d]"
-                                : "bg-gray-200"
-                            }`}
-                          />
-                        )}
-
-                        {/* ICON */}
-
-                        <div
-                          className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 ${
-                            isCompleted
-                              ? "border-[#ff594d] bg-[#ff594d] text-white"
-                              : "border-gray-200 bg-white text-gray-400"
-                          } ${
-                            isCurrent
-                              ? "ring-4 ring-[#fff1ef]"
-                              : ""
-                          }`}
-                        >
-                          {getStatusIcon(
-                            step.status,
-                          )}
-                        </div>
-
-                        {/* CONTENT */}
-
-                        <div
-                          className={`min-w-0 flex-1 ${
-                            isLast
-                              ? "pb-0"
-                              : "pb-9"
-                          }`}
-                        >
-
-                          <div className="flex flex-col justify-between gap-1 sm:flex-row sm:items-start">
-
-                            <div>
-
-                              <h3
-                                className={`text-sm font-semibold ${
-                                  isCompleted
-                                    ? "text-gray-900"
-                                    : "text-gray-400"
-                                }`}
-                              >
-                                {step.title}
-                              </h3>
-
-                              <p
-                                className={`mt-1 text-sm leading-5 ${
-                                  isCompleted
-                                    ? "text-gray-500"
-                                    : "text-gray-400"
-                                }`}
-                              >
-                                {
-                                  step.description
-                                }
-                              </p>
-
-                            </div>
-
-                            {step.date && (
-                              <span className="shrink-0 text-xs text-gray-400">
-                                {step.date}
-                              </span>
-                            )}
-
-                          </div>
-
-                          {isCurrent && (
-                            <span className="mt-3 inline-flex rounded-full bg-[#fff1ef] px-3 py-1 text-xs font-medium text-[#ff594d]">
-                              Current Status
-                            </span>
-                          )}
-
-                        </div>
-
-                      </div>
-                    );
-                  },
-                )}
-
-              </div>
-
-            </div>
-
-            {/* =================================================
-                BOTTOM
-            ================================================= */}
-
-            <div className="mt-8 flex flex-col items-center justify-between gap-4 rounded-xl bg-gray-50 p-5 sm:flex-row">
-
-              <p className="text-sm text-gray-600">
-                Need help with your order?
-              </p>
-
-              <Link
-                href="/shop"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-[#ff594d] transition hover:text-black"
-              >
-                <ArrowLeft size={16} />
-                Continue Shopping
-              </Link>
-
-            </div>
-
-          </div>
+            Track Order
+          </button>
+        </form>
+
+        {error && (
+          <p className="text-xs text-rose-500 font-medium mt-3">{error}</p>
         )}
-
       </div>
+
+      {/* Order Status Display */}
+      {activeOrder && (
+        <div className="space-y-6">
+          {/* Summary Card */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-5">
+              <div>
+                <span className="text-[11px] uppercase tracking-wider text-slate-400 font-bold">
+                  Tracking Number
+                </span>
+                <h3 className="text-lg font-black text-slate-900 font-mono">
+                  {activeOrder.trackingId}
+                </h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-slate-500">Status:</span>
+                <span className="bg-emerald-50 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full border border-emerald-200">
+                  {activeOrder.status}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-5 text-xs">
+              <div>
+                <span className="text-slate-400 font-medium block mb-1">
+                  Order Number
+                </span>
+                <span className="font-bold text-slate-800">
+                  {activeOrder.orderId}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-400 font-medium block mb-1">
+                  Order Placed
+                </span>
+                <span className="font-bold text-slate-800">
+                  {activeOrder.placedAt}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-400 font-medium block mb-1">
+                  Estimated Delivery
+                </span>
+                <span className="font-bold text-[#ff594d]">
+                  {activeOrder.estimatedDelivery}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Timeline Visual Status */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm">
+            <h3 className="text-base font-bold text-slate-900 mb-8">
+              Delivery Timeline Progress
+            </h3>
+
+            <div className="relative pl-6 sm:pl-8 space-y-8 before:absolute before:left-[15px] sm:before:left-[19px] before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200">
+              {trackingSteps.map((step, idx) => {
+                const isCompleted = idx <= currentStatusIndex;
+
+                return (
+                  <div key={step.status} className="relative flex items-start gap-4">
+                    {/* Circle Node */}
+                    <div
+                      className={`absolute -left-[27px] sm:-left-[31px] top-0 w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-xs font-bold shadow-xs transition-colors ${
+                        isCompleted
+                          ? "bg-[#ff594d] text-white ring-4 ring-red-100"
+                          : "bg-white border-2 border-slate-300 text-slate-400"
+                      }`}
+                    >
+                      {isCompleted ? <Check className="w-3.5 h-3.5" /> : idx + 1}
+                    </div>
+
+                    {/* Step details */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-baseline justify-between gap-2">
+                        <h4
+                          className={`text-sm font-bold ${
+                            isCompleted ? "text-slate-900" : "text-slate-400"
+                          }`}
+                        >
+                          {step.title}
+                        </h4>
+                        {step.date && (
+                          <span className="text-[11px] text-slate-400 font-medium">
+                            {step.date}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                        {step.description}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function OrderTrackingPage() {
+  return (
+    <main className="min-h-screen bg-[#fcfdfd]">
+      <Suspense fallback={<div className="p-20 text-center text-slate-400">Loading tracking engine...</div>}>
+        <TrackingContent />
+      </Suspense>
     </main>
   );
 }

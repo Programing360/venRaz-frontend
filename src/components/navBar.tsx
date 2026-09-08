@@ -1,11 +1,11 @@
-import React from "react";
 
-import {
-  Store,
-  User,
-  Cloud,
-  PlusCircle,
-  LayoutDashboard,
+import React from 'react';
+import { 
+  Store, 
+  User, 
+  Cloud, 
+  PlusCircle, 
+  LayoutDashboard, 
   ShieldCheck,
   ExternalLink,
   ChevronRight,
