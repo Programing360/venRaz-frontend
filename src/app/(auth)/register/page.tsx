@@ -5,9 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import AuthFormShell from "@/components/auth/auth-form-shell";
-import { ErrorBanner, Field, PrimaryButton, TextInput } from "@/components/auth/fields";
-
-
+import {
+  ErrorBanner,
+  Field,
+  PrimaryButton,
+  TextInput,
+} from "@/components/auth/fields";
+const ADMIN_EMAIL = "fhlimon36@gmail.com";
 export default function RegisterPage() {
   const router = useRouter();
 
@@ -35,6 +39,12 @@ export default function RegisterPage() {
 
     setLoading(true);
 
+    // Determine user role dynamically based on email
+    // const role =
+    //   email.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase()
+    //     ? "admin"
+    //     : "customer";
+
     try {
       const { data, error } = await authClient.signUp.email({
         name,
@@ -42,9 +52,12 @@ export default function RegisterPage() {
         password,
         callbackURL: "/",
       });
+      console.log(data, error);
 
       if (error) {
-        setError(error.message || "Unable to create your account. Please try again.");
+        setError(
+          error.message || "Unable to create your account. Please try again.",
+        );
         return;
       }
 
@@ -69,7 +82,10 @@ export default function RegisterPage() {
       footer={
         <p className="text-sm text-[#6B7268]">
           Already have an account?{" "}
-          <Link href="/login" className="font-semibold text-[#0E1B1B] hover:text-[#C08A3E]">
+          <Link
+            href="/login"
+            className="font-semibold text-[#0E1B1B] hover:text-[#C08A3E]"
+          >
             Sign in
           </Link>
         </p>
@@ -118,7 +134,9 @@ export default function RegisterPage() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Minimum 8 characters"
           />
-          <p className="mt-2 text-xs text-[#9A9488]">Use at least 8 characters.</p>
+          <p className="mt-2 text-xs text-[#9A9488]">
+            Use at least 8 characters.
+          </p>
         </div>
 
         <div>
@@ -142,18 +160,28 @@ export default function RegisterPage() {
           />
           <span className="text-xs leading-5 text-[#6B7268]">
             I agree to the VenRaz{" "}
-            <Link href="/terms" className="font-medium text-[#0E1B1B] hover:text-[#C08A3E]">
+            <Link
+              href="/terms"
+              className="font-medium text-[#0E1B1B] hover:text-[#C08A3E]"
+            >
               Terms of Service
             </Link>{" "}
             and{" "}
-            <Link href="/privacy" className="font-medium text-[#0E1B1B] hover:text-[#C08A3E]">
+            <Link
+              href="/privacy"
+              className="font-medium text-[#0E1B1B] hover:text-[#C08A3E]"
+            >
               Privacy Policy
             </Link>
             .
           </span>
         </label>
 
-        <PrimaryButton type="submit" loading={loading} loadingText="Creating account…">
+        <PrimaryButton
+          type="submit"
+          loading={loading}
+          loadingText="Creating account…"
+        >
           Create account
         </PrimaryButton>
       </form>

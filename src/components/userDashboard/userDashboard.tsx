@@ -1,22 +1,23 @@
-import React from 'react';
-// import all things which are needed 
-import { 
-  User, 
-  Store, 
-  PlusCircle, 
-  ArrowRight, 
-  ShoppingBag, 
-  Heart, 
-  Clock, 
-  ShieldCheck, 
+import React from "react";
+// import all things which are needed
+import {
+  User,
+  Store,
+  PlusCircle,
+  ArrowRight,
+  ShoppingBag,
+  Heart,
+  Clock,
+  ShieldCheck,
   Sparkles,
   ChevronRight,
   ExternalLink,
-  Settings
-} from 'lucide-react';
-import { motion } from 'motion/react';
-import { Shop } from '../../types';
-import { ShopStatusBadge } from './shopStatusBadge';
+  Settings,
+} from "lucide-react";
+import { motion } from "motion/react";
+import { Shop } from "../../../types";
+import { ShopStatusBadge } from "../shopStatusBadge";
+import Image from "next/image";
 
 interface UserDashboardViewProps {
   shop?: Shop | null;
@@ -34,7 +35,8 @@ export const UserDashboardView: React.FC<UserDashboardViewProps> = ({
   onOpenCloudinarySettings,
 }) => {
   const formatCurrency = (val?: number) => {
-    const numericValue = typeof val === 'number' && Number.isFinite(val) ? val : 0;
+    const numericValue =
+      typeof val === "number" && Number.isFinite(val) ? val : 0;
     return `৳${numericValue.toLocaleString()}`;
   };
 
@@ -67,22 +69,28 @@ export const UserDashboardView: React.FC<UserDashboardViewProps> = ({
         {/* User Summary Stats */}
         <div className="flex items-center gap-6 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-6">
           <div>
-            <span className="text-xs text-slate-400 block font-medium">Orders Placed</span>
+            <span className="text-xs text-slate-400 block font-medium">
+              Orders Placed
+            </span>
             <span className="text-lg font-bold text-slate-800">8 orders</span>
           </div>
           <div>
-            <span className="text-xs text-slate-400 block font-medium">Wishlist</span>
+            <span className="text-xs text-slate-400 block font-medium">
+              Wishlist
+            </span>
             <span className="text-lg font-bold text-slate-800">14 items</span>
           </div>
           <div>
-            <span className="text-xs text-slate-400 block font-medium">Reward Points</span>
+            <span className="text-xs text-slate-400 block font-medium">
+              Reward Points
+            </span>
             <span className="text-lg font-bold text-indigo-600">650 pts</span>
           </div>
         </div>
       </div>
 
       {/* Primary Flow Callout: User Dashboard -> My Shop -> Create Shop */}
-      <div className="rounded-2xl bg-gradient-to-r from-indigo-50/80 to-sky-50/80 border border-indigo-100 p-4 text-xs text-indigo-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="rounded-2xl bg-linear-to-r from-indigo-50/80 to-sky-50/80 border border-indigo-100 p-4 text-xs text-indigo-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2 font-medium">
           <span className="px-2 py-1 bg-white rounded-lg border border-indigo-200 shadow-2xs font-semibold text-indigo-700">
             User Dashboard
@@ -93,7 +101,7 @@ export const UserDashboardView: React.FC<UserDashboardViewProps> = ({
           </span>
           <ArrowRight size={14} className="text-indigo-400" />
           <span className="px-2 py-1 bg-indigo-600 text-white rounded-lg shadow-2xs font-semibold">
-            {shop ? 'Seller Dashboard' : 'Create Shop'}
+            {shop ? "Seller Dashboard" : "Create Shop"}
           </span>
         </div>
 
@@ -119,7 +127,8 @@ export const UserDashboardView: React.FC<UserDashboardViewProps> = ({
             <div>
               <h2 className="text-lg font-bold text-slate-900">My Shop</h2>
               <p className="text-xs text-slate-500">
-                Manage your vendor storefront, monitor status, and access seller dashboard
+                Manage your vendor storefront, monitor status, and access seller
+                dashboard
               </p>
             </div>
           </div>
@@ -131,7 +140,7 @@ export const UserDashboardView: React.FC<UserDashboardViewProps> = ({
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition-colors"
           >
             <PlusCircle size={15} />
-            <span>{shop ? 'Create Another Shop' : 'Create Shop'}</span>
+            <span>{shop ? "Create Another Shop" : "Create Shop"}</span>
           </button>
         </div>
 
@@ -144,7 +153,7 @@ export const UserDashboardView: React.FC<UserDashboardViewProps> = ({
           >
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="flex items-start gap-4">
-                <img
+                <Image
                   src={shop.logoUrl}
                   alt={shop.name}
                   className="w-16 h-16 rounded-2xl object-cover border border-slate-200 shadow-xs shrink-0"
@@ -161,11 +170,18 @@ export const UserDashboardView: React.FC<UserDashboardViewProps> = ({
                     {shop.description}
                   </p>
                   <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 mt-2">
-                    <span>Category: <strong>{shop.category}</strong></span>
+                    <span>
+                      Category: <strong>{shop.category}</strong>
+                    </span>
                     <span>•</span>
-                    <span>Products: <strong>{shop.totalProducts}</strong></span>
+                    <span>
+                      Products: <strong>{shop.totalProducts}</strong>
+                    </span>
                     <span>•</span>
-                    <span>Total Sales: <strong>{formatCurrency(shop.totalSales)}</strong></span>
+                    <span>
+                      Total Sales:{" "}
+                      <strong>{formatCurrency(shop.totalSales)}</strong>
+                    </span>
                   </div>
                 </div>
               </div>
@@ -191,9 +207,13 @@ export const UserDashboardView: React.FC<UserDashboardViewProps> = ({
             <div className="w-14 h-14 mx-auto rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3">
               <Store size={28} />
             </div>
-            <h3 className="text-base font-bold text-slate-900">You don't have an active shop yet</h3>
+            <h3 className="text-base font-bold text-slate-900">
+              You don't have an active shop yet
+            </h3>
             <p className="text-xs text-slate-500 max-w-md mx-auto mt-1 mb-5">
-              Launch your vendor storefront today. Upload your brand logo and banner with Cloudinary, set up your shop profile, and start selling.
+              Launch your vendor storefront today. Upload your brand logo and
+              banner with Cloudinary, set up your shop profile, and start
+              selling.
             </p>
             <button
               type="button"
@@ -216,7 +236,8 @@ export const UserDashboardView: React.FC<UserDashboardViewProps> = ({
             <span>My Buyer Purchases</span>
           </h3>
           <p className="text-xs text-slate-500">
-            Track your customer orders placed across other vendor shops on the platform.
+            Track your customer orders placed across other vendor shops on the
+            platform.
           </p>
         </div>
 
@@ -226,7 +247,8 @@ export const UserDashboardView: React.FC<UserDashboardViewProps> = ({
             <span>Seller Privileges</span>
           </h3>
           <p className="text-xs text-slate-500">
-            Zero setup fee, Cloudinary CDN asset hosting, real-time analytics, and automated payouts.
+            Zero setup fee, Cloudinary CDN asset hosting, real-time analytics,
+            and automated payouts.
           </p>
         </div>
       </div>
