@@ -97,7 +97,7 @@ export const CreateShopForm: React.FC<CreateShopFormProps> = ({
     };
 
     setTimeout(() => {
-      onSaveShop(newShop, targetStatus);
+      onSaveShop?.(newShop, targetStatus);
       setIsSubmitting(false);
     }, 400);
   };

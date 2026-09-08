@@ -3,13 +3,11 @@ import { InputHTMLAttributes, LabelHTMLAttributes, ReactNode } from "react";
 export function Field({
   label,
   htmlFor,
-  hint,
   rightSlot,
   ...rest
 }: {
   label: string;
   htmlFor: string;
-  hint?: string;
   rightSlot?: ReactNode;
 } & LabelHTMLAttributes<HTMLLabelElement>) {
   return (

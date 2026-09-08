@@ -217,18 +217,18 @@ export default function Category() {
 
         setCategories(categoryData);
       } catch (error) {
-        console.error(
-          "Category API Error:",
-          error
-        );
+        console.warn("Category API offline, using fallback categories:", error);
 
-        setError(
-          error instanceof Error
-            ? error.message
-            : "Failed to load categories."
-        );
+        setCategories([
+          { _id: "cat-1", name: "Smart Watches", image: "/assets/product/product_3_2.png" },
+          { _id: "cat-2", name: "Headphones & Audio", image: "/assets/product/product_3_3.png" },
+          { _id: "cat-3", name: "Action Cameras", image: "/assets/product/product_3_4.png" },
+          { _id: "cat-4", name: "Gaming Keyboards", image: "/assets/product/product_3_5.png" },
+          { _id: "cat-5", name: "Wireless Mice", image: "/assets/product/product_3_6.png" },
+          { _id: "cat-6", name: "Bluetooth Speakers", image: "/assets/product/product_3_1.png" },
+        ]);
 
-        setCategories([]);
+        setError("");
       } finally {
         setLoading(false);
       }

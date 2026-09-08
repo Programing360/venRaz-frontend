@@ -37,11 +37,14 @@ export const CloudinarySettingsModal: React.FC<CloudinarySettingsModalProps> = (
 
   useEffect(() => {
     if (isOpen) {
-      const current = getCloudinaryConfig();
-      setConfig(current);
-      setSavedSuccess(false);
-      setTestStatus('idle');
-      setTestMessage('');
+      const timer = setTimeout(() => {
+        const current = getCloudinaryConfig();
+        setConfig(current);
+        setSavedSuccess(false);
+        setTestStatus('idle');
+        setTestMessage('');
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 

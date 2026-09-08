@@ -31,7 +31,7 @@ import { Order, Product, Shop, ShopStatus } from "../../types";
 import { ShopStatusAlert } from "./shopStatusAlert";
 
 import Image from "next/image";
-import { ShopStatusBadge } from "./ShopStatusBadge";
+import { ShopStatusBadge } from "./shopStatusBadge";
 
 interface SellerDashboardViewProps {
   shop?: Shop;
@@ -73,8 +73,7 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
   const formatCurrency = (val?: number) => {
     const numericValue =
       typeof val === "number" && Number.isFinite(val) ? val : 0;
-
-
+    return `$${numericValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
   const formatDate = (dateValue?: string) => {
     if (!dateValue) return 'Not set';

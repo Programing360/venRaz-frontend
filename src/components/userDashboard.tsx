@@ -191,7 +191,7 @@ export const UserDashboardView: React.FC<UserDashboardViewProps> = ({
             <div className="w-14 h-14 mx-auto rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3">
               <Store size={28} />
             </div>
-            <h3 className="text-base font-bold text-slate-900">You don't have an active shop yet</h3>
+            <h3 className="text-base font-bold text-slate-900">You don&apos;t have an active shop yet</h3>
             <p className="text-xs text-slate-500 max-w-md mx-auto mt-1 mb-5">
               Launch your vendor storefront today. Upload your brand logo and banner with Cloudinary, set up your shop profile, and start selling.
             </p>
