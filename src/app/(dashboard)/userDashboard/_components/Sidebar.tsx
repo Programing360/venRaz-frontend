@@ -11,6 +11,7 @@ import {
   LogOut,
   X,
   ChevronRight,
+  ShieldCheck,
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 
@@ -30,17 +31,22 @@ export default function Sidebar({
   const links = [
     {
       name: "Overview",
-      href: "/dashboard",
+      href: "/userDashboard",
       icon: LayoutDashboard,
     },
     {
       name: "My Profile",
-      href: "/dashboard/profile",
+      href: "/userDashboard/profile",
       icon: User,
     },
     {
       name: "My Orders",
-      href: "/dashboard/orders",
+      href: "/userDashboard/orders",
+      icon: ShoppingBag,
+    },
+    {
+      name: "My WishList",
+      href: "/userDashboard/wishList",
       icon: ShoppingBag,
     },
   ];
@@ -48,8 +54,13 @@ export default function Sidebar({
   if (role === "admin") {
     links.push({
       name: "Admin Panel",
-      href: "/dashboard/admin",
+      href: "/adminDashboard",
       icon: Settings,
+    });
+    links.push({
+      name: "Verify Shops",
+      href: "/adminDashboard/verify-shops",
+      icon: ShieldCheck,
     });
   }
 
@@ -81,7 +92,7 @@ export default function Sidebar({
         {/* Header */}
         <div className="flex h-16 items-center justify-between border-b border-[#DEDACE] px-5">
           <Link
-            href="/dashboard"
+            href="/userDashboard"
             onClick={onClose}
             className="flex items-center gap-3"
           >
@@ -123,7 +134,7 @@ export default function Sidebar({
 
               const isActive =
                 pathname === link.href ||
-                (link.href !== "/dashboard" &&
+                (link.href !== "/userDashboard" &&
                   pathname.startsWith(`${link.href}/`));
 
               return (

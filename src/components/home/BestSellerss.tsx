@@ -42,7 +42,7 @@ type Category = {
    FALLBACK IMAGE
    ========================================================= */
 
-const FALLBACK_IMAGE = "/assets/product/product_3_2.png";
+const FALLBACK_IMAGE = "/placeholder.svg";
 
 /* =========================================================
    PRODUCT IMAGE HELPER
@@ -245,7 +245,7 @@ export default function BestSellers() {
         }
 
         const response = await fetch(
-          `${apiUrl}/api/v1/products/home-sections`,
+          `${apiUrl}/products/home-sections`,
           {
             method: "GET",
             headers: {

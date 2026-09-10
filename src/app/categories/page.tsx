@@ -93,6 +93,8 @@ const categories = [
 ];
 
 export default function CategoriesPage() {
+
+
   return (
     <main className="min-h-screen bg-white">
 
@@ -156,7 +158,7 @@ export default function CategoriesPage() {
             </div>
 
             <Link
-              href="/product"
+              href="/products"
               className="inline-flex items-center gap-2 font-semibold text-[#ff594d] transition hover:gap-3"
             >
               View All Products
@@ -174,7 +176,7 @@ export default function CategoriesPage() {
               return (
                 <Link
                   key={category.name}
-                  href={`/product?category=${encodeURIComponent(
+                  href={`/products?category=${encodeURIComponent(
                     category.name
                   )}`}
                   className="group"
@@ -245,7 +247,7 @@ export default function CategoriesPage() {
                 </p>
 
                 <Link
-                  href="/product"
+                  href="/products"
                   className="mt-7 inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3.5 font-semibold text-[#ff594d] transition hover:bg-gray-100"
                 >
                   Explore Products
@@ -292,7 +294,7 @@ export default function CategoriesPage() {
 
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
 
-          <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+<h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
             Can&apos;t Find What You&apos;re Looking For?
           </h2>
 
@@ -302,7 +304,7 @@ export default function CategoriesPage() {
           </p>
 
           <Link
-            href="/product"
+            href="/products"
             className="mt-7 inline-flex items-center gap-2 rounded-xl bg-[#ff594d] px-7 py-3.5 font-semibold text-white shadow-lg shadow-[#ff594d]/20 transition hover:bg-[#e94d43]"
           >
             Browse All Products

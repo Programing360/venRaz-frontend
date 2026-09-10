@@ -100,8 +100,8 @@ export default function ProductFormModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
-    onClose();
+    onSubmit?.(formData);
+    onClose?.();
   };
 
   return (

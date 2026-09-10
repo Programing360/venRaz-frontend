@@ -33,8 +33,7 @@ type CategoryApiResponse = {
    FALLBACK IMAGE
 ========================================================= */
 
-const FALLBACK_IMAGE =
-  "/assets/category/category_1_1.png";
+const FALLBACK_IMAGE = "/placeholder.svg";
 
 /* =========================================================
    IMAGE HELPER
@@ -94,7 +93,7 @@ export default function Category() {
          */
 
         const response = await fetch(
-          `${apiUrl}/api/v1/categories`,
+          `${apiUrl}/categories`,
           {
             method: "GET",
             headers: {
@@ -220,12 +219,12 @@ export default function Category() {
         console.warn("Category API offline, using fallback categories:", error);
 
         setCategories([
-          { _id: "cat-1", name: "Smart Watches", image: "/assets/product/product_3_2.png" },
-          { _id: "cat-2", name: "Headphones & Audio", image: "/assets/product/product_3_3.png" },
-          { _id: "cat-3", name: "Action Cameras", image: "/assets/product/product_3_4.png" },
-          { _id: "cat-4", name: "Gaming Keyboards", image: "/assets/product/product_3_5.png" },
-          { _id: "cat-5", name: "Wireless Mice", image: "/assets/product/product_3_6.png" },
-          { _id: "cat-6", name: "Bluetooth Speakers", image: "/assets/product/product_3_1.png" },
+          { _id: "cat-1", name: "Smart Watches", image: "/placeholder.svg" },
+          { _id: "cat-2", name: "Headphones & Audio", image: "/placeholder.svg" },
+          { _id: "cat-3", name: "Action Cameras", image: "/placeholder.svg" },
+          { _id: "cat-4", name: "Gaming Keyboards", image: "/placeholder.svg" },
+          { _id: "cat-5", name: "Wireless Mice", image: "/placeholder.svg" },
+          { _id: "cat-6", name: "Bluetooth Speakers", image: "/placeholder.svg" },
         ]);
 
         setError("");

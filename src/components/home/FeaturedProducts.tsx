@@ -40,12 +40,12 @@ const getProductImage = (images?: string[]) => {
 
   // No image
   if (!image) {
-    return "/assets/product/product_3_2.png";
+    return "/placeholder.svg";
   }
 
   // Dummy/example image
   if (image.includes("example.com")) {
-    return "/assets/product/product_3_2.png";
+    return "/placeholder.svg";
   }
 
   return image;
@@ -93,7 +93,7 @@ export default function FeaturedProducts() {
         }
 
         const response = await fetch(
-          `${apiUrl}/api/v1/products/home-sections`,
+          `${apiUrl}/products/home-sections`,
           {
             method: "GET",
             headers: {

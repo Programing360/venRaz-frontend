@@ -109,7 +109,7 @@ export default function DashboardPage() {
           </h3>
 
           <Link
-            href="/dashboard/orders"
+            href="/userDashboard/orders"
             className="text-sm font-medium text-[#C08A3E] hover:underline"
           >
             View all

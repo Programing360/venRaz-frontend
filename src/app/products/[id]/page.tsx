@@ -60,19 +60,20 @@ export default function ProductDetailsPage({
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 2000);
 
-          const res = await fetch(`${API_URL}/api/v1/products/${id}`, {
+          const res = await fetch(`${API_URL}/products/${id}`, {
             signal: controller.signal,
           }).finally(() => clearTimeout(timeoutId));
-
+          console.log(res);
           if (res.ok) {
             const data = await res.json();
+            console.log(data);
             const productData = data?.data || data;
             if (productData && productData._id) {
               setProduct(productData);
               const img =
                 productData.images?.[0] ||
                 productData.image ||
-                "/assets/product/product_3_2.png";
+                "/placeholder.svg";
               setSelectedImage(img);
               return;
             }
@@ -97,14 +98,19 @@ export default function ProductDetailsPage({
             rating: found.rating,
             reviews: found.totalReviews,
           });
-          setSelectedImage(found.images[0]);
+          setSelectedImage(
+            found.images?.[0] || "/placeholder.svg",
+          );
         }
       } catch (err) {
         console.error("Product fetch error:", err);
-        const found = MOCK_PRODUCTS.find((p) => p._id === id) || MOCK_PRODUCTS[0];
+        const found =
+          MOCK_PRODUCTS.find((p) => p._id === id) || MOCK_PRODUCTS[0];
         if (found) {
           setProduct(found);
-          setSelectedImage(found.images[0]);
+          setSelectedImage(
+            found.images?.[0] || "/placeholder.svg",
+          );
         }
       } finally {
         setLoading(false);
@@ -177,7 +183,7 @@ export default function ProductDetailsPage({
           <div className="flex flex-col items-center">
             <div className="relative w-full aspect-square max-h-[500px] bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 flex items-center justify-center p-8">
               <Image
-                src={selectedImage || "/assets/product/product_3_2.png"}
+                src={selectedImage || "/placeholder.svg"}
                 alt={product.name}
                 fill
                 priority
@@ -306,7 +312,9 @@ export default function ProductDetailsPage({
                   ) : (
                     <>
                       <ShoppingBag className="w-5 h-5" />
-                      <span>Add to Cart (${(finalPrice * quantity).toFixed(2)})</span>
+                      <span>
+                        Add to Cart (${(finalPrice * quantity).toFixed(2)})
+                      </span>
                     </>
                   )}
                 </button>

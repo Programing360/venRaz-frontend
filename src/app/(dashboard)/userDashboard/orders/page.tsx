@@ -214,7 +214,7 @@ export default function MyOrdersPage() {
                     {/* Action */}
                     <td className="px-6 py-5 text-right">
                       <Link
-                        href={`/dashboard/orders/${order.id}`}
+                        href={`/userDashboard/orders/${order.id}`}
                         className="group/link inline-flex items-center gap-2 rounded-xl border bg-background px-3.5 py-2 text-xs font-bold transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground"
                       >
                         <Eye className="h-3.5 w-3.5" />
@@ -282,7 +282,7 @@ export default function MyOrdersPage() {
                       </div>
 
                       <Link
-                        href={`/dashboard/orders/${order.id}`}
+                        href={`/userDashboard/orders/${order.id}`}
                         className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-105"
                       >
                         <Eye className="h-3.5 w-3.5" />

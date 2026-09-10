@@ -37,7 +37,7 @@ export default function ShopPage() {
 
   // Categories list
   const categories = useMemo(() => {
-    const cats = Array.from(new Set(MOCK_PRODUCTS.map((p) => p.category)));
+    const cats = Array.from(new Set(products.map((p) => p.category)));
     return ["All", ...cats];
   }, []);
 
@@ -55,19 +55,24 @@ export default function ShopPage() {
 
           const params = new URLSearchParams();
           if (search.trim()) params.set("search", search.trim());
-          if (selectedCategory !== "All") params.set("category", selectedCategory);
+          if (selectedCategory !== "All")
+            params.set("category", selectedCategory);
           if (minPrice) params.set("minPrice", minPrice);
           if (maxPrice) params.set("maxPrice", maxPrice);
           if (minRating) params.set("minRating", minRating);
           params.set("sort", sortBy);
 
-          const res = await fetch(`${API_URL}/api/v1/products?${params.toString()}`, {
-            signal: controller.signal,
-          }).finally(() => clearTimeout(timeoutId));
+          const res = await fetch(
+            `${API_URL}/shops?${params.toString()}`,
+            {
+              signal: controller.signal,
+            },
+          ).finally(() => clearTimeout(timeoutId));
 
           if (res.ok) {
             const data = await res.json();
-            const fetched = data?.data?.products || data?.products;
+            const fetched = data.data;
+            console.log(fetched);
             if (Array.isArray(fetched) && fetched.length > 0 && !cancelled) {
               setProducts(fetched);
               return;
@@ -76,7 +81,7 @@ export default function ShopPage() {
         }
 
         // Resilient Fallback to rich Mock Catalog
-        let filtered = [...MOCK_PRODUCTS];
+        let filtered = [...products];
 
         if (search.trim()) {
           const q = search.toLowerCase();
@@ -84,7 +89,7 @@ export default function ShopPage() {
             (p) =>
               p.name.toLowerCase().includes(q) ||
               p.brand.toLowerCase().includes(q) ||
-              p.category.toLowerCase().includes(q)
+              p.category.toLowerCase().includes(q),
           );
         }
 
@@ -116,7 +121,7 @@ export default function ShopPage() {
           // latest
           filtered.sort(
             (a, b) =>
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
           );
         }
 
@@ -125,7 +130,7 @@ export default function ShopPage() {
         }
       } catch (err) {
         console.warn("Shop backend API fallback triggered:", err);
-        if (!cancelled) {
+        if (!cancelled && products.length === 0) {
           setProducts(MOCK_PRODUCTS);
         }
       } finally {
@@ -140,7 +145,15 @@ export default function ShopPage() {
     return () => {
       cancelled = true;
     };
-  }, [API_URL, search, selectedCategory, minPrice, maxPrice, minRating, sortBy]);
+  }, [
+    API_URL,
+    search,
+    selectedCategory,
+    minPrice,
+    maxPrice,
+    minRating,
+    sortBy,
+  ]);
 
   const clearFilters = () => {
     setSearch("");
@@ -165,11 +178,13 @@ export default function ShopPage() {
   const totalPages = Math.ceil(products.length / PRODUCTS_PER_PAGE);
   const paginatedProducts = products.slice(
     (currentPage - 1) * PRODUCTS_PER_PAGE,
-    currentPage * PRODUCTS_PER_PAGE
+    currentPage * PRODUCTS_PER_PAGE,
   );
 
+  console.log(paginatedProducts);
+
   return (
-    <main className="min-h-screen bg-[#fcfdfd] py-10 md:py-16">
+    <main className="min-h-screen bg-[#fcfdfd] py-10 md:py-16 md:mt-10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header & Controls Bar */}
         <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -178,7 +193,8 @@ export default function ShopPage() {
               All Products & Deals
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Explore our curated electronics catalog with instant price filters.
+              Explore our curated electronics catalog with instant price
+              filters.
             </p>
           </div>
 
@@ -361,7 +377,7 @@ export default function ShopPage() {
                           className="relative h-56 bg-slate-50 flex items-center justify-center p-4 overflow-hidden"
                         >
                           <Image
-                            src={product.images[0] || "/assets/product/product_3_2.png"}
+                            src={product.images?.[0] || "/placeholder.svg"}
                             alt={product.name}
                             fill
                             sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
@@ -396,9 +412,12 @@ export default function ShopPage() {
                           {/* Price and Cart Button */}
                           <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
                             <div>
-                              <span className="text-lg font-black text-slate-900">
-                                ${(product.flashSalePrice || product.price).toFixed(2)}
-                              </span>
+                              {/* <span className="text-lg font-black text-slate-900">
+                                $
+                                {(
+                                  product.flashSalePrice || product.price
+                                ).toFixed(2)}
+                              </span> */}
                               {product.discount && (
                                 <span className="text-xs text-slate-400 line-through block">
                                   ${product.price.toFixed(2)}

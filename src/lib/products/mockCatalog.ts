@@ -3,7 +3,7 @@ export interface CatalogProduct {
   name: string;
   slug: string;
   description: string;
-  images: string[];
+  images?: string[];
   price: number;
   discount?: number;
   stock: number;
@@ -24,8 +24,9 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     _id: "prod-1",
     name: "Samsung Galaxy Watch6 Aluminum Smart Watch",
     slug: "samsung-galaxy-watch6",
-    description: "Advanced sleep coaching, ECG monitoring, personalized HR zones, and sapphire crystal glass display.",
-    images: ["/assets/product/product_3_2.png"],
+    description:
+      "Advanced sleep coaching, ECG monitoring, personalized HR zones, and sapphire crystal glass display.",
+    images: ["/placeholder.svg"],
     price: 289.99,
     discount: 15,
     stock: 45,
@@ -43,8 +44,9 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     _id: "prod-2",
     name: "Beat True Wireless Noise Cancelling Earbuds",
     slug: "beat-true-wireless-earbuds",
-    description: "Custom acoustic platform delivers rich, immersive sound. Active noise cancelling and transparency mode.",
-    images: ["/assets/product/product_3_3.png"],
+    description:
+      "Custom acoustic platform delivers rich, immersive sound. Active noise cancelling and transparency mode.",
+    images: ["/placeholder.svg"],
     price: 189.99,
     discount: 20,
     stock: 60,
@@ -62,8 +64,9 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     _id: "prod-3",
     name: "Ultra HD 4K Action Camera Waterproof",
     slug: "ultra-hd-4k-action-camera",
-    description: "Capture stunning 4K video at 60fps with advanced electronic image stabilization and waterproof casing.",
-    images: ["/assets/product/product_3_4.png"],
+    description:
+      "Capture stunning 4K video at 60fps with advanced electronic image stabilization and waterproof casing.",
+    images: ["/placeholder.svg"],
     price: 129.99,
     discount: 10,
     stock: 25,
@@ -80,8 +83,9 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     _id: "prod-4",
     name: "Ergonomic Mechanical Gaming Keyboard RGB",
     slug: "ergonomic-mechanical-gaming-keyboard",
-    description: "Linear red switches, customizable per-key RGB backlighting, aircraft-grade aluminum frame.",
-    images: ["/assets/product/product_3_5.png"],
+    description:
+      "Linear red switches, customizable per-key RGB backlighting, aircraft-grade aluminum frame.",
+    images: ["/placeholder.svg"],
     price: 89.99,
     discount: 0,
     stock: 80,
@@ -98,8 +102,9 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     _id: "prod-5",
     name: "Precision Optical Wireless Gaming Mouse",
     slug: "precision-optical-wireless-mouse",
-    description: "Ultra-lightweight 58g chassis, 26K DPI optical sensor, zero latency wireless connectivity.",
-    images: ["/assets/product/product_3_6.png"],
+    description:
+      "Ultra-lightweight 58g chassis, 26K DPI optical sensor, zero latency wireless connectivity.",
+    images: ["/placeholder.svg"],
     price: 69.99,
     discount: 12,
     stock: 50,
@@ -117,8 +122,9 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     _id: "prod-6",
     name: "Portable Bluetooth 360 Speaker Waterproof",
     slug: "portable-bluetooth-360-speaker",
-    description: "Bold 360-degree sound with deep bass. IP67 waterproof and dustproof with up to 15 hours battery.",
-    images: ["/assets/product/product_3_1.png"],
+    description:
+      "Bold 360-degree sound with deep bass. IP67 waterproof and dustproof with up to 15 hours battery.",
+    images: ["/placeholder.svg"],
     price: 119.99,
     discount: 25,
     stock: 35,
@@ -136,8 +142,9 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     _id: "prod-7",
     name: "Fast Charging 20000mAh Power Bank PD 65W",
     slug: "fast-charging-20000mah-power-bank",
-    description: "High-power 65W USB-C output suitable for laptops, tablets, and fast smartphone replenishment.",
-    images: ["/assets/product/product_3_2.png"],
+    description:
+      "High-power 65W USB-C output suitable for laptops, tablets, and fast smartphone replenishment.",
+    images: ["/placeholder.svg"],
     price: 49.99,
     discount: 0,
     stock: 120,
@@ -154,8 +161,9 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     _id: "prod-8",
     name: "Smart Fitness Tracker Band with Heart Rate Monitor",
     slug: "smart-fitness-tracker-band",
-    description: "OLED color touch display, 24/7 continuous health tracking, 14-day battery life, 5ATM water resistance.",
-    images: ["/assets/product/product_3_3.png"],
+    description:
+      "OLED color touch display, 24/7 continuous health tracking, 14-day battery life, 5ATM water resistance.",
+    images: ["/placeholder.svg"],
     price: 39.99,
     discount: 15,
     stock: 90,

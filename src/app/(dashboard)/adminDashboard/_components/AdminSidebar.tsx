@@ -19,27 +19,37 @@ import {
 const NAV_ITEMS = [
   {
     label: 'Overview',
-    href: '/admin/',
+    href: '/adminDashboard',
     icon: LayoutDashboard,
   },
   {
     label: 'Products',
-    href: '/admin/products',
+    href: '/adminDashboard/products',
     icon: Package,
   },
   {
     label: 'Orders',
-    href: '/admin/orders',
+    href: '/adminDashboard/orders',
+    icon: ShoppingCart,
+  },
+  {
+    label: 'Add Product',
+    href: '/adminDashboard/addProduct',
     icon: ShoppingCart,
   },
   {
     label: 'Users & Sellers',
-    href: '/admin/users',
+    href: '/adminDashboard/users',
     icon: Users,
   },
   {
+    label: 'Verify Shops',
+    href: '/adminDashboard/verify-shops',
+    icon: ShieldCheck,
+  },
+  {
     label: 'Settings',
-    href: '/admin/settings',
+    href: '/adminDashboard/settings',
     icon: Settings,
   },
 ];
@@ -52,7 +62,7 @@ export default function AdminSidebar() {
       
       {/* Brand Header */}
       <div className="flex h-16 items-center border-b border-zinc-800/80 px-6">
-        <Link href="/admin" className="flex items-center gap-3 group">
+        <Link href="/adminDashboard" className="flex items-center gap-3 group">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-600 to-emerald-400 text-zinc-950 shadow-md shadow-emerald-500/20 transition-transform duration-300 group-hover:scale-105">
             <Store className="h-5 w-5" />
           </div>
@@ -83,8 +93,8 @@ export default function AdminSidebar() {
           <nav className="space-y-1">
             {NAV_ITEMS.map((item) => {
               const isActive =
-                item.href === '/admin'
-                  ? pathname === '/admin'
+                item.href === '/adminDashboard'
+                  ? pathname === '/adminDashboard'
                   : pathname.startsWith(item.href);
 
               const Icon = item.icon;
@@ -147,7 +157,7 @@ export default function AdminSidebar() {
       {/* Footer Controls */}
       <div className="border-t border-zinc-800/80 p-4 space-y-3">
         <Link
-          href="/dashboard"
+          href="/userDashboard"
           className="group flex items-center gap-3 rounded-xl border border-zinc-800/80 bg-zinc-900/50 px-3.5 py-2.5 text-xs font-semibold text-zinc-400 transition-all hover:border-zinc-700 hover:bg-zinc-900 hover:text-zinc-200"
         >
           <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />

@@ -114,7 +114,7 @@ export default function CartPage() {
                         className="relative h-20 w-20 sm:h-24 sm:w-24 shrink-0 rounded-xl bg-slate-50 border border-slate-100 overflow-hidden flex items-center justify-center p-2"
                       >
                         <Image
-                          src={item.image || "/assets/product/product_3_2.png"}
+                          src={item.image || "/placeholder.svg"}
                           alt={item.name}
                           fill
                           sizes="96px"

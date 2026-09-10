@@ -8,10 +8,12 @@ import AuthFormShell from "@/components/auth/auth-form-shell";
 import {
   ErrorBanner,
   Field,
+  PasswordInput,
   PrimaryButton,
   TextInput,
 } from "@/components/auth/fields";
-const ADMIN_EMAIL = "fhlimon36@gmail.com";
+import { GoogleButton } from "@/components/auth/google-button";
+
 export default function RegisterPage() {
   const router = useRouter();
 
@@ -21,7 +23,22 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
+
+  async function handleGoogleSignIn() {
+    setError("");
+    setGoogleLoading(true);
+    try {
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      });
+    } catch {
+      setGoogleLoading(false);
+      setError("Unable to sign in with Google. Please try again.");
+    }
+  }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -51,6 +68,7 @@ export default function RegisterPage() {
         email,
         password,
         callbackURL: "/",
+        role: "user",
       });
       console.log(data, error);
 
@@ -73,57 +91,76 @@ export default function RegisterPage() {
   }
 
   return (
-    <AuthFormShell
-      eyebrow="Get started"
-      headline="Build your next deal with a clear head."
-      body="VenRaz keeps every relationship, term sheet, and follow-up in one calm, organized place."
-      title="Create your account"
-      subtitle="Join VenRaz and get set up in a couple of minutes."
-      footer={
-        <p className="text-sm text-[#6B7268]">
-          Already have an account?{" "}
-          <Link
-            href="/login"
-            className="font-semibold text-[#0E1B1B] hover:text-[#C08A3E]"
+    <div className="md:mt-10">
+      <AuthFormShell
+        eyebrow="Get started"
+        headline="Build your next deal with a clear head."
+        body="VenRaz keeps every relationship, term sheet, and follow-up in one calm, organized place."
+        title="Create your account"
+        subtitle="Join VenRaz and get set up in a couple of minutes."
+        footer={
+          <p className="text-sm text-[#6B7268]">
+            Already have an account?{" "}
+            <Link
+              href="/login"
+              className="font-semibold text-[#0E1B1B] hover:text-[#C08A3E]"
+            >
+              Sign in
+            </Link>
+          </p>
+        }
+      >
+        {error && <ErrorBanner message={error} />}
+
+        <div className="space-y-3 ">
+          <GoogleButton
+            loading={googleLoading}
+            loadingText="Signing up with Google…"
+            onClick={handleGoogleSignIn}
           >
-            Sign in
-          </Link>
-        </p>
-      }
-    >
-      {error && <ErrorBanner message={error} />}
+            Continue with Google
+          </GoogleButton>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
-          <Field label="Full name" htmlFor="name" />
-          <TextInput
-            id="name"
-            type="text"
-            autoComplete="name"
-            required
-            minLength={2}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="John Doe"
-          />
+          <div className="flex items-center gap-3 py-1">
+            <span className="h-px flex-1 bg-[#E4E1D8]" />
+            <span className="text-xs font-medium uppercase tracking-wide text-[#9A9488]">
+              or
+            </span>
+            <span className="h-px flex-1 bg-[#E4E1D8]" />
+          </div>
         </div>
 
-        <div>
-          <Field label="Email address" htmlFor="email" />
-          <TextInput
-            id="email"
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-          />
-        </div>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <Field label="Full name" htmlFor="name" />
+            <TextInput
+              id="name"
+              type="text"
+              autoComplete="name"
+              required
+              minLength={2}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="John Doe"
+            />
+          </div>
 
-        <div>
-          <Field label="Password" htmlFor="password" />
-          <TextInput
+          <div>
+            <Field label="Email address" htmlFor="email" />
+            <TextInput
+              id="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+            />
+          </div>
+
+          <div>
+            <Field label="Password" htmlFor="password" />
+<PasswordInput
             id="password"
             type="password"
             autoComplete="new-password"
@@ -134,14 +171,14 @@ export default function RegisterPage() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Minimum 8 characters"
           />
-          <p className="mt-2 text-xs text-[#9A9488]">
-            Use at least 8 characters.
-          </p>
-        </div>
+            <p className="mt-2 text-xs text-[#9A9488]">
+              Use at least 8 characters.
+            </p>
+          </div>
 
-        <div>
-          <Field label="Confirm password" htmlFor="confirmPassword" />
-          <TextInput
+          <div>
+            <Field label="Confirm password" htmlFor="confirmPassword" />
+<PasswordInput
             id="confirmPassword"
             type="password"
             autoComplete="new-password"
@@ -150,41 +187,42 @@ export default function RegisterPage() {
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Re-enter your password"
           />
-        </div>
+          </div>
 
-        <label className="flex items-start gap-3">
-          <input
-            type="checkbox"
-            required
-            className="mt-1 h-4 w-4 rounded border-[#DEDACE] text-[#0E1B1B] focus:ring-[#C08A3E]"
-          />
-          <span className="text-xs leading-5 text-[#6B7268]">
-            I agree to the VenRaz{" "}
-            <Link
-              href="/terms"
-              className="font-medium text-[#0E1B1B] hover:text-[#C08A3E]"
-            >
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link
-              href="/privacy"
-              className="font-medium text-[#0E1B1B] hover:text-[#C08A3E]"
-            >
-              Privacy Policy
-            </Link>
-            .
-          </span>
-        </label>
+          <label className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              required
+              className="mt-1 h-4 w-4 rounded border-[#DEDACE] text-[#0E1B1B] focus:ring-[#C08A3E]"
+            />
+            <span className="text-xs leading-5 text-[#6B7268]">
+              I agree to the VenRaz{" "}
+              <Link
+                href="/terms"
+                className="font-medium text-[#0E1B1B] hover:text-[#C08A3E]"
+              >
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="/privacy"
+                className="font-medium text-[#0E1B1B] hover:text-[#C08A3E]"
+              >
+                Privacy Policy
+              </Link>
+              .
+            </span>
+          </label>
 
-        <PrimaryButton
-          type="submit"
-          loading={loading}
-          loadingText="Creating account…"
-        >
-          Create account
-        </PrimaryButton>
-      </form>
-    </AuthFormShell>
+          <PrimaryButton
+            type="submit"
+            loading={loading}
+            loadingText="Creating account…"
+          >
+            Create account
+          </PrimaryButton>
+        </form>
+      </AuthFormShell>
+    </div>
   );
 }

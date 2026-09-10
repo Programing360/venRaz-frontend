@@ -19,6 +19,20 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+    },
+  },
+  user: {
+    additionalFields: {
+      role: {
+        type: "string",
+        default: "user",
+      },
+    },
+  },
 
   // Server-side hook to automatically set the user role on creation
   databaseHooks: {
@@ -31,7 +45,7 @@ export const auth = betterAuth({
           return {
             data: {
               ...user,
-              role: isAdmin ? "admin" : "customer",
+              role: isAdmin ? "admin" : "user",
             },
           };
         },

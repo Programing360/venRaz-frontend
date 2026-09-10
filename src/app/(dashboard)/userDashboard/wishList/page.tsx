@@ -20,6 +20,8 @@ const wishlistItems = [
 ];
 
 export default function WishlistPage() {
+
+  
   return (
     <div className="min-h-screen space-y-8 bg-background">
       {/* Header */}

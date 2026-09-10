@@ -64,7 +64,7 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
     onStatusChange?.(newStatus);
   };
 
-  console.log(safeOrders);
+  // console.log(safeOrders);
 
   const [activeTab, setActiveTab] = useState<
     "overview" | "products" | "orders"

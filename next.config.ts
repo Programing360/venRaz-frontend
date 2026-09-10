@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    cpus: 4,
+    memoryBasedWorkersCount: true,
+  },
+  enablePrerenderSourceMaps: false,
   images: {
     remotePatterns: [
       {
@@ -12,6 +17,40 @@ const nextConfig: NextConfig = {
         hostname: "example.com",
       },
     ],
+  },
+  async redirects() {
+    return [
+      {
+        source: "/product",
+        destination: "/products",
+        permanent: true,
+      },
+      {
+        source: "/product/:path*",
+        destination: "/products/:path*",
+        permanent: true,
+      },
+      {
+        source: "/dashboard/admin",
+        destination: "/adminDashboard",
+        permanent: true,
+      },
+      {
+        source: "/dashboard/adminPanel/:path*",
+        destination: "/adminDashboard",
+        permanent: true,
+      },
+      {
+        source: "/dashboard/:path*",
+        destination: "/userDashboard/:path*",
+        permanent: true,
+      },
+      {
+        source: "/dashboard",
+        destination: "/userDashboard",
+        permanent: true,
+      },
+    ];
   },
 };
 

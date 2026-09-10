@@ -104,7 +104,7 @@ export default function CheckoutPage() {
         try {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 2000);
-          await fetch(`${API_URL}/api/v1/orders`, {
+          await fetch(`${API_URL}/orders`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(orderPayload),
@@ -441,7 +441,7 @@ export default function CheckoutPage() {
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="relative w-12 h-12 rounded-lg bg-slate-50 border border-slate-100 shrink-0 overflow-hidden flex items-center justify-center p-1">
                         <Image
-                          src={item.image || "/assets/product/product_3_2.png"}
+                          src={item.image || "/placeholder.svg"}
                           alt={item.name}
                           fill
                           sizes="48px"

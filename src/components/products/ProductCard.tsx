@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ShoppingBag, Star, Check } from "lucide-react";
 import { useCart } from "@/context/CartContext";
-
+// import img from '../../../public/assets/collection_1_4.jpg'
 export interface Product {
   _id: string;
   name: string;
@@ -30,8 +30,8 @@ interface ProductCardProps {
 const ProductCard = ({ product }: ProductCardProps) => {
   const { addToCart } = useCart();
   const [added, setAdded] = React.useState(false);
-
-  const image = product.images?.[0] || "/assets/product/product_3_2.png";
+  // console.log(product);
+  const image = product.images?.[0] || "/placeholder.svg";
 
   const hasDiscount =
     typeof product.discount === "number" && product.discount > 0;

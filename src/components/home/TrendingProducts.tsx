@@ -44,8 +44,7 @@ type ApiResponse = {
    FALLBACK IMAGE
    ========================================================= */
 
-const FALLBACK_IMAGE =
-  "/assets/product/product_2_1.png";
+const FALLBACK_IMAGE = "/placeholder.svg";
 
 /* =========================================================
    IMAGE HELPER
@@ -305,7 +304,7 @@ export default function TrendingProducts() {
           }
 
           const response = await fetch(
-            `${apiUrl}/api/v1/products/home-sections`,
+            `${apiUrl}/products/home-sections`,
             {
               method: "GET",
               headers: {

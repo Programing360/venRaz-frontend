@@ -44,7 +44,7 @@ export default function OrderDetailsPage({
     <div className="min-h-screen space-y-7 bg-background">
       {/* Back */}
       <Link
-        href="/dashboard/orders"
+        href="/userDashboard/orders"
         className="group inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
       >
         <span className="flex h-8 w-8 items-center justify-center rounded-full border bg-card transition-all group-hover:-translate-x-1 group-hover:border-primary/40 group-hover:text-primary">

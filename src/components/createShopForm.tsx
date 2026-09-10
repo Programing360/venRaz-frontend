@@ -15,10 +15,13 @@ import {
   Layers, 
   FileText, 
   Check, 
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { PRESET_BANNERS, PRESET_LOGOS, SHOP_CATEGORIES } from '@/data/mockdata';
+import { verifyShop, VerificationResult } from '@/services/shopVerification';
+import VerificationResultModal from './verificationResultModal';
 
 interface CreateShopFormProps {
   onSaveShop?: (shop: Shop, status: ShopStatus) => void;
@@ -45,6 +48,9 @@ export const CreateShopForm: React.FC<CreateShopFormProps> = ({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -59,43 +65,82 @@ export const CreateShopForm: React.FC<CreateShopFormProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
+  const buildShop = (targetStatus: ShopStatus): Shop => ({
+    id: initialValues?.id || `shp_${Date.now().toString().slice(-6)}`,
+    name: formData.name.trim(),
+    logoUrl: formData.logoUrl.trim() || PRESET_LOGOS[0].url,
+    bannerUrl: formData.bannerUrl.trim() || PRESET_BANNERS[0].url,
+    description: formData.description.trim() || 'No description provided.',
+    category: formData.category,
+    phone: formData.phone.trim() || '+880 1700-000000',
+    address: formData.address.trim() || 'Not specified',
+    status: targetStatus,
+    statusReason: targetStatus === 'Pending'
+      ? 'Application submitted on ' + new Date().toLocaleDateString() + ' — pending administrator review.'
+      : 'Saved as draft.',
+    createdAt: initialValues?.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    sellerName: 'Shamsul Haque',
+    sellerEmail: 'webdevlopershamsul@gmail.com',
+    totalProducts: initialValues?.totalProducts || 0,
+    totalOrders: initialValues?.totalOrders || 0,
+    totalSales: initialValues?.totalSales || 0,
+    rating: initialValues?.rating || 5.0,
+    reviewCount: initialValues?.reviewCount || 0,
+  });
+
+  const handleSubmitForApproval = async () => {
+    if (!validate()) return;
+
+    setIsVerifying(true);
+    try {
+      const result = await verifyShop({
+        shopName: formData.name.trim(),
+        description: formData.description.trim(),
+        address: formData.address.trim(),
+        phone: formData.phone.trim(),
+        logoUrl: formData.logoUrl.trim(),
+        bannerUrl: formData.bannerUrl.trim(),
+        ownerName: 'Shamsul Haque',
+      });
+      setVerificationResult(result);
+      setShowVerificationModal(true);
+    } catch {
+      // Fallback: submit directly if verification API is unreachable
+      const shop = buildShop('Pending');
+      onSaveShop?.(shop, 'Pending');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleAcceptVerification = () => {
+    const targetStatus = verificationResult?.status === 'rejected' ? 'Draft' : 'Pending';
+    const shop = buildShop(targetStatus);
+    setShowVerificationModal(false);
+    setVerificationResult(null);
+    onSaveShop?.(shop, targetStatus);
+  };
+
+  const handleEditFromVerification = () => {
+    setShowVerificationModal(false);
+    setVerificationResult(null);
+  };
+
   const handleSubmit = (targetStatus: ShopStatus) => {
     if (targetStatus === 'Pending') {
-      if (!validate()) return;
-    } else {
-      // Draft requires at least a shop name
-      if (!formData.name.trim()) {
-        setErrors({ name: 'Please enter a shop name to save as draft' });
-        return;
-      }
+      handleSubmitForApproval();
+      return;
+    }
+
+    // Draft requires at least a shop name
+    if (!formData.name.trim()) {
+      setErrors({ name: 'Please enter a shop name to save as draft' });
+      return;
     }
 
     setIsSubmitting(true);
-
-    const newShop: Shop = {
-      id: initialValues?.id || `shp_${Date.now().toString().slice(-6)}`,
-      name: formData.name.trim(),
-      logoUrl: formData.logoUrl.trim() || PRESET_LOGOS[0].url,
-      bannerUrl: formData.bannerUrl.trim() || PRESET_BANNERS[0].url,
-      description: formData.description.trim() || 'No description provided.',
-      category: formData.category,
-      phone: formData.phone.trim() || '+880 1700-000000',
-      address: formData.address.trim() || 'Not specified',
-      status: targetStatus,
-      statusReason: targetStatus === 'Pending' 
-        ? 'Application submitted on ' + new Date().toLocaleDateString() + ' — pending administrator review.'
-        : 'Saved as draft.',
-      createdAt: initialValues?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      sellerName: 'Shamsul Haque',
-      sellerEmail: 'webdevlopershamsul@gmail.com',
-      totalProducts: initialValues?.totalProducts || 0,
-      totalOrders: initialValues?.totalOrders || 0,
-      totalSales: initialValues?.totalSales || 0,
-      rating: initialValues?.rating || 5.0,
-      reviewCount: initialValues?.reviewCount || 0,
-    };
-
+    const newShop = buildShop(targetStatus);
     setTimeout(() => {
       onSaveShop?.(newShop, targetStatus);
       setIsSubmitting(false);
@@ -426,16 +471,33 @@ export const CreateShopForm: React.FC<CreateShopFormProps> = ({
             <button
               type="button"
               id="submit-shop-btn"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isVerifying}
               onClick={() => handleSubmit('Pending')}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20 transition-all hover:scale-[1.01]"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20 transition-all hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Send size={15} />
-              <span>Submit for Approval</span>
+              {isVerifying ? (
+                <>
+                  <Loader2 size={15} className="animate-spin" />
+                  <span>Verifying...</span>
+                </>
+              ) : (
+                <>
+                  <Send size={15} />
+                  <span>Submit for Approval</span>
+                </>
+              )}
             </button>
           </div>
         </div>
       </div>
+
+      <VerificationResultModal
+        result={verificationResult}
+        isOpen={showVerificationModal}
+        onClose={handleEditFromVerification}
+        onAccept={handleAcceptVerification}
+        onEdit={handleEditFromVerification}
+      />
     </motion.div>
   );
 };

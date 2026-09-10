@@ -51,7 +51,7 @@ type ApiResponse = {
    FALLBACK IMAGE
    ========================================================= */
 
-const FALLBACK_IMAGE = "/assets/product/product_3_2.png";
+const FALLBACK_IMAGE = "/placeholder.svg";
 
 /* =========================================================
    PRODUCT IMAGE HELPER
@@ -97,21 +97,13 @@ function getCountdown() {
   }
 
   return {
-    days: Math.floor(
-      difference / (1000 * 60 * 60 * 24)
-    ),
+    days: Math.floor(difference / (1000 * 60 * 60 * 24)),
 
-    hours: Math.floor(
-      (difference / (1000 * 60 * 60)) % 24
-    ),
+    hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
 
-    minutes: Math.floor(
-      (difference / (1000 * 60)) % 60
-    ),
+    minutes: Math.floor((difference / (1000 * 60)) % 60),
 
-    seconds: Math.floor(
-      (difference / 1000) % 60
-    ),
+    seconds: Math.floor((difference / 1000) % 60),
   };
 }
 
@@ -119,15 +111,8 @@ function getCountdown() {
    OLD PRICE
    ========================================================= */
 
-function getOldPrice(
-  price: number,
-  discount?: number
-) {
-  if (
-    !discount ||
-    discount <= 0 ||
-    discount >= 100
-  ) {
+function getOldPrice(price: number, discount?: number) {
+  if (!discount || discount <= 0 || discount >= 100) {
     return price;
   }
 
@@ -141,10 +126,8 @@ function getOldPrice(
 function getRatingStars(rating = 0) {
   const roundedRating = Math.round(rating);
 
-  return Array.from(
-    { length: 5 },
-    (_, index) =>
-      index < roundedRating ? "★" : "☆"
+  return Array.from({ length: 5 }, (_, index) =>
+    index < roundedRating ? "★" : "☆",
   );
 }
 
@@ -152,47 +135,32 @@ function getRatingStars(rating = 0) {
    PRODUCT CARD
    ========================================================= */
 
-function ProductCard({
-  product,
-}: {
-  product: Product;
-}) {
+function ProductCard({ product }: { product: Product }) {
   const rating = Number(product.rating ?? 0);
 
   const stock = Number(product.stock ?? 0);
 
   const price = Number(product.price ?? 0);
 
-  const oldPrice = getOldPrice(
-    price,
-    product.discount
-  );
+  const oldPrice = getOldPrice(price, product.discount);
 
-  const image = getProductImage(
-    product.images
-  );
+  const image = getProductImage(product.images);
 
   return (
     <div className="group relative h-full overflow-hidden rounded-lg border border-[#dce5ee] bg-transparent">
-
       {/* =================================================
           IMAGE
           ================================================= */}
 
       <div className="relative mx-2 mt-2 flex h-[243px] items-center justify-center overflow-hidden rounded-lg bg-[#e3ebf4]">
-
         <Image
           src={image}
-          alt={
-            product.name ||
-            "Product image"
-          }
+          alt={product.name || "Product image"}
           width={230}
           height={230}
           className="h-[190px] w-[230px] object-contain transition-transform duration-300 group-hover:scale-105"
           unoptimized={
-            image.startsWith("http://") ||
-            image.startsWith("https://")
+            image.startsWith("http://") || image.startsWith("https://")
           }
         />
 
@@ -200,19 +168,17 @@ function ProductCard({
             DISCOUNT
             ================================================= */}
 
-        {product.discount !== undefined &&
-          product.discount > 0 && (
-            <span className="absolute left-0 top-0 rounded-br-[16px] rounded-tl-[7px] bg-[#ed2939] px-3 py-1 text-[14px] font-bold text-white">
-              -{product.discount}%
-            </span>
-          )}
+        {product.discount !== undefined && product.discount > 0 && (
+          <span className="absolute left-0 top-0 rounded-br-[16px] rounded-tl-[7px] bg-[#ed2939] px-3 py-1 text-[14px] font-bold text-white">
+            -{product.discount}%
+          </span>
+        )}
 
         {/* =================================================
             ACTIONS
             ================================================= */}
 
         <div className="absolute right-3 top-3 flex translate-x-10 flex-col gap-2 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
-
           {/* Wishlist */}
 
           <Link
@@ -242,7 +208,6 @@ function ProductCard({
           >
             <Eye size={17} />
           </button>
-
         </div>
       </div>
 
@@ -251,18 +216,15 @@ function ProductCard({
           ================================================= */}
 
       <div className="flex min-h-[255px] flex-col px-6 pb-6 pt-5">
-
         {/* Product Name */}
 
         <h3 className="min-h-[52px] text-[16px] font-semibold leading-[1.45] text-[#111]">
-
           <Link
             href={`/shop-details/${product._id}`}
             className="transition-colors hover:text-[#ed2939]"
           >
             {product.name}
           </Link>
-
         </h3>
 
         {/* =================================================
@@ -270,24 +232,16 @@ function ProductCard({
             ================================================= */}
 
         <div className="mt-2 flex items-center gap-5">
-
           <div
             className="flex gap-[1px] text-[19px] leading-none text-[#ff594d]"
             aria-label={`Rated ${rating} out of 5`}
           >
-            {getRatingStars(rating).map(
-              (star, index) => (
-                <span key={index}>
-                  {star}
-                </span>
-              )
-            )}
+            {getRatingStars(rating).map((star, index) => (
+              <span key={index}>{star}</span>
+            ))}
           </div>
 
-          <span className="text-[13px] text-[#999]">
-            ({rating})
-          </span>
-
+          <span className="text-[13px] text-[#999]">({rating})</span>
         </div>
 
         {/* =================================================
@@ -295,18 +249,15 @@ function ProductCard({
             ================================================= */}
 
         <div className="mt-3 flex items-center gap-2">
-
           <span className="text-[17px] font-bold text-[#111]">
             ${price.toFixed(2)}
           </span>
 
-          {product.discount !== undefined &&
-            product.discount > 0 && (
-              <del className="text-[14px] text-[#999]">
-                ${oldPrice.toFixed(2)}
-              </del>
-            )}
-
+          {product.discount !== undefined && product.discount > 0 && (
+            <del className="text-[14px] text-[#999]">
+              ${oldPrice.toFixed(2)}
+            </del>
+          )}
         </div>
 
         {/* =================================================
@@ -314,35 +265,17 @@ function ProductCard({
             ================================================= */}
 
         <div className="mt-5 flex items-center gap-1.5 text-[13px]">
-
           <Check
             size={15}
             strokeWidth={1.8}
-            className={
-              stock > 0
-                ? "text-[#18b875]"
-                : "text-red-500"
-            }
+            className={stock > 0 ? "text-[#18b875]" : "text-red-500"}
           />
 
-          <span
-            className={
-              stock > 0
-                ? "text-[#18b875]"
-                : "text-red-500"
-            }
-          >
-            {stock > 0
-              ? "In Stock"
-              : "Out of Stock"}
+          <span className={stock > 0 ? "text-[#18b875]" : "text-red-500"}>
+            {stock > 0 ? "In Stock" : "Out of Stock"}
           </span>
 
-          {stock > 0 && (
-            <span className="text-[#111]">
-              {stock} Products
-            </span>
-          )}
-
+          {stock > 0 && <span className="text-[#111]">{stock} Products</span>}
         </div>
 
         {/* =================================================
@@ -355,7 +288,6 @@ function ProductCard({
         >
           Add To Cart
         </Link>
-
       </div>
     </div>
   );
@@ -366,146 +298,121 @@ function ProductCard({
    ========================================================= */
 
 export default function FlashSale() {
-
   /* =======================================================
      SWIPER
      ======================================================= */
 
-  const swiperRef =
-    useRef<SwiperType | null>(null);
+  const swiperRef = useRef<SwiperType | null>(null);
 
   /* =======================================================
      STATES
      ======================================================= */
 
-  const [products, setProducts] =
-    useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [error, setError] =
-    useState("");
+  const [error, setError] = useState("");
 
-  const [time, setTime] =
-    useState({
-      days: 0,
-      hours: 0,
-      minutes: 0,
-      seconds: 0,
-    });
+  const [time, setTime] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
 
-  const [mounted, setMounted] =
-    useState(false);
+  const [mounted, setMounted] = useState(false);
 
   /* =======================================================
      FETCH FLASH SALE PRODUCTS
      ======================================================= */
 
   useEffect(() => {
-    const fetchFlashSaleProducts =
-      async () => {
-        try {
-          setLoading(true);
-          setError("");
+    const fetchFlashSaleProducts = async () => {
+      try {
+        setLoading(true);
+        setError("");
 
-          const apiUrl =
-            process.env.NEXT_PUBLIC_API_URL;
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-          if (!apiUrl) {
-            throw new Error(
-              "NEXT_PUBLIC_API_URL is not configured"
-            );
-          }
-
-          const response =
-            await fetch(
-              `${apiUrl}/api/v1/products/home-sections`,
-              {
-                method: "GET",
-                headers: {
-                  Accept:
-                    "application/json",
-                },
-                cache: "no-store",
-              }
-            );
-
-          if (!response.ok) {
-            throw new Error(
-              `Failed to fetch products: ${response.status}`
-            );
-          }
-
-          const result: ApiResponse =
-            await response.json();
-
-          if (!result.success) {
-            throw new Error(
-              result.message ||
-                "Failed to load flash sale products"
-            );
-          }
-
-          const flashSaleProducts =
-            result.data?.flashSale ?? [];
-
-          setProducts(
-            flashSaleProducts
-          );
-
-        } catch (error) {
-          console.warn(
-            "Flash Sale API offline, using fallback catalog:",
-            error
-          );
-
-          // Graceful fallback to rich mock data
-          setProducts([
-            {
-              _id: "prod-1",
-              name: "Samsung Galaxy Watch6 Aluminum Smart Watch",
-              images: ["/assets/product/product_3_2.png"],
-              price: 289.99,
-              discount: 15,
-              rating: 4.8,
-              stock: 45,
-            },
-            {
-              _id: "prod-2",
-              name: "Beat True Wireless Noise Cancelling Earbuds",
-              images: ["/assets/product/product_3_3.png"],
-              price: 189.99,
-              discount: 20,
-              rating: 4.7,
-              stock: 60,
-            },
-            {
-              _id: "prod-5",
-              name: "Precision Optical Wireless Gaming Mouse",
-              images: ["/assets/product/product_3_6.png"],
-              price: 69.99,
-              discount: 12,
-              rating: 4.6,
-              stock: 50,
-            },
-            {
-              _id: "prod-6",
-              name: "Portable Bluetooth 360 Speaker Waterproof",
-              images: ["/assets/product/product_3_1.png"],
-              price: 119.99,
-              discount: 25,
-              rating: 4.8,
-              stock: 35,
-            },
-          ]);
-
-          setError("");
-
-        } finally {
-          setLoading(false);
+        if (!apiUrl) {
+          throw new Error("NEXT_PUBLIC_API_URL is not configured");
         }
-      };
+
+        const response = await fetch(
+          `${apiUrl}/products/home-sections`,
+          {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+            },
+            cache: "no-store",
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch products: ${response.status}`);
+        }
+
+        const result: ApiResponse = await response.json();
+
+        if (!result.success) {
+          throw new Error(
+            result.message || "Failed to load flash sale products",
+          );
+        }
+
+        const flashSaleProducts = result.data?.flashSale ?? [];
+
+        setProducts(flashSaleProducts);
+      } catch (error) {
+        console.warn("Flash Sale API offline, using fallback catalog:", error);
+
+        // Graceful fallback to rich mock data
+        setProducts([
+          {
+            _id: "prod-1",
+            name: "Samsung Galaxy Watch6 Aluminum Smart Watch",
+            images: ["/placeholder.svg"],
+            price: 289.99,
+            discount: 15,
+            rating: 4.8,
+            stock: 45,
+          },
+          {
+            _id: "prod-2",
+            name: "Beat True Wireless Noise Cancelling Earbuds",
+            images: ["/placeholder.svg"],
+            price: 189.99,
+            discount: 20,
+            rating: 4.7,
+            stock: 60,
+          },
+          {
+            _id: "prod-5",
+            name: "Precision Optical Wireless Gaming Mouse",
+            images: ["/placeholder.svg"],
+            price: 69.99,
+            discount: 12,
+            rating: 4.6,
+            stock: 50,
+          },
+          {
+            _id: "prod-6",
+            name: "Portable Bluetooth 360 Speaker Waterproof",
+            images: ["/placeholder.svg"],
+            price: 119.99,
+            discount: 25,
+            rating: 4.8,
+            stock: 35,
+          },
+        ]);
+
+        setError("");
+      } finally {
+        setLoading(false);
+      }
+    };
 
     fetchFlashSaleProducts();
   }, []);
@@ -520,10 +427,9 @@ export default function FlashSale() {
       setTime(getCountdown());
     }, 0);
 
-    const interval =
-      window.setInterval(() => {
-        setTime(getCountdown());
-      }, 1000);
+    const interval = window.setInterval(() => {
+      setTime(getCountdown());
+    }, 1000);
 
     return () => {
       clearTimeout(timer);
@@ -537,21 +443,17 @@ export default function FlashSale() {
 
   return (
     <section className="overflow-hidden bg-[#f7faff] py-[60px] md:py-[70px]">
-
       <div className="mx-auto w-full max-w-[1860px] px-5 lg:px-8">
-
         {/* =================================================
             HEADER
             ================================================= */}
 
         <div className="mb-8 flex flex-col justify-between gap-7 xl:flex-row xl:items-center">
-
           {/* =================================================
               TITLE
               ================================================= */}
 
           <div>
-
             <h2 className="text-[30px] font-bold leading-none text-[#111] sm:text-[34px] md:text-[38px]">
               Flash Sale Today
             </h2>
@@ -559,11 +461,8 @@ export default function FlashSale() {
             {/* Underline */}
 
             <div className="relative mt-5 h-[2px] w-[250px] bg-[#dce5ee] sm:w-[308px]">
-
               <span className="absolute left-0 top-0 h-[2px] w-[150px] bg-[#ff594d] sm:w-[172px]" />
-
             </div>
-
           </div>
 
           {/* =================================================
@@ -571,11 +470,9 @@ export default function FlashSale() {
               ================================================= */}
 
           <div className="flex flex-wrap items-center gap-3">
-
             {/* Fire + Text */}
 
             <div className="flex items-center gap-2 sm:gap-3">
-
               <Flame
                 size={27}
                 strokeWidth={2.5}
@@ -585,7 +482,6 @@ export default function FlashSale() {
               <span className="text-[15px] font-semibold text-[#ed2939] sm:text-[18px]">
                 Hurry up! Sale end in:
               </span>
-
             </div>
 
             {/* =================================================
@@ -593,20 +489,11 @@ export default function FlashSale() {
                 ================================================= */}
 
             <div className="flex h-[52px] w-[57px] flex-col items-center justify-center rounded-lg bg-[#ed2939] text-white">
-
               <span className="text-[17px] font-bold leading-none">
-                {mounted
-                  ? String(time.days).padStart(
-                      2,
-                      "0"
-                    )
-                  : "00"}
+                {mounted ? String(time.days).padStart(2, "0") : "00"}
               </span>
 
-              <span className="mt-1 text-[12px]">
-                Days
-              </span>
-
+              <span className="mt-1 text-[12px]">Days</span>
             </div>
 
             {/* =================================================
@@ -614,20 +501,11 @@ export default function FlashSale() {
                 ================================================= */}
 
             <div className="flex h-[52px] w-[57px] flex-col items-center justify-center rounded-lg bg-[#ed2939] text-white">
-
               <span className="text-[17px] font-bold leading-none">
-                {mounted
-                  ? String(time.hours).padStart(
-                      2,
-                      "0"
-                    )
-                  : "00"}
+                {mounted ? String(time.hours).padStart(2, "0") : "00"}
               </span>
 
-              <span className="mt-1 text-[12px]">
-                Hours
-              </span>
-
+              <span className="mt-1 text-[12px]">Hours</span>
             </div>
 
             {/* =================================================
@@ -635,19 +513,11 @@ export default function FlashSale() {
                 ================================================= */}
 
             <div className="flex h-[52px] w-[57px] flex-col items-center justify-center rounded-lg bg-[#ed2939] text-white">
-
               <span className="text-[17px] font-bold leading-none">
-                {mounted
-                  ? String(
-                      time.minutes
-                    ).padStart(2, "0")
-                  : "00"}
+                {mounted ? String(time.minutes).padStart(2, "0") : "00"}
               </span>
 
-              <span className="mt-1 text-[12px]">
-                Mins
-              </span>
-
+              <span className="mt-1 text-[12px]">Mins</span>
             </div>
 
             {/* =================================================
@@ -655,19 +525,11 @@ export default function FlashSale() {
                 ================================================= */}
 
             <div className="flex h-[52px] w-[57px] flex-col items-center justify-center rounded-lg bg-[#ed2939] text-white">
-
               <span className="text-[17px] font-bold leading-none">
-                {mounted
-                  ? String(
-                      time.seconds
-                    ).padStart(2, "0")
-                  : "00"}
+                {mounted ? String(time.seconds).padStart(2, "0") : "00"}
               </span>
 
-              <span className="mt-1 text-[12px]">
-                Secs
-              </span>
-
+              <span className="mt-1 text-[12px]">Secs</span>
             </div>
 
             {/* =================================================
@@ -680,7 +542,6 @@ export default function FlashSale() {
             >
               Explore All
             </Link>
-
           </div>
         </div>
 
@@ -690,11 +551,9 @@ export default function FlashSale() {
 
         {loading && (
           <div className="flex min-h-[400px] items-center justify-center">
-
             <p className="text-lg text-gray-500">
               Loading flash sale products...
             </p>
-
           </div>
         )}
 
@@ -704,25 +563,17 @@ export default function FlashSale() {
 
         {!loading && error && (
           <div className="flex min-h-[400px] items-center justify-center">
-
             <div className="text-center">
-
-              <p className="text-lg text-red-500">
-                {error}
-              </p>
+              <p className="text-lg text-red-500">{error}</p>
 
               <button
                 type="button"
-                onClick={() =>
-                  window.location.reload()
-                }
+                onClick={() => window.location.reload()}
                 className="mt-4 rounded-md bg-black px-5 py-2 text-sm font-medium text-white transition hover:bg-[#ed2939]"
               >
                 Try Again
               </button>
-
             </div>
-
           </div>
         )}
 
@@ -730,117 +581,99 @@ export default function FlashSale() {
             EMPTY
             ================================================= */}
 
-        {!loading &&
-          !error &&
-          products.length === 0 && (
-            <div className="flex min-h-[400px] items-center justify-center">
-
-              <p className="text-lg text-gray-500">
-                No flash sale products found.
-              </p>
-
-            </div>
-          )}
+        {!loading && !error && products.length === 0 && (
+          <div className="flex min-h-[400px] items-center justify-center">
+            <p className="text-lg text-gray-500">
+              No flash sale products found.
+            </p>
+          </div>
+        )}
 
         {/* =================================================
             PRODUCT SLIDER
             ================================================= */}
 
-        {!loading &&
-          !error &&
-          products.length > 0 && (
-            <div className="relative mt-8">
+        {!loading && !error && products.length > 0 && (
+          <div className="relative mt-8">
+            <Swiper
+              onSwiper={(swiper) => {
+                swiperRef.current = swiper;
+              }}
+              slidesPerView={1}
+              spaceBetween={16}
+              loop={products.length > 6}
+              speed={600}
+              breakpoints={{
+                /* Mobile */
 
-              <Swiper
-                onSwiper={(swiper) => {
-                  swiperRef.current = swiper;
-                }}
-                slidesPerView={1}
-                spaceBetween={16}
-                loop={products.length > 6}
-                speed={600}
-                breakpoints={{
-                  /* Mobile */
+                0: {
+                  slidesPerView: 1,
+                  spaceBetween: 16,
+                },
 
-                  0: {
-                    slidesPerView: 1,
-                    spaceBetween: 16,
-                  },
+                /* Large Mobile */
 
-                  /* Large Mobile */
+                480: {
+                  slidesPerView: 1,
+                  spaceBetween: 18,
+                },
 
-                  480: {
-                    slidesPerView: 1,
-                    spaceBetween: 18,
-                  },
+                /* Small Tablet */
 
-                  /* Small Tablet */
+                640: {
+                  slidesPerView: 2,
+                  spaceBetween: 18,
+                },
 
-                  640: {
-                    slidesPerView: 2,
-                    spaceBetween: 18,
-                  },
+                /* Tablet */
 
-                  /* Tablet */
+                768: {
+                  slidesPerView: 3,
+                  spaceBetween: 20,
+                },
 
-                  768: {
-                    slidesPerView: 3,
-                    spaceBetween: 20,
-                  },
+                /* Laptop */
 
-                  /* Laptop */
+                1024: {
+                  slidesPerView: 4,
+                  spaceBetween: 22,
+                },
 
-                  1024: {
-                    slidesPerView: 4,
-                    spaceBetween: 22,
-                  },
+                /* Desktop */
 
-                  /* Desktop */
+                1280: {
+                  slidesPerView: 5,
+                  spaceBetween: 22,
+                },
 
-                  1280: {
-                    slidesPerView: 5,
-                    spaceBetween: 22,
-                  },
+                /* Large Desktop */
 
-                  /* Large Desktop */
-
-                  1536: {
-                    slidesPerView: 6,
-                    spaceBetween: 24,
-                  },
-                }}
-              >
-
-                {/* =================================================
+                1536: {
+                  slidesPerView: 6,
+                  spaceBetween: 24,
+                },
+              }}
+            >
+              {/* =================================================
                     PRODUCTS
                     ================================================= */}
 
-                {products.map(
-                  (product) => (
-                    <SwiperSlide
-                      key={product._id}
-                      className="h-auto"
-                    >
-                      <ProductCard
-                        product={product}
-                      />
-                    </SwiperSlide>
-                  )
-                )}
+              {products.map((product) => (
+                <SwiperSlide key={product._id} className="h-auto">
+                  <ProductCard product={product} />
+                </SwiperSlide>
+              ))}
+            </Swiper>
 
-              </Swiper>
-
-              {/* =================================================
+            {/* =================================================
                   PREVIOUS ARROW
                   ================================================= */}
 
-              <button
-                type="button"
-                aria-label="Previous products"
-                onClick={() =>
-                  swiperRef.current?.slidePrev()
-                }
-                className="
+            <button
+              type="button"
+              aria-label="Previous products"
+              onClick={() => swiperRef.current?.slidePrev()}
+              className="
                   group
                   absolute
                   left-[-18px]
@@ -863,27 +696,23 @@ export default function FlashSale() {
                   md:flex
                   lg:left-[-22px]
                 "
-              >
+            >
+              <ChevronLeft
+                size={26}
+                strokeWidth={2}
+                className="text-black transition-colors group-hover:text-white"
+              />
+            </button>
 
-                <ChevronLeft
-                  size={26}
-                  strokeWidth={2}
-                  className="text-black transition-colors group-hover:text-white"
-                />
-
-              </button>
-
-              {/* =================================================
+            {/* =================================================
                   NEXT ARROW
                   ================================================= */}
 
-              <button
-                type="button"
-                aria-label="Next products"
-                onClick={() =>
-                  swiperRef.current?.slideNext()
-                }
-                className="
+            <button
+              type="button"
+              aria-label="Next products"
+              onClick={() => swiperRef.current?.slideNext()}
+              className="
                   group
                   absolute
                   right-[-18px]
@@ -906,34 +735,28 @@ export default function FlashSale() {
                   md:flex
                   lg:right-[-22px]
                 "
-              >
-
-                <ChevronRight
-                  size={26}
-                  strokeWidth={2}
-                  className="text-black transition-colors group-hover:text-white"
-                />
-
-              </button>
-
-            </div>
-          )}
+            >
+              <ChevronRight
+                size={26}
+                strokeWidth={2}
+                className="text-black transition-colors group-hover:text-white"
+              />
+            </button>
+          </div>
+        )}
 
         {/* =================================================
             MOBILE EXPLORE
             ================================================= */}
 
         <div className="mt-7 text-center md:hidden">
-
           <Link
             href="/shop"
             className="text-[17px] font-semibold text-black transition-colors hover:text-[#ed2939]"
           >
             Explore All
           </Link>
-
         </div>
-
       </div>
     </section>
   );

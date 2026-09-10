@@ -47,7 +47,7 @@ type HomeSectionsResponse = {
    FALLBACK IMAGE
 ========================================================= */
 
-const FALLBACK_IMAGE = "/assets/product/product_5_1.png";
+const FALLBACK_IMAGE = "/placeholder.svg";
 
 /* =========================================================
    GET PRODUCT IMAGE
@@ -344,7 +344,7 @@ export default function SmartWatches() {
         }
 
         const response = await fetch(
-          `${apiUrl}/api/v1/products/home-sections`,
+          `${apiUrl}/products/home-sections`,
           {
             method: "GET",
             headers: {
