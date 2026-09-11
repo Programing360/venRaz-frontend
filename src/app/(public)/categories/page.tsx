@@ -93,24 +93,18 @@ const categories = [
 ];
 
 export default function CategoriesPage() {
-
-
   return (
     <main className="min-h-screen bg-white">
-
       {/* =========================
           HERO SECTION
       ========================== */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#fff5f3] via-white to-[#fff1ef] pb-20 pt-28">
-
         {/* Decorative shapes */}
         <div className="absolute -left-20 top-20 h-64 w-64 rounded-full bg-[#ff594d]/5" />
         <div className="absolute -right-20 bottom-0 h-80 w-80 rounded-full bg-[#ff594d]/5" />
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-
           <div className="mx-auto max-w-3xl text-center">
-
             <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-[#ff594d]/10 px-4 py-2 text-sm font-semibold text-[#ff594d]">
               <ShoppingBasket className="h-4 w-4" />
               Explore Categories
@@ -118,16 +112,13 @@ export default function CategoriesPage() {
 
             <h1 className="text-4xl font-extrabold leading-tight text-gray-900 sm:text-5xl lg:text-6xl">
               Find Everything
-              <span className="block text-[#ff594d]">
-                You Need
-              </span>
+              <span className="block text-[#ff594d]">You Need</span>
             </h1>
 
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-gray-600">
-              Explore our wide range of categories and discover thousands
-              of quality products from trusted sellers.
+              Explore our wide range of categories and discover thousands of
+              quality products from trusted sellers.
             </p>
-
           </div>
         </div>
       </section>
@@ -136,12 +127,9 @@ export default function CategoriesPage() {
           CATEGORY SECTION
       ========================== */}
       <section className="py-20">
-
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-
           {/* Section Header */}
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-
             <div>
               <p className="font-semibold uppercase tracking-wider text-[#ff594d]">
                 Shop By Category
@@ -152,8 +140,7 @@ export default function CategoriesPage() {
               </h2>
 
               <p className="mt-3 max-w-2xl text-gray-500">
-                Choose a category to find the products you&apos;re looking
-                for.
+                Choose a category to find the products you&apos;re looking for.
               </p>
             </div>
 
@@ -164,12 +151,10 @@ export default function CategoriesPage() {
               View All Products
               <ArrowRight className="h-5 w-5" />
             </Link>
-
           </div>
 
           {/* Categories Grid */}
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-
             {categories.map((category) => {
               const Icon = category.icon;
 
@@ -177,15 +162,13 @@ export default function CategoriesPage() {
                 <Link
                   key={category.name}
                   href={`/products?category=${encodeURIComponent(
-                    category.name
+                    category.name,
                   )}`}
                   className="group"
                 >
                   <div className="h-full rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#ff594d]/30 hover:shadow-xl">
-
                     {/* Icon */}
                     <div className="flex items-center justify-between">
-
                       <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#ff594d]/10 transition duration-300 group-hover:bg-[#ff594d]">
                         <Icon className="h-7 w-7 text-[#ff594d] transition group-hover:text-white" />
                       </div>
@@ -193,7 +176,6 @@ export default function CategoriesPage() {
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-50 transition group-hover:bg-[#ff594d]/10">
                         <ArrowRight className="h-4 w-4 text-gray-400 transition group-hover:translate-x-0.5 group-hover:text-[#ff594d]" />
                       </div>
-
                     </div>
 
                     {/* Content */}
@@ -208,12 +190,10 @@ export default function CategoriesPage() {
                     <p className="mt-4 text-sm font-semibold text-[#ff594d]">
                       {category.items}
                     </p>
-
                   </div>
                 </Link>
               );
             })}
-
           </div>
         </div>
       </section>
@@ -222,16 +202,11 @@ export default function CategoriesPage() {
           FEATURED CATEGORY CTA
       ========================== */}
       <section className="bg-gray-50 py-20">
-
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-
           <div className="overflow-hidden rounded-3xl bg-[#ff594d]">
-
             <div className="grid items-center lg:grid-cols-2">
-
               {/* Content */}
               <div className="px-6 py-12 sm:px-12 lg:py-16">
-
                 <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20">
                   <Sparkles className="h-7 w-7 text-white" />
                 </div>
@@ -242,8 +217,8 @@ export default function CategoriesPage() {
                 </h2>
 
                 <p className="mt-5 max-w-lg leading-7 text-white/90">
-                  From fashion and electronics to home essentials and
-                  everyday products, VenRaz has something for everyone.
+                  From fashion and electronics to home essentials and everyday
+                  products, VenRaz has something for everyone.
                 </p>
 
                 <Link
@@ -253,14 +228,11 @@ export default function CategoriesPage() {
                   Explore Products
                   <ArrowRight className="h-5 w-5" />
                 </Link>
-
               </div>
 
               {/* Right Visual */}
               <div className="hidden h-full min-h-[350px] items-center justify-center bg-[#e94d43] lg:flex">
-
                 <div className="grid grid-cols-2 gap-5">
-
                   <div className="flex h-32 w-32 items-center justify-center rounded-3xl bg-white shadow-lg">
                     <Shirt className="h-14 w-14 text-[#ff594d]" />
                   </div>
@@ -276,13 +248,9 @@ export default function CategoriesPage() {
                   <div className="flex h-32 w-32 items-center justify-center rounded-3xl bg-white shadow-lg">
                     <ShoppingBasket className="h-14 w-14 text-[#ff594d]" />
                   </div>
-
                 </div>
-
               </div>
-
             </div>
-
           </div>
         </div>
       </section>
@@ -291,16 +259,14 @@ export default function CategoriesPage() {
           BOTTOM CTA
       ========================== */}
       <section className="py-20">
-
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
-
-<h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-            Can&apos;t Find What You&apos;re Looking For?
+          <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+            Can't Find What You're Looking For?
           </h2>
 
           <p className="mx-auto mt-4 max-w-2xl text-gray-600">
-            Browse all our products and use filters or search to quickly
-            find exactly what you need.
+            Browse all our products and use filters or search to quickly find
+            exactly what you need.
           </p>
 
           <Link
@@ -310,10 +276,8 @@ export default function CategoriesPage() {
             Browse All Products
             <ArrowRight className="h-5 w-5" />
           </Link>
-
         </div>
       </section>
-
     </main>
   );
 }

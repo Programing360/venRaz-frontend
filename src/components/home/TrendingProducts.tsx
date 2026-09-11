@@ -3,15 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import {
-  Heart,
-  ArrowLeftRight,
-  Eye,
-  Check,
-} from "lucide-react";
+import { Heart, ArrowLeftRight, Eye, Check } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 
 import "swiper/css";
+import { Button } from "@heroui/react";
+import { useCart } from "@/context/CartContext";
 
 /* =========================================================
    TYPES
@@ -55,10 +52,7 @@ const getProductImage = (image?: string) => {
     return FALLBACK_IMAGE;
   }
 
-  if (
-    image.includes("example.com") ||
-    image.trim() === ""
-  ) {
+  if (image.includes("example.com") || image.trim() === "") {
     return FALLBACK_IMAGE;
   }
 
@@ -69,10 +63,7 @@ const getProductImage = (image?: string) => {
    OLD PRICE CALCULATION
    ========================================================= */
 
-const getOldPrice = (
-  price: number,
-  discount?: number
-) => {
+const getOldPrice = (price: number, discount?: number) => {
   if (!discount || discount <= 0) {
     return null;
   }
@@ -84,33 +75,34 @@ const getOldPrice = (
    PRODUCT CARD
    ========================================================= */
 
-function ProductCard({
-  product,
-}: {
-  product: Product;
-}) {
-  const image = getProductImage(
-    product.images?.[0]
-  );
+function ProductCard({ product }: { product: Product }) {
+  const image = getProductImage(product.images?.[0]);
 
-  const oldPrice = getOldPrice(
-    Number(product.price),
-    product.discount
-  );
+  const oldPrice = getOldPrice(Number(product.price), product.discount);
 
   const rating = Number(product.rating || 0);
 
   const stock = Number(product.stock || 0);
+  const { addToCart } = useCart();
+  const [adding, setAdding] = useState(false);
+  const [added, setAdded] = useState(false);
+
+  const handleCartAdd = async () => {
+    if (adding || added) return;
+    setAdding(true);
+    await addToCart(product, 1);
+    setAdding(false);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1500);
+  };
 
   return (
     <div className="group relative overflow-hidden rounded-[8px] border border-[#e0e8f0] bg-[#f8fbff] p-3.5 transition duration-300 hover:-translate-y-1 hover:shadow-lg">
-
       {/* =====================================================
           IMAGE
           ===================================================== */}
 
       <div className="relative flex h-[245px] items-center justify-center overflow-hidden rounded-[5px] bg-[#e3ebf4]">
-
         <Image
           src={image}
           alt={product.name}
@@ -124,19 +116,17 @@ function ProductCard({
             DISCOUNT
             ================================================= */}
 
-        {product.discount &&
-          product.discount > 0 && (
-            <span className="absolute left-0 top-0 rounded-br-[16px] bg-[#ee3347] px-4 py-1.5 text-sm font-semibold text-white">
-              -{product.discount}%
-            </span>
-          )}
+        {product.discount && product.discount > 0 && (
+          <span className="absolute left-0 top-0 rounded-br-[16px] bg-[#ee3347] px-4 py-1.5 text-sm font-semibold text-white">
+            -{product.discount}%
+          </span>
+        )}
 
         {/* =================================================
             ACTION BUTTONS
             ================================================= */}
 
         <div className="absolute right-3 top-3 flex translate-x-10 flex-col gap-2 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
-
           {/* Wishlist */}
 
           <Link
@@ -166,7 +156,6 @@ function ProductCard({
           >
             <Eye size={17} />
           </Link>
-
         </div>
       </div>
 
@@ -175,18 +164,15 @@ function ProductCard({
           ===================================================== */}
 
       <div className="px-1.5 pb-2 pt-5">
-
         {/* Product Name */}
 
         <h3 className="min-h-[48px] text-[16px] font-semibold leading-[23px] text-[#252525]">
-
           <Link
             href={`/shop-details/${product._id}`}
             className="transition hover:text-red-500"
           >
             {product.name}
           </Link>
-
         </h3>
 
         {/* =================================================
@@ -194,7 +180,6 @@ function ProductCard({
             ================================================= */}
 
         <div className="mt-2 flex items-center gap-2">
-
           <div
             className="flex items-center gap-[1px] text-[18px] leading-none text-[#ff5a4f]"
             aria-label={`Rating ${rating} out of 5`}
@@ -202,10 +187,7 @@ function ProductCard({
             {"★★★★★"}
           </div>
 
-          <span className="ml-auto text-sm text-gray-400">
-            ({rating})
-          </span>
-
+          <span className="ml-auto text-sm text-gray-400">({rating})</span>
         </div>
 
         {/* =================================================
@@ -213,7 +195,6 @@ function ProductCard({
             ================================================= */}
 
         <div className="mt-2 flex items-center gap-2">
-
           <span className="text-[17px] font-bold text-[#171717]">
             ${Number(product.price).toFixed(2)}
           </span>
@@ -223,7 +204,6 @@ function ProductCard({
               ${oldPrice.toFixed(2)}
             </del>
           )}
-
         </div>
 
         {/* =================================================
@@ -231,38 +211,27 @@ function ProductCard({
             ================================================= */}
 
         <div className="mt-6 flex items-center gap-1.5 text-[13px]">
-
-          <Check
-            size={17}
-            strokeWidth={2}
-            className="text-[#4dcc9a]"
-          />
+          <Check size={17} strokeWidth={2} className="text-[#4dcc9a]" />
 
           <span className="text-[#4dcc9a]">
-            {stock > 0
-              ? "In Stock"
-              : "Out of Stock"}
+            {stock > 0 ? "In Stock" : "Out of Stock"}
           </span>
 
           {stock > 0 && (
-            <span className="text-[#292929]">
-              {stock} Products
-            </span>
+            <span className="text-[#292929]">{stock} Products</span>
           )}
-
         </div>
 
         {/* =================================================
             ADD TO CART
             ================================================= */}
 
-        <Link
-          href={`/cart?product=${product._id}`}
+        <Button
+          onClick={handleCartAdd}
           className="mt-7 flex h-[48px] w-full items-center justify-center rounded-[8px] border border-[#e0e8f0] bg-transparent text-[15px] font-semibold uppercase text-[#252525] transition duration-300 hover:border-black hover:bg-black hover:text-white"
         >
           Add To Cart
-        </Link>
-
+        </Button>
       </div>
     </div>
   );
@@ -273,91 +242,63 @@ function ProductCard({
    ========================================================= */
 
 export default function TrendingProducts() {
-  const [products, setProducts] = useState<Product[]>(
-    []
-  );
+  const [products, setProducts] = useState<Product[]>([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [error, setError] =
-    useState("");
+  const [error, setError] = useState("");
 
   /* =======================================================
      FETCH DATA
      ======================================================= */
 
   useEffect(() => {
-    const fetchTrendingProducts =
-      async () => {
-        try {
-          setLoading(true);
-          setError("");
+    const fetchTrendingProducts = async () => {
+      try {
+        setLoading(true);
+        setError("");
 
-          const apiUrl =
-            process.env.NEXT_PUBLIC_API_URL;
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-          if (!apiUrl) {
-            throw new Error(
-              "NEXT_PUBLIC_API_URL is not configured"
-            );
-          }
+        if (!apiUrl) {
+          throw new Error("NEXT_PUBLIC_API_URL is not configured");
+        }
 
-          const response = await fetch(
-            `${apiUrl}/products/home-sections`,
-            {
-              method: "GET",
-              headers: {
-                "Content-Type":
-                  "application/json",
-              },
-              cache: "no-store",
-            }
-          );
+        const response = await fetch(`${apiUrl}/products/home-sections`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          cache: "no-store",
+        });
 
-          if (!response.ok) {
-            throw new Error(
-              `Failed to fetch products: ${response.status}`
-            );
-          }
+        if (!response.ok) {
+          throw new Error(`Failed to fetch products: ${response.status}`);
+        }
 
-          const result: ApiResponse =
-            await response.json();
+        const result: ApiResponse = await response.json();
 
-          console.log(
-            "Trending Products API:",
-            result
-          );
+        console.log("Trending Products API:", result);
 
-          if (!result.success) {
-            throw new Error(
-              result.message ||
-                "Failed to load products"
-            );
-          }
+        if (!result.success) {
+          throw new Error(result.message || "Failed to load products");
+        }
 
-          /* ===============================================
+        /* ===============================================
              MOST SELLING = TRENDING PRODUCTS
              =============================================== */
 
-          setProducts(
-            result.data?.mostSelling || []
-          );
-        } catch (error) {
-          console.error(
-            "Trending Products Error:",
-            error
-          );
+        setProducts(result.data?.mostSelling || []);
+      } catch (error) {
+        console.error("Trending Products Error:", error);
 
-          setError(
-            "Failed to load trending products."
-          );
+        setError("Failed to load trending products.");
 
-          setProducts([]);
-        } finally {
-          setLoading(false);
-        }
-      };
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
     fetchTrendingProducts();
   }, []);
@@ -368,21 +309,16 @@ export default function TrendingProducts() {
 
   return (
     <section className="w-full overflow-hidden bg-[#f8fbff] py-10 md:py-12">
-
       <div className="mx-auto w-full max-w-[1810px] px-5 md:px-8">
-
         {/* =================================================
             HEADER
             ================================================= */}
 
         <div className="flex items-center justify-between">
-
           <div>
-
             <h2 className="inline-block border-b-2 border-red-500 pb-3 text-[30px] font-bold leading-none text-[#292929] md:text-[38px]">
               Trending Products
             </h2>
-
           </div>
 
           <Link
@@ -391,7 +327,6 @@ export default function TrendingProducts() {
           >
             Explore All
           </Link>
-
         </div>
 
         {/* Bottom Line */}
@@ -404,9 +339,7 @@ export default function TrendingProducts() {
 
         {loading && (
           <div className="flex min-h-[400px] items-center justify-center">
-            <p className="text-gray-500">
-              Loading trending products...
-            </p>
+            <p className="text-gray-500">Loading trending products...</p>
           </div>
         )}
 
@@ -416,21 +349,15 @@ export default function TrendingProducts() {
 
         {!loading && error && (
           <div className="flex min-h-[400px] flex-col items-center justify-center">
-
-            <p className="text-red-500">
-              {error}
-            </p>
+            <p className="text-red-500">{error}</p>
 
             <button
               type="button"
-              onClick={() =>
-                window.location.reload()
-              }
+              onClick={() => window.location.reload()}
               className="mt-4 rounded-md bg-black px-5 py-2 text-sm font-semibold text-white transition hover:bg-red-500"
             >
               Try Again
             </button>
-
           </div>
         )}
 
@@ -438,92 +365,70 @@ export default function TrendingProducts() {
             EMPTY
             ================================================= */}
 
-        {!loading &&
-          !error &&
-          products.length === 0 && (
-            <div className="flex min-h-[400px] items-center justify-center">
-
-              <p className="text-gray-500">
-                No trending products found.
-              </p>
-
-            </div>
-          )}
+        {!loading && !error && products.length === 0 && (
+          <div className="flex min-h-[400px] items-center justify-center">
+            <p className="text-gray-500">No trending products found.</p>
+          </div>
+        )}
 
         {/* =================================================
             SLIDER
             ================================================= */}
 
-        {!loading &&
-          !error &&
-          products.length > 0 && (
-            <div className="mt-8">
+        {!loading && !error && products.length > 0 && (
+          <div className="mt-8">
+            <Swiper
+              spaceBetween={24}
+              slidesPerView={1}
+              breakpoints={{
+                576: {
+                  slidesPerView: 2,
+                  spaceBetween: 20,
+                },
 
-              <Swiper
-                spaceBetween={24}
-                slidesPerView={1}
-                breakpoints={{
-                  576: {
-                    slidesPerView: 2,
-                    spaceBetween: 20,
-                  },
+                768: {
+                  slidesPerView: 3,
+                  spaceBetween: 20,
+                },
 
-                  768: {
-                    slidesPerView: 3,
-                    spaceBetween: 20,
-                  },
+                1024: {
+                  slidesPerView: 4,
+                  spaceBetween: 22,
+                },
 
-                  1024: {
-                    slidesPerView: 4,
-                    spaceBetween: 22,
-                  },
+                1280: {
+                  slidesPerView: 5,
+                  spaceBetween: 24,
+                },
 
-                  1280: {
-                    slidesPerView: 5,
-                    spaceBetween: 24,
-                  },
-
-                  1536: {
-                    slidesPerView: 6,
-                    spaceBetween: 24,
-                  },
-                }}
-              >
-
-                {products.map(
-                  (product) => (
-                    <SwiperSlide
-                      key={product._id}
-                    >
-                      <ProductCard
-                        product={product}
-                      />
-                    </SwiperSlide>
-                  )
-                )}
-
-              </Swiper>
-
-            </div>
-          )}
+                1536: {
+                  slidesPerView: 6,
+                  spaceBetween: 24,
+                },
+              }}
+            >
+              {products.map((product) => (
+                <SwiperSlide key={product._id}>
+                  <ProductCard product={product} />
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
+        )}
 
         {/* =================================================
             MOBILE EXPLORE
             ================================================= */}
 
         <div className="mt-6 text-center md:hidden">
-
           <Link
             href="/shop"
             className="text-[17px] font-semibold text-black hover:text-red-500"
           >
             Explore All
           </Link>
-
         </div>
-
       </div>
-
     </section>
   );
 }

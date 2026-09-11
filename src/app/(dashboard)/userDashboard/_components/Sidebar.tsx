@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -91,11 +90,7 @@ export default function Sidebar({
       >
         {/* Header */}
         <div className="flex h-16 items-center justify-between border-b border-[#DEDACE] px-5">
-          <Link
-            href="/userDashboard"
-            onClick={onClose}
-            className="flex items-center gap-3"
-          >
+          <Link href="/" onClick={onClose} className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0E1B1B] text-sm font-bold text-white">
               D
             </div>
@@ -171,10 +166,7 @@ export default function Sidebar({
                   <span className="flex-1">{link.name}</span>
 
                   {isActive && (
-                    <ChevronRight
-                      size={15}
-                      className="text-white/60"
-                    />
+                    <ChevronRight size={15} className="text-white/60" />
                   )}
                 </Link>
               );
@@ -186,9 +178,7 @@ export default function Sidebar({
         <div className="border-t border-[#DEDACE] p-4">
           {/* Account label */}
           <div className="mb-3 rounded-xl bg-[#F8F7F3] p-3">
-            <p className="text-xs font-medium text-[#6B7268]">
-              Signed in as
-            </p>
+            <p className="text-xs font-medium text-[#6B7268]">Signed in as</p>
 
             <p className="mt-1 truncate text-sm font-semibold text-[#0E1B1B]">
               {role === "admin" ? "Administrator" : "Customer"}
@@ -222,4 +212,3 @@ export default function Sidebar({
     </>
   );
 }
-

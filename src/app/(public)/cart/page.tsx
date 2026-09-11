@@ -52,7 +52,7 @@ export default function CartPage() {
   const shippingProgress = Math.min(100, (subtotal / freeShippingThreshold) * 100);
 
   return (
-    <main className="min-h-screen bg-[#fcfdfd] py-10 md:py-16">
+    <main className="min-h-screen bg-[#fcfdfd] py-10 md:py-16 mt-10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Breadcrumb / Title */}
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">

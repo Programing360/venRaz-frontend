@@ -40,7 +40,7 @@ const heroSlides: HeroSlide[] = [
 
 export default function Hero() {
   return (
-    <section id="hero" className="relative overflow-hidden bg-gray-100">
+    <section id="hero" className="relative overflow-hidden bg-gray-100 mt-10">
        <Image
         src="/assets/hero_bg_1_1.jpg"
         alt="Hero Background"

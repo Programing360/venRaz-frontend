@@ -1,25 +1,28 @@
-"use client"
-import React, { useState, useRef } from 'react';
-import { uploadToCloudinary, getCloudinaryConfig } from '../services/cloudinary';
-import { 
-  Upload, 
-  Image as ImageIcon, 
-  X, 
-  Check, 
-  Cloud, 
-  Sparkles, 
-  Link as LinkIcon, 
-  Loader2, 
+"use client";
+import React, { useState, useRef } from "react";
+import {
+  uploadToCloudinary,
+  getCloudinaryConfig,
+} from "../services/cloudinary";
+import {
+  Upload,
+  Image as ImageIcon,
+  X,
+  Check,
+  Cloud,
+  Sparkles,
+  Link as LinkIcon,
+  Loader2,
   AlertCircle,
-  RefreshCw
-} from 'lucide-react';
+  RefreshCw,
+} from "lucide-react";
 
 interface ImageUploaderProps {
   label: string;
   sublabel?: string;
   value: string;
   onChange: (url: string) => void;
-  aspectRatio?: 'square' | 'banner';
+  aspectRatio?: "square" | "banner";
   presets?: { name: string; url: string }[];
   onOpenCloudinarySettings?: () => void;
   idPrefix: string;
@@ -30,7 +33,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   sublabel,
   value,
   onChange,
-  aspectRatio = 'square',
+  aspectRatio = "square",
   presets,
   onOpenCloudinarySettings,
   idPrefix,
@@ -40,12 +43,16 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   const [isDragOver, setIsDragOver] = useState(false);
   const [showPresets, setShowPresets] = useState(false);
   const [showUrlInput, setShowUrlInput] = useState(false);
-  const [customUrl, setCustomUrl] = useState('');
+  const [customUrl, setCustomUrl] = useState("");
   const [uploadStatus, setUploadStatus] = useState<{
-    type: 'idle' | 'cloudinary' | 'local' | 'error';
+    type: "idle" | "cloudinary" | "local" | "error";
     message?: string;
   }>({
-    type: value ? (value.includes('cloudinary') ? 'cloudinary' : 'local') : 'idle',
+    type: value
+      ? value.includes("cloudinary")
+        ? "cloudinary"
+        : "local"
+      : "idle",
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -53,41 +60,40 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   const hasCloudinarySetup = !!(config.cloudName && config.uploadPreset);
 
   const handleFile = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      alert('Please upload a valid image file (PNG, JPG, WEBP, etc.)');
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload a valid image file (PNG, JPG, WEBP, etc.)");
       return;
     }
 
     setIsUploading(true);
     setUploadProgress(10);
-    setUploadStatus({ type: 'idle' });
+    setUploadStatus({ type: "idle" });
 
     try {
       const result = await uploadToCloudinary(file, (progress) => {
         setUploadProgress(progress);
-
-      })
-      ;
-      console.log(result);
+      });
+      result;
 
       onChange(result.url);
 
       if (result.isCloudinary) {
         setUploadStatus({
-          type: 'cloudinary',
-          message: 'Uploaded directly to Cloudinary!',
+          type: "cloudinary",
+          message: "Uploaded directly to Cloudinary!",
         });
       } else {
         setUploadStatus({
-          type: 'local',
-          message: result.error || 'Preview loaded (Cloudinary not configured).',
+          type: "local",
+          message:
+            result.error || "Preview loaded (Cloudinary not configured).",
         });
       }
     } catch (err) {
       console.error(err);
       setUploadStatus({
-        type: 'error',
-        message: 'Upload failed. Please try again.',
+        type: "error",
+        message: "Upload failed. Please try again.",
       });
     } finally {
       setIsUploading(false);
@@ -106,13 +112,16 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     e.preventDefault();
     if (customUrl.trim()) {
       onChange(customUrl.trim());
-      setUploadStatus({ type: 'local', message: 'Image loaded from custom URL' });
+      setUploadStatus({
+        type: "local",
+        message: "Image loaded from custom URL",
+      });
       setShowUrlInput(false);
-      setCustomUrl('');
+      setCustomUrl("");
     }
   };
 
-  const isBanner = aspectRatio === 'banner';
+  const isBanner = aspectRatio === "banner";
 
   return (
     <div id={`${idPrefix}-uploader-container`} className="space-y-2">
@@ -155,7 +164,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl animate-in fade-in duration-150">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wide">
-              Select Preset {isBanner ? 'Banner' : 'Logo'}:
+              Select Preset {isBanner ? "Banner" : "Logo"}:
             </span>
             <button
               type="button"
@@ -174,13 +183,18 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                 onClick={() => {
                   onChange(preset.url);
                   setShowPresets(false);
-                  setUploadStatus({ type: 'local', message: `Selected: ${preset.name}` });
+                  setUploadStatus({
+                    type: "local",
+                    message: `Selected: ${preset.name}`,
+                  });
                 }}
                 className={`group relative overflow-hidden rounded-lg border border-slate-200 hover:border-indigo-500 transition-all text-left ${
-                  value === preset.url ? 'ring-2 ring-indigo-600' : ''
+                  value === preset.url ? "ring-2 ring-indigo-600" : ""
                 }`}
               >
-                <div className={`w-full overflow-hidden bg-slate-100 ${isBanner ? 'h-14' : 'h-16'}`}>
+                <div
+                  className={`w-full overflow-hidden bg-slate-100 ${isBanner ? "h-14" : "h-16"}`}
+                >
                   <img
                     src={preset.url}
                     alt={preset.name}
@@ -189,7 +203,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                   />
                 </div>
                 <div className="p-1 bg-white">
-                  <p className="text-[10px] font-medium text-slate-700 truncate">{preset.name}</p>
+                  <p className="text-[10px] font-medium text-slate-700 truncate">
+                    {preset.name}
+                  </p>
                 </div>
               </button>
             ))}
@@ -237,7 +253,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         <div
           id={`${idPrefix}-preview-box`}
           className={`relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 group ${
-            isBanner ? 'h-40 w-full' : 'h-32 w-32'
+            isBanner ? "h-40 w-full" : "h-32 w-32"
           }`}
         >
           <img
@@ -262,8 +278,8 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
               type="button"
               id={`${idPrefix}-remove-btn`}
               onClick={() => {
-                onChange('');
-                setUploadStatus({ type: 'idle' });
+                onChange("");
+                setUploadStatus({ type: "idle" });
               }}
               className="p-2 rounded-xl bg-rose-600/90 hover:bg-rose-600 text-white shadow-md transition-transform hover:scale-105"
               title="Remove image"
@@ -298,17 +314,19 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           onDrop={onDrop}
           onClick={() => fileInputRef.current?.click()}
           className={`cursor-pointer border-2 border-dashed rounded-2xl p-4 text-center transition-all duration-200 flex flex-col items-center justify-center ${
-            isBanner ? 'h-36 w-full' : 'h-32 w-full max-w-xs'
+            isBanner ? "h-36 w-full" : "h-32 w-full max-w-xs"
           } ${
             isDragOver
-              ? 'border-sky-500 bg-sky-50/50'
-              : 'border-slate-200 hover:border-sky-400 bg-slate-50/50 hover:bg-slate-50'
+              ? "border-sky-500 bg-sky-50/50"
+              : "border-slate-200 hover:border-sky-400 bg-slate-50/50 hover:bg-slate-50"
           }`}
         >
           {isUploading ? (
             <div className="flex flex-col items-center gap-2">
               <Loader2 size={24} className="animate-spin text-sky-600" />
-              <p className="text-xs font-semibold text-slate-700">Uploading to Cloudinary...</p>
+              <p className="text-xs font-semibold text-slate-700">
+                Uploading to Cloudinary...
+              </p>
               <div className="w-32 bg-slate-200 h-1.5 rounded-full overflow-hidden">
                 <div
                   className="bg-sky-600 h-full transition-all duration-200"
@@ -340,17 +358,17 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       {uploadStatus.message && (
         <div
           className={`flex items-center justify-between text-[11px] p-2 rounded-lg ${
-            uploadStatus.type === 'cloudinary'
-              ? 'bg-sky-50 text-sky-800 border border-sky-200'
-              : uploadStatus.type === 'error'
-              ? 'bg-rose-50 text-rose-800 border border-rose-200'
-              : 'bg-slate-100 text-slate-700'
+            uploadStatus.type === "cloudinary"
+              ? "bg-sky-50 text-sky-800 border border-sky-200"
+              : uploadStatus.type === "error"
+                ? "bg-rose-50 text-rose-800 border border-rose-200"
+                : "bg-slate-100 text-slate-700"
           }`}
         >
           <div className="flex items-center gap-1.5">
-            {uploadStatus.type === 'cloudinary' ? (
+            {uploadStatus.type === "cloudinary" ? (
               <Check size={12} className="text-sky-600" />
-            ) : uploadStatus.type === 'error' ? (
+            ) : uploadStatus.type === "error" ? (
               <AlertCircle size={12} className="text-rose-600" />
             ) : (
               <Cloud size={12} className="text-slate-500" />

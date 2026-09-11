@@ -91,6 +91,25 @@ interface OrderRecord {
   createdAt?: string;
 }
 
+const formatStatus = (status: string): OrderStatus => {
+  switch (status.toLowerCase()) {
+    case "pending":
+      return "Pending";
+    case "confirmed":
+      return "Confirmed";
+    case "processing":
+      return "Processing";
+    case "shipped":
+      return "Shipped";
+    case "out_for_delivery":
+      return "Out for Delivery";
+    case "delivered":
+      return "Delivered";
+    default:
+      return "Processing";
+  }
+};
+
 function TrackingContent() {
   const searchParams = useSearchParams();
   const initialId = searchParams.get("id") || "";
@@ -98,8 +117,9 @@ function TrackingContent() {
   const [trackingId, setTrackingId] = useState(initialId);
   const [activeOrder, setActiveOrder] = useState<OrderRecord | null>(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const trackOrderById = useCallback((idToTrack: string) => {
+  const trackOrderById = useCallback(async (idToTrack: string) => {
     const value = idToTrack.trim().toUpperCase();
 
     if (!value) {
@@ -108,70 +128,64 @@ function TrackingContent() {
       return;
     }
 
-    // Check LocalStorage saved orders first
-    try {
-      const stored = localStorage.getItem("venraz_orders");
-      if (stored) {
-        const orders: OrderRecord[] = JSON.parse(stored);
-        const match = orders.find(
-          (o) =>
-            o.trackingId?.toUpperCase() === value ||
-            o.orderId?.toUpperCase() === value
-        );
-        if (match) {
-          setActiveOrder({
-            trackingId: match.trackingId,
-            orderId: match.orderId,
-            status: match.status || "Pending",
-            total: match.total,
-            customer: match.customer,
-            placedAt: match.createdAt
-              ? new Date(match.createdAt).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
-              : "Today",
-            estimatedDelivery: "3 - 5 Business Days",
-          });
-          setError("");
-          return;
-        }
-      }
-    } catch (e) {
-      console.error("Failed to read orders from localStorage", e);
-    }
-
-    // Fallback demo order
-    if (
-      value === "TRK-2026-00125" ||
-      value.startsWith("TRK-") ||
-      value.startsWith("ORD-")
-    ) {
-      setActiveOrder({
-        trackingId: value,
-        orderId: "#" + value.replace("TRK-", "ORD-"),
-        status: "Processing",
-        total: 149.99,
-        placedAt: "Today",
-        estimatedDelivery: "September 10, 2026",
-      });
-      setError("");
-      return;
-    }
-
-    setError(
-      "No order found with tracking ID: " + value + ". Try 'TRK-2026-00125'."
-    );
+    setLoading(true);
+    setError("");
     setActiveOrder(null);
+
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      if (!API_URL) {
+        throw new Error("API URL is not configured");
+      }
+
+      const res = await fetch(
+        `${API_URL}/orders/track/${encodeURIComponent(value)}`,
+      );
+
+      if (!res.ok) {
+        setError(
+          `No order found with tracking ID: ${value}.`,
+        );
+        return;
+      }
+
+      const json = await res.json();
+      const data = json.data;
+
+      if (!data) {
+        setError(`No order found with tracking ID: ${value}.`);
+        return;
+      }
+
+      setActiveOrder({
+        trackingId: data.trackingId,
+        orderId: "#" + data.trackingId,
+        status: formatStatus(data.status || "processing"),
+        total: Number(data.totalAmount ?? 0),
+        customer: data.shippingAddress,
+        placedAt: data.createdAt
+          ? new Date(data.createdAt).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : "Today",
+        estimatedDelivery: "3 - 5 Business Days",
+      });
+    } catch (e) {
+      console.error("Order tracking failed:", e);
+      setError("Could not reach the tracking service. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
     if (initialId) {
       const timer = setTimeout(() => {
-        trackOrderById(initialId);
+        void trackOrderById(initialId);
       }, 0);
       return () => clearTimeout(timer);
     }
@@ -179,7 +193,7 @@ function TrackingContent() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    trackOrderById(trackingId);
+    void trackOrderById(trackingId);
   };
 
   const currentStatusIndex = activeOrder
@@ -225,9 +239,10 @@ function TrackingContent() {
           </div>
           <button
             type="submit"
-            className="bg-[#ff594d] hover:bg-black text-white px-6 py-3 rounded-xl font-bold text-xs sm:text-sm transition-colors shadow-md shadow-red-500/20 shrink-0"
+            disabled={loading}
+            className="bg-[#ff594d] hover:bg-black text-white px-6 py-3 rounded-xl font-bold text-xs sm:text-sm transition-colors shadow-md shadow-red-500/20 shrink-0 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Track Order
+            {loading ? "Tracking..." : "Track Order"}
           </button>
         </form>
 

@@ -75,7 +75,7 @@ export const getProducts = async ({
 
     const response = await res.json();
     const data = response?.data;
-    console.log(data);
+    data;
 
     return {
       totalPages: data?.totalPages || 1,

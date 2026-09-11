@@ -64,6 +64,13 @@ export default function LoginPage() {
       if (data) {
         router.push("/");
         router.refresh();
+        // Better Auth দিয়ে সাইন আপ সফল হলে আপনার Sync API টি হিট করবেন
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/sync-guest-orders`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
       }
     } catch {
       setError("Something went wrong. Please try again.");
@@ -141,15 +148,17 @@ export default function LoginPage() {
                 </Link>
               }
             />
-<PasswordInput
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-            placeholder="Enter your password"
-          />
+            <PasswordInput
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setPassword(e.target.value)
+              }
+              placeholder="Enter your password"
+            />
           </div>
 
           <label className="flex cursor-pointer items-center gap-3">

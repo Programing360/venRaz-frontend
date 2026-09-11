@@ -30,7 +30,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const { totalItems } = useCart();
-
+  session;
   // Active route checking helper
   const isActive = (path: string) => {
     if (path === "/") {

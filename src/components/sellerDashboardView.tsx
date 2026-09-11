@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 
 import {
@@ -33,8 +32,6 @@ import { ShopStatusAlert } from "./shopStatusAlert";
 import Image from "next/image";
 import { ShopStatusBadge } from "./shopStatusBadge";
 
-
-
 interface SellerDashboardViewProps {
   shop?: Shop;
   products?: Product[];
@@ -64,7 +61,7 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
     onStatusChange?.(newStatus);
   };
 
-  // console.log(safeOrders);
+  // (safeOrders);
 
   const [activeTab, setActiveTab] = useState<
     "overview" | "products" | "orders"
@@ -79,27 +76,26 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
 
     console.log("Formatting currency:", numericValue);
 
-
     return `$${numericValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
   };
   const formatDate = (dateValue?: string) => {
-    if (!dateValue) return 'Not set';
+    if (!dateValue) return "Not set";
 
     const parsedDate = new Date(dateValue);
-    if (Number.isNaN(parsedDate.getTime())) return 'Not set';
+    if (Number.isNaN(parsedDate.getTime())) return "Not set";
 
     return parsedDate.toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
   const filteredProducts = safeProducts.filter((p) => {
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          p.category.toLowerCase().includes(searchQuery.toLowerCase());
-    if (statusFilter === 'all') return matchesSearch;
+    const matchesSearch =
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.category.toLowerCase().includes(searchQuery.toLowerCase());
+    if (statusFilter === "all") return matchesSearch;
     return matchesSearch && p.status === statusFilter;
   });
 
@@ -127,7 +123,6 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
             referrerPolicy="no-referrer"
             width={800}
             height={300}
-
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-900/20 to-transparent" />
 
@@ -289,7 +284,6 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
                   ).length
                 }{" "}
                 Low/Out
-
               </span>
             </div>
           </div>
@@ -313,11 +307,9 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
               <ShopStatusBadge status={safeShop.status} size="md" />
             </div>
             <p className="text-xs text-slate-500 mt-2 truncate">
-
               {safeShop.status === "Active"
                 ? "Accepting orders nationwide"
                 : safeShop.statusReason || "Status managed"}
-
             </p>
           </div>
         </motion.div>
@@ -340,7 +332,6 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
               <p className="text-xs text-slate-500">
                 Official business profile, credentials, and contact coordinates
               </p>
-
             </div>
           </div>
 
@@ -380,7 +371,6 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
               <p className="text-[11px] text-emerald-600 mt-0.5">
                 Verified for SMS dispatch
               </p>
-
             </div>
           </div>
 
@@ -396,7 +386,6 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
               <span className="font-semibold text-slate-800 leading-snug block">
                 {safeShop.address}
               </span>
-
             </div>
           </div>
 
@@ -415,7 +404,6 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
               <p className="text-[11px] text-slate-500 mt-0.5">
                 Seller: {safeShop.sellerName}
               </p>
-
             </div>
           </div>
         </div>
@@ -428,7 +416,6 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
           <div className="flex items-center gap-6">
             <button
               id="tab-overview-btn"
-
               onClick={() => setActiveTab("overview")}
               className={`py-4 text-xs font-semibold border-b-2 transition-colors ${
                 activeTab === "overview"
@@ -445,7 +432,6 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
                 activeTab === "products"
                   ? "border-indigo-600 text-indigo-600"
                   : "border-transparent text-slate-500 hover:text-slate-800"
-
               }`}
             >
               <span>Products Catalog</span>
@@ -455,13 +441,11 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
             </button>
             <button
               id="tab-orders-btn"
-
               onClick={() => setActiveTab("orders")}
               className={`py-4 text-xs font-semibold border-b-2 transition-colors flex items-center gap-1.5 ${
                 activeTab === "orders"
                   ? "border-indigo-600 text-indigo-600"
                   : "border-transparent text-slate-500 hover:text-slate-800"
-
               }`}
             >
               <span>Recent Orders</span>
@@ -471,9 +455,7 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
             </button>
           </div>
 
-
           {activeTab === "products" && (
-
             <button
               id="add-product-tab-header-btn"
               onClick={onAddProduct}
@@ -489,7 +471,6 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
         <div className="p-6">
           {/* TAB 1: OVERVIEW */}
           {activeTab === "overview" && (
-
             <div className="space-y-6">
               {/* Quick Summary Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -502,7 +483,6 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
                     </h3>
                     <button
                       onClick={() => setActiveTab("products")}
-
                       className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
                     >
                       View All
@@ -539,7 +519,6 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
                           <p className="text-[10px] text-emerald-600 font-medium">
                             {product.salesCount} sold
                           </p>
-
                         </div>
                       </div>
                     ))}
@@ -585,7 +564,6 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
                                 : "bg-amber-50 text-amber-700"
                             }`}
                           >
-
                             {order.status}
                           </span>
                         </div>
@@ -600,7 +578,6 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
           {/* TAB 2: PRODUCTS CATALOG */}
 
           {activeTab === "products" && (
-
             <div className="space-y-4">
               {/* Filter and Search */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
@@ -646,12 +623,10 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-slate-700">
                     {filteredProducts.map((p) => (
-
                       <tr
                         key={p.id}
                         className="hover:bg-slate-50/50 transition-colors"
                       >
-
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
                             <Image
@@ -679,13 +654,11 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
                         <td className="px-4 py-3">
                           <span
                             className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-
                               p.status === "In Stock"
                                 ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                                 : p.status === "Low Stock"
                                   ? "bg-amber-50 text-amber-700 border border-amber-200"
                                   : "bg-rose-50 text-rose-700 border border-rose-200"
-
                             }`}
                           >
                             {p.status}
@@ -705,7 +678,6 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
           {/* TAB 3: ORDERS */}
 
           {activeTab === "orders" && (
-
             <div className="overflow-x-auto rounded-2xl border border-slate-200">
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider text-[10px]">
@@ -720,7 +692,6 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
                   {safeOrders.map((o) => (
-
                     <tr
                       key={o.id}
                       className="hover:bg-slate-50/50 transition-colors"
@@ -736,7 +707,6 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
                           <p className="text-[10px] text-slate-400">
                             {o.customerEmail}
                           </p>
-
                         </div>
                       </td>
                       <td className="px-4 py-3">{o.itemsCount} items</td>
@@ -753,7 +723,6 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
                               : o.status === "Shipped"
                                 ? "bg-sky-50 text-sky-700 border border-sky-200"
                                 : "bg-amber-50 text-amber-700 border border-amber-200"
-
                           }`}
                         >
                           {o.status}

@@ -9,7 +9,7 @@ interface NavbarProps {
 
 export default function Navbar({ onMenuClick }: NavbarProps) {
   const { data: session } = authClient.useSession();
-  // console.log(session);
+  // (session);
 
   const name = session?.user?.name || "User";
   const email = session?.user?.email || "";

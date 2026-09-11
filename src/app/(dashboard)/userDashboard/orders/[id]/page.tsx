@@ -1,3 +1,8 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
 import {
   Truck,
   CreditCard,
@@ -8,37 +13,180 @@ import {
   MapPin,
   Copy,
   Sparkles,
+  Loader2,
+  AlertCircle,
+  Home,
 } from "lucide-react";
-import Link from "next/link";
+import { useToast } from "@/context/ToastContext";
 
-export default function OrderDetailsPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const order = {
-    id: params.id || "ORD-94821",
-    date: "2026-08-28",
-    paymentStatus: "Paid",
-    paymentMethod: "SSLCommerz / Stripe",
-    orderStatus: "In Transit",
-    trackingId: "TRK-88291039",
-    items: [
-      {
-        id: 1,
-        name: "Minimalist Wireless Headphone",
-        quantity: 1,
-        price: 89.0,
-      },
-      {
-        id: 2,
-        name: "Mechanical Gaming Keyboard",
-        quantity: 1,
-        price: 40.0,
-      },
-    ],
-    total: 129.0,
+interface OrderItem {
+  product?: {
+    _id: string;
+    name?: string;
+    price?: number;
+    images?: string[];
+    brand?: string;
   };
+  quantity: number;
+  price: number;
+}
+
+interface Order {
+  _id: string;
+  trackingId: string;
+  items: OrderItem[];
+  totalAmount: number;
+  shippingAddress?: {
+    fullName?: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+  };
+  paymentMethod?: string;
+  status: string;
+  isCancelled?: boolean;
+  createdAt: string;
+}
+
+type FetchState = "loading" | "error" | "ready";
+
+const statusLabel = (status: string) =>
+  status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+const formatDate = (value: string) =>
+  new Date(value).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+const paymentLabel = (method?: string) =>
+  method === "online" ? "Online Payment" : "Cash on Delivery";
+
+export default function OrderDetailsPage() {
+  const params = useParams<{ id: string }>();
+  const { success, error } = useToast();
+
+  const [order, setOrder] = useState<Order | null>(null);
+  const [state, setState] = useState<FetchState>("loading");
+  const [copyText, setCopyText] = useState("Copy");
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    const controller = new AbortController();
+
+    (async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/orders/${params.id}`,
+          {
+            credentials: "include",
+            cache: "no-store",
+            signal: controller.signal,
+          },
+        );
+        const json = res.ok ? await res.json() : null;
+        if (!active) return;
+
+        if (json && json.data) {
+          setOrder(json.data as Order);
+          setState("ready");
+        } else {
+          throw new Error("Order not found");
+        }
+      } catch {
+        if (active) setState("error");
+      }
+    })();
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [params.id]);
+
+  const handleCopyTracking = async () => {
+    if (!order) return;
+    try {
+      await navigator.clipboard.writeText(order.trackingId);
+      setCopyText("Copied!");
+      setTimeout(() => setCopyText("Copy"), 1500);
+    } catch {
+      error("Failed to copy tracking ID.");
+    }
+  };
+
+  const handleCancelOrder = async () => {
+    if (!order || isCancelling) return;
+    setIsCancelling(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/orders/${order._id}/cancel`,
+        {
+          method: "PATCH",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+      const json = res.ok ? await res.json() : null;
+
+      if (res.ok && json?.data) {
+        success("Order cancelled successfully.");
+        setOrder(json.data as Order);
+      } else {
+        error(json?.message || "Failed to cancel order.");
+      }
+    } catch {
+      error("Failed to cancel order. Please try again.");
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  const cancelled = order?.status === "cancelled";
+
+  const stepActive = (index: number) => {
+    if (!order || cancelled) return false;
+    const s = order.status;
+    if (index === 0) return true;
+    if (index === 1) return ["shipped", "out_for_delivery", "delivered"].includes(s);
+    return s === "delivered";
+  };
+
+  if (state === "loading") {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">Loading order details...</p>
+      </div>
+    );
+  }
+
+  if (state === "error" || !order) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 bg-background text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500">
+          <AlertCircle className="h-8 w-8" />
+        </div>
+        <div>
+          <p className="text-lg font-black">Order not found</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            This order could not be loaded or doesn&apos;t belong to you.
+          </p>
+        </div>
+        <Link
+          href="/userDashboard/orders"
+          className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Orders
+        </Link>
+      </div>
+    );
+  }
+
+  const inTransit = ["shipped", "out_for_delivery", "delivered"].includes(order.status);
 
   return (
     <div className="min-h-screen space-y-7 bg-background">
@@ -72,18 +220,40 @@ export default function OrderDetailsPage({
             <p className="mt-1 text-sm text-muted-foreground">
               Order ID{" "}
               <span className="font-mono font-bold text-foreground">
-                #{order.id}
+                #{order.trackingId}
               </span>
             </p>
           </div>
 
-          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-sm font-bold text-blue-500 shadow-sm shadow-blue-500/10">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-blue-500" />
-            </span>
-            {order.orderStatus}
-          </div>
+          {cancelled ? (
+            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-rose-500/20 bg-rose-500/10 px-4 py-2 text-sm font-bold text-rose-500 shadow-sm shadow-rose-500/10">
+              <span className="h-2.5 w-2.5 rounded-full bg-rose-500" />
+              {statusLabel(order.status)}
+            </div>
+          ) : (
+            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-sm font-bold text-blue-500 shadow-sm shadow-blue-500/10">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-blue-500" />
+              </span>
+              {statusLabel(order.status)}
+            </div>
+          )}
+
+          {!cancelled && (
+            <button
+              onClick={handleCancelOrder}
+              disabled={!["pending", "confirmed"].includes(order.status) || isCancelling}
+              className="inline-flex w-fit items-center gap-2 rounded-xl border border-rose-500/20 bg-rose-500/5 px-4 py-2 text-sm font-bold text-rose-500 transition-all hover:bg-rose-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-rose-500/5 disabled:hover:text-rose-500"
+            >
+              {isCancelling ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <MapPin className="h-4 w-4" />
+              )}
+              Cancel Order
+            </button>
+          )}
         </div>
       </div>
 
@@ -93,7 +263,11 @@ export default function OrderDetailsPage({
           <div>
             <h2 className="font-bold">Delivery Status</h2>
             <p className="text-xs text-muted-foreground">
-              Your package is on the way
+              {cancelled
+                ? "This order was cancelled"
+                : inTransit
+                  ? "Your package is on the way"
+                  : "Your order is being processed"}
             </p>
           </div>
 
@@ -101,26 +275,21 @@ export default function OrderDetailsPage({
         </div>
 
         <div className="relative grid grid-cols-3 gap-2">
-          <div className="absolute left-[16%] right-[16%] top-5 h-0.5 bg-gradient-to-r from-emerald-500 via-blue-500 to-muted" />
+          <div
+            className={`absolute left-[16%] right-[16%] top-5 h-0.5 ${
+              cancelled
+                ? "bg-muted"
+                : "bg-gradient-to-r from-emerald-500 via-blue-500 to-muted"
+            }`}
+          />
 
           {[
-            {
-              label: "Ordered",
-              icon: CheckCircle2,
-              active: true,
-            },
-            {
-              label: "In Transit",
-              icon: Truck,
-              active: true,
-            },
-            {
-              label: "Delivered",
-              icon: MapPin,
-              active: false,
-            },
-          ].map((step) => {
+            { label: "Ordered", icon: CheckCircle2 },
+            { label: "In Transit", icon: Truck },
+            { label: "Delivered", icon: MapPin },
+          ].map((step, index) => {
             const Icon = step.icon;
+            const active = stepActive(index);
 
             return (
               <div
@@ -129,7 +298,7 @@ export default function OrderDetailsPage({
               >
                 <div
                   className={`flex h-10 w-10 items-center justify-center rounded-full border-4 border-card shadow-sm ${
-                    step.active
+                    active
                       ? "bg-primary text-primary-foreground shadow-primary/20"
                       : "bg-muted text-muted-foreground"
                   }`}
@@ -139,9 +308,7 @@ export default function OrderDetailsPage({
 
                 <span
                   className={`text-[11px] font-bold ${
-                    step.active
-                      ? "text-foreground"
-                      : "text-muted-foreground"
+                    active ? "text-foreground" : "text-muted-foreground"
                   }`}
                 >
                   {step.label}
@@ -163,7 +330,7 @@ export default function OrderDetailsPage({
             Order Date
           </p>
 
-          <p className="mt-1 font-bold">{order.date}</p>
+          <p className="mt-1 font-bold">{formatDate(order.createdAt)}</p>
         </div>
 
         <div className="group rounded-2xl border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/5">
@@ -176,12 +343,16 @@ export default function OrderDetailsPage({
           </p>
 
           <div className="mt-1 flex items-center gap-2">
-            <span className="font-bold">{order.paymentStatus}</span>
-            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+            <span className="font-bold">
+              {order.paymentMethod === "online" ? "Paid" : "Pay on Delivery"}
+            </span>
+            {order.paymentMethod === "online" && (
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+            )}
           </div>
 
           <p className="mt-1 text-xs text-muted-foreground">
-            {order.paymentMethod}
+            {paymentLabel(order.paymentMethod)}
           </p>
         </div>
 
@@ -198,6 +369,7 @@ export default function OrderDetailsPage({
             <p className="font-mono text-sm font-bold">{order.trackingId}</p>
 
             <button
+              onClick={handleCopyTracking}
               aria-label="Copy tracking ID"
               className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
@@ -205,11 +377,33 @@ export default function OrderDetailsPage({
             </button>
           </div>
 
-          <p className="mt-1 text-xs text-blue-500">
-            Track your package →
-          </p>
+          <p className="mt-1 text-xs text-blue-500">{copyText} tracking ID</p>
         </div>
       </div>
+
+      {/* Shipping Address */}
+      {order.shippingAddress && (
+        <div className="rounded-2xl border bg-card p-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
+              <Home className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Shipping Address
+              </p>
+              <p className="font-bold">
+                {order.shippingAddress.fullName || "Customer"}
+              </p>
+            </div>
+          </div>
+
+          <p className="mt-3 text-sm text-muted-foreground">
+            {order.shippingAddress.address},{" "}
+            {order.shippingAddress.city} — {order.shippingAddress.phone}
+          </p>
+        </div>
+      )}
 
       {/* Products */}
       <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
@@ -237,63 +431,104 @@ export default function OrderDetailsPage({
             </thead>
 
             <tbody className="divide-y">
-              {order.items.map((item) => (
-                <tr
-                  key={item.id}
-                  className="group transition-colors hover:bg-muted/20"
-                >
-                  <td className="px-5 py-5">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 text-primary">
-                        <Package className="h-5 w-5" />
+              {order.items.map((item, index) => {
+                const product = item.product as
+                  | { _id?: string; name?: string; images?: string[]; brand?: string }
+                  | undefined;
+                const image = product?.images?.[0];
+                const name = product?.name || "Product";
+                const lineTotal = (item.quantity || 1) * item.price;
+
+                return (
+                  <tr
+                    key={product?._id || `${item.price}-${index}`}
+                    className="group transition-colors hover:bg-muted/20"
+                  >
+                    <td className="px-5 py-5">
+                      <div className="flex items-center gap-3">
+                        {image ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={image}
+                            alt={name}
+                            className="h-12 w-12 rounded-xl object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 text-primary">
+                            <Package className="h-5 w-5" />
+                          </div>
+                        )}
+
+                        <div>
+                          <span className="font-bold">{name}</span>
+                          {product?.brand && (
+                            <p className="text-[11px] text-muted-foreground">
+                              {product.brand}
+                            </p>
+                          )}
+                        </div>
                       </div>
+                    </td>
 
-                      <span className="font-bold">{item.name}</span>
-                    </div>
-                  </td>
+                    <td className="px-5 py-5 font-medium text-muted-foreground">
+                      ×{item.quantity}
+                    </td>
 
-                  <td className="px-5 py-5 font-medium text-muted-foreground">
-                    ×{item.quantity}
-                  </td>
+                    <td className="px-5 py-5 font-medium">
+                      ${item.price.toFixed(2)}
+                    </td>
 
-                  <td className="px-5 py-5 font-medium">
-                    ${item.price.toFixed(2)}
-                  </td>
-
-                  <td className="px-5 py-5 text-right font-bold">
-                    ${(item.quantity * item.price).toFixed(2)}
-                  </td>
-                </tr>
-              ))}
+                    <td className="px-5 py-5 text-right font-bold">
+                      ${lineTotal.toFixed(2)}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
 
         {/* Mobile */}
         <div className="divide-y md:hidden">
-          {order.items.map((item) => (
-            <div key={item.id} className="p-4">
-              <div className="flex gap-3">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <Package className="h-5 w-5" />
-                </div>
+          {order.items.map((item, index) => {
+            const product = item.product as
+              | { _id?: string; name?: string; images?: string[] }
+              | undefined;
+            const image = product?.images?.[0];
+            const name = product?.name || "Product";
+            const lineTotal = (item.quantity || 1) * item.price;
 
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold leading-tight">{item.name}</p>
+            return (
+              <div key={product?._id || `${item.price}-${index}`} className="p-4">
+                <div className="flex gap-3">
+                  {image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={image}
+                      alt={name}
+                      className="h-12 w-12 shrink-0 rounded-xl object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <Package className="h-5 w-5" />
+                    </div>
+                  )}
 
-                  <div className="mt-2 flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      Qty: ×{item.quantity}
-                    </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold leading-tight">{name}</p>
 
-                    <span className="font-bold">
-                      ${(item.quantity * item.price).toFixed(2)}
-                    </span>
+                    <div className="mt-2 flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        Qty: ×{item.quantity}
+                      </span>
+
+                      <span className="font-bold">${lineTotal.toFixed(2)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Total */}
@@ -303,7 +538,7 @@ export default function OrderDetailsPage({
           <div className="relative flex items-center justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                Total Paid
+                Total
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
                 Including all applicable charges
@@ -311,7 +546,7 @@ export default function OrderDetailsPage({
             </div>
 
             <span className="text-2xl font-black tracking-tight text-primary sm:text-3xl">
-              ${order.total.toFixed(2)}
+              ${order.totalAmount.toFixed(2)}
             </span>
           </div>
         </div>

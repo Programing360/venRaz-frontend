@@ -12,7 +12,10 @@ import {
   Eye,
   ChevronLeft,
   ChevronRight,
+  ShoppingBag,
+  Loader2,
 } from "lucide-react";
+import { useCart } from "@/context/CartContext";
 
 import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperType } from "swiper";
@@ -136,6 +139,11 @@ function getRatingStars(rating = 0) {
    ========================================================= */
 
 function ProductCard({ product }: { product: Product }) {
+  const { addToCart } = useCart();
+  const [adding, setAdding] = useState(false);
+  const [added, setAdded] = useState(false);
+  console.log(product);
+
   const rating = Number(product.rating ?? 0);
 
   const stock = Number(product.stock ?? 0);
@@ -145,6 +153,15 @@ function ProductCard({ product }: { product: Product }) {
   const oldPrice = getOldPrice(price, product.discount);
 
   const image = getProductImage(product.images);
+
+  const handleAddToCart = async () => {
+    if (adding || added) return;
+    setAdding(true);
+    await addToCart(product, 1);
+    setAdding(false);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1500);
+  };
 
   return (
     <div className="group relative h-full overflow-hidden rounded-lg border border-[#dce5ee] bg-transparent">
@@ -282,12 +299,34 @@ function ProductCard({ product }: { product: Product }) {
             ADD TO CART
             ================================================= */}
 
-        <Link
-          href={`/cart?product=${product._id}`}
-          className="mt-auto flex h-[48px] w-full items-center justify-center rounded-lg border border-[#dce5ee] bg-transparent text-[15px] font-semibold uppercase text-[#111] transition-all duration-300 hover:border-[#ed2939] hover:bg-[#ed2939] hover:text-white"
+        <button
+          type="button"
+          disabled={stock <= 0 || adding}
+          onClick={handleAddToCart}
+          className={`mt-auto flex h-[48px] w-full items-center justify-center rounded-lg border bg-transparent text-[15px] font-semibold uppercase transition-all duration-300 ${
+            stock <= 0
+              ? "cursor-not-allowed border-gray-300 text-gray-400"
+              : added
+                ? "border-[#18b875] bg-[#18b875] text-white"
+                : "border-[#dce5ee] text-[#111] hover:border-[#ed2939] hover:bg-[#ed2939] hover:text-white"
+          }`}
         >
-          Add To Cart
-        </Link>
+          {adding ? (
+            <Loader2 size={18} className="animate-spin" />
+          ) : added ? (
+            <>
+              <Check size={18} className="mr-1.5" />
+              Added
+            </>
+          ) : stock <= 0 ? (
+            "Out of Stock"
+          ) : (
+            <>
+              <ShoppingBag size={18} className="mr-1.5" />
+              Add To Cart
+            </>
+          )}
+        </button>
       </div>
     </div>
   );
@@ -309,7 +348,7 @@ export default function FlashSale() {
      ======================================================= */
 
   const [products, setProducts] = useState<Product[]>([]);
-
+  
   const [loading, setLoading] = useState(true);
 
   const [error, setError] = useState("");
@@ -363,7 +402,7 @@ export default function FlashSale() {
         }
 
         const flashSaleProducts = result.data?.flashSale ?? [];
-
+        
         setProducts(flashSaleProducts);
       } catch (error) {
         console.warn("Flash Sale API offline, using fallback catalog:", error);

@@ -9,7 +9,7 @@ const client = new MongoClient(
 
 const db = client.db(process.env.MONGODB_DATABASE || "venraz");
 
-const ADMIN_EMAIL = "fhlimon36@gmail.com";
+const ADMIN_EMAIL = "fhlimon360@gmail.com";
 
 export const auth = betterAuth({
   database: mongodbAdapter(db, {
@@ -25,6 +25,12 @@ export const auth = betterAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
     },
   },
+  account: {
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ["google"],
+    },
+  },
   user: {
     additionalFields: {
       role: {
@@ -34,7 +40,7 @@ export const auth = betterAuth({
     },
   },
 
-  // Server-side hook to automatically set the user role on creation
+  // Database hooks for role assignment and syncing guest orders
   databaseHooks: {
     user: {
       create: {
@@ -48,6 +54,20 @@ export const auth = betterAuth({
               role: isAdmin ? "admin" : "user",
             },
           };
+        },
+        after: async (user) => {
+          if (user?.email) {
+            try {
+              await db
+                .collection("orders")
+                .updateMany(
+                  { guestEmail: user.email.toLowerCase(), user: null },
+                  { $set: { user: user.id } },
+                );
+            } catch (error) {
+              console.error("Error syncing guest orders:", error);
+            }
+          }
         },
       },
     },

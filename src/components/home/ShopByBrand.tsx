@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from "next/image";
@@ -77,8 +76,8 @@ const brands: Brand[] = [
 
 const ShopByBrand = () => {
   return (
-    <section className="overflow-hidden py-10">
-      <div className="mx-auto w-full max-w-[1800px] px-4"> 
+    <section className="overflow-hidden py-10 bg-[#f7faff]">
+      <div className="mx-auto w-full max-w-[1800px] px-4">
         {/* Header */}
         <div className="mb-6 flex flex-col items-center justify-between gap-4 lg:flex-row">
           <div>
@@ -124,14 +123,14 @@ const ShopByBrand = () => {
           className="w-full"
         >
           {brands.map((brand: Brand) => (
-            <SwiperSlide key={brand.id}>
-              <div className="flex h-[135px] items-center justify-center px-4">
+            <SwiperSlide key={brand.id} className="">
+              <div className="flex h-[135px] items-center justify-center px-4 ">
                 <Image
                   src={brand.image}
                   alt={brand.name}
-                  width={280} 
+                  width={280}
                   height={130}
-                  className="h-auto max-h-[130px] w-auto max-w-[280px] object-cover"
+                  className="h-auto max-h-[130px] w-auto max-w-[280px] object-cover bg-[#dadde7]"
                 />
               </div>
             </SwiperSlide>
@@ -143,4 +142,3 @@ const ShopByBrand = () => {
 };
 
 export default ShopByBrand;
-

@@ -13,11 +13,13 @@ import {
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useToast } from "@/context/ToastContext";
+import { useSession } from "@/lib/auth-client";
 import EmptyState from "@/components/common/EmptyState";
 
 export default function CheckoutPage() {
-  const { items, subtotal, shipping, clearCart } = useCart();
+  const { items, subtotal, shipping } = useCart();
   const { success, error, warning } = useToast();
+  const { data: session } = useSession();
 
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [coupon, setCoupon] = useState("");
@@ -45,7 +47,9 @@ export default function CheckoutPage() {
   const finalTotal = Math.max(0, subtotal + shipping - discountAmount);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -82,59 +86,58 @@ export default function CheckoutPage() {
 
     try {
       const generatedOrderId = `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
-      const generatedTrackingId = `TRK-${Date.now().toString().slice(-6)}`;
 
       const orderPayload = {
-        orderId: generatedOrderId,
-        trackingId: generatedTrackingId,
-        customer: formData,
-        items,
-        subtotal,
-        shipping,
-        discount: discountAmount,
-        total: finalTotal,
-        paymentMethod,
-        status: "Pending",
-        createdAt: new Date().toISOString(),
+        trackingId: `TRK-${Date.now().toString().slice(-6)}`,
+        items: items.map((item) => ({
+          product: item.id,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        totalAmount: finalTotal,
+        shippingAddress: {
+          fullName: formData.fullName,
+          phone: formData.phone,
+          address: formData.address,
+          city: formData.city,
+        },
+        paymentMethod: paymentMethod === "cod" ? "cash_on_delivery" : "online",
       };
-
-      // Attempt to send to Backend API
+      orderPayload;
+      // Send to Backend API
       const API_URL = process.env.NEXT_PUBLIC_API_URL;
       if (API_URL) {
         try {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 2000);
-          await fetch(`${API_URL}/orders`, {
+          const res = await fetch(`${API_URL}/orders`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              ...(session?.session?.token
+                ? { Authorization: `Bearer ${session.session.token}` }
+                : {}),
+            },
             body: JSON.stringify(orderPayload),
             signal: controller.signal,
           }).finally(() => clearTimeout(timeoutId));
-        } catch (apiErr) {
-          console.warn("Backend order API not reachable, saved locally.", apiErr);
-        }
-      }
 
-      // Save order to localStorage for tracking verification
-      try {
-        const existingOrders = JSON.parse(
-          localStorage.getItem("venraz_orders") || "[]"
-        );
-        existingOrders.unshift(orderPayload);
-        localStorage.setItem("venraz_orders", JSON.stringify(existingOrders));
-      } catch (err) {
-        console.error("Failed to store order in localStorage", err);
+          res;
+        } catch (apiErr) {
+          console.warn("Backend order API not reachable.", apiErr);
+        }
       }
 
       setPlacedOrder({
         orderId: generatedOrderId,
-        trackingId: generatedTrackingId,
+        trackingId: orderPayload.trackingId,
         total: finalTotal,
         paymentMethod,
       });
 
-      clearCart();
-      success(`Order placed successfully! Tracking ID: ${generatedTrackingId}`);
+      success(
+        `Order placed successfully! Tracking ID: ${orderPayload.trackingId}`,
+      );
     } catch (err) {
       console.error("Checkout order error:", err);
       error("Something went wrong while placing your order. Please try again.");
@@ -156,14 +159,17 @@ export default function CheckoutPage() {
             Order Confirmed!
           </h1>
           <p className="text-sm text-slate-500 mb-6">
-            Thank you for shopping with VenRaz. Your order has been placed and is currently being processed.
+            Thank you for shopping with VenRaz. Your order has been placed and
+            is currently being processed.
           </p>
 
           {/* Tracking Details Card */}
           <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 text-left space-y-3 mb-8 text-xs sm:text-sm">
             <div className="flex justify-between items-center">
               <span className="text-slate-500">Order ID</span>
-              <span className="font-bold text-slate-900">{placedOrder.orderId}</span>
+              <span className="font-bold text-slate-900">
+                {placedOrder.orderId}
+              </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-slate-500">Tracking Number</span>
@@ -241,7 +247,11 @@ export default function CheckoutPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Shipping Form & Payment Selection */}
           <section className="lg:col-span-7 space-y-6">
-            <form onSubmit={handlePlaceOrder} className="space-y-6" id="checkout-form">
+            <form
+              onSubmit={handlePlaceOrder}
+              className="space-y-6"
+              id="checkout-form"
+            >
               {/* Shipping Address */}
               <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
                 <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
@@ -431,13 +441,17 @@ export default function CheckoutPage() {
           <aside className="lg:col-span-5 space-y-6">
             <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm sticky top-24 space-y-5">
               <h2 className="text-lg font-bold text-slate-900">
-                Your Order ({items.length} {items.length === 1 ? "item" : "items"})
+                Your Order ({items.length}{" "}
+                {items.length === 1 ? "item" : "items"})
               </h2>
 
               {/* Order Items Preview */}
               <div className="max-h-60 overflow-y-auto divide-y divide-slate-100 pr-1 space-y-3">
                 {items.map((item) => (
-                  <div key={item.id} className="pt-3 first:pt-0 flex items-center justify-between gap-3 text-xs">
+                  <div
+                    key={item.id}
+                    className="pt-3 first:pt-0 flex items-center justify-between gap-3 text-xs"
+                  >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="relative w-12 h-12 rounded-lg bg-slate-50 border border-slate-100 shrink-0 overflow-hidden flex items-center justify-center p-1">
                         <Image
@@ -463,7 +477,10 @@ export default function CheckoutPage() {
               </div>
 
               {/* Coupon Form */}
-              <form onSubmit={handleApplyCoupon} className="pt-4 border-t border-slate-100">
+              <form
+                onSubmit={handleApplyCoupon}
+                className="pt-4 border-t border-slate-100"
+              >
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <Tag className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -488,12 +505,18 @@ export default function CheckoutPage() {
               <div className="border-t border-slate-100 pt-4 space-y-2.5 text-xs sm:text-sm">
                 <div className="flex justify-between text-slate-600">
                   <span>Subtotal</span>
-                  <span className="font-bold text-slate-900">${subtotal.toFixed(2)}</span>
+                  <span className="font-bold text-slate-900">
+                    ${subtotal.toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-slate-600">
                   <span>Shipping</span>
                   <span className="font-bold">
-                    {shipping === 0 ? <span className="text-emerald-600">FREE</span> : `$${shipping.toFixed(2)}`}
+                    {shipping === 0 ? (
+                      <span className="text-emerald-600">FREE</span>
+                    ) : (
+                      `$${shipping.toFixed(2)}`
+                    )}
                   </span>
                 </div>
                 {discountAmount > 0 && (
@@ -503,7 +526,9 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 <div className="border-t border-slate-200 pt-3 flex justify-between items-baseline">
-                  <span className="text-base font-bold text-slate-900">Total</span>
+                  <span className="text-base font-bold text-slate-900">
+                    Total
+                  </span>
                   <span className="text-2xl font-black text-[#ff594d]">
                     ${finalTotal.toFixed(2)}
                   </span>

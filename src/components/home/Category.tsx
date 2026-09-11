@@ -57,14 +57,11 @@ const getCategoryImage = (image?: string) => {
 ========================================================= */
 
 export default function Category() {
-  const [categories, setCategories] =
-    useState<CategoryItem[]>([]);
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [error, setError] =
-    useState("");
+  const [error, setError] = useState("");
 
   /* =======================================================
      FETCH CATEGORIES
@@ -76,13 +73,10 @@ export default function Category() {
         setLoading(true);
         setError("");
 
-        const apiUrl =
-          process.env.NEXT_PUBLIC_API_URL;
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
         if (!apiUrl) {
-          throw new Error(
-            "NEXT_PUBLIC_API_URL is not configured"
-          );
+          throw new Error("NEXT_PUBLIC_API_URL is not configured");
         }
 
         /*
@@ -92,36 +86,24 @@ export default function Category() {
          * তাই আলাদা categories endpoint ব্যবহার করছি।
          */
 
-        const response = await fetch(
-          `${apiUrl}/categories`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            cache: "no-store",
-          }
-        );
+        const response = await fetch(`${apiUrl}/categories`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          cache: "no-store",
+        });
 
         if (!response.ok) {
-          throw new Error(
-            `Failed to fetch categories: ${response.status}`
-          );
+          throw new Error(`Failed to fetch categories: ${response.status}`);
         }
 
-        const result: CategoryApiResponse =
-          await response.json();
+        const result: CategoryApiResponse = await response.json();
 
-        console.log(
-          "Categories API Response:",
-          result
-        );
+        console.log("Categories API Response:", result);
 
         if (!result.success) {
-          throw new Error(
-            result.message ||
-              "Failed to load categories"
-          );
+          throw new Error(result.message || "Failed to load categories");
         }
 
         /* =================================================
@@ -141,7 +123,7 @@ export default function Category() {
 
         if (Array.isArray(result.data)) {
           categoryData = result.data;
-        }
+        } else if (
 
         /*
          * Case 2:
@@ -153,17 +135,12 @@ export default function Category() {
          *   }
          * }
          */
-
-        else if (
           result.data &&
           "categories" in result.data &&
-          Array.isArray(
-            result.data.categories
-          )
+          Array.isArray(result.data.categories)
         ) {
-          categoryData =
-            result.data.categories;
-        }
+          categoryData = result.data.categories;
+        } else if (
 
         /*
          * Case 3:
@@ -175,17 +152,12 @@ export default function Category() {
          *   }
          * }
          */
-
-        else if (
           result.data &&
           "category" in result.data &&
-          Array.isArray(
-            result.data.category
-          )
+          Array.isArray(result.data.category)
         ) {
-          categoryData =
-            result.data.category;
-        }
+          categoryData = result.data.category;
+        } else if (
 
         /*
          * Case 4:
@@ -197,22 +169,14 @@ export default function Category() {
          *   }
          * }
          */
-
-        else if (
           result.data &&
           "data" in result.data &&
-          Array.isArray(
-            result.data.data
-          )
+          Array.isArray(result.data.data)
         ) {
-          categoryData =
-            result.data.data;
+          categoryData = result.data.data;
         }
 
-        console.log(
-          "Final Categories:",
-          categoryData
-        );
+        console.log("Final Categories:", categoryData);
 
         setCategories(categoryData);
       } catch (error) {
@@ -220,11 +184,19 @@ export default function Category() {
 
         setCategories([
           { _id: "cat-1", name: "Smart Watches", image: "/placeholder.svg" },
-          { _id: "cat-2", name: "Headphones & Audio", image: "/placeholder.svg" },
+          {
+            _id: "cat-2",
+            name: "Headphones & Audio",
+            image: "/placeholder.svg",
+          },
           { _id: "cat-3", name: "Action Cameras", image: "/placeholder.svg" },
           { _id: "cat-4", name: "Gaming Keyboards", image: "/placeholder.svg" },
           { _id: "cat-5", name: "Wireless Mice", image: "/placeholder.svg" },
-          { _id: "cat-6", name: "Bluetooth Speakers", image: "/placeholder.svg" },
+          {
+            _id: "cat-6",
+            name: "Bluetooth Speakers",
+            image: "/placeholder.svg",
+          },
         ]);
 
         setError("");
@@ -244,11 +216,9 @@ export default function Category() {
     return (
       <section className="w-full bg-[#f6f9fd] py-12">
         <div className="mx-auto max-w-[1800px] px-5">
-
           {/* Header */}
 
           <div className="flex items-center justify-between border-b border-[#d7e0ea]">
-
             <div className="relative">
               <h2 className="pb-4 text-[32px] font-bold leading-none text-black">
                 Shop by Categories
@@ -263,17 +233,13 @@ export default function Category() {
             >
               Explore All
             </Link>
-
           </div>
 
           {/* Loading */}
 
           <div className="flex min-h-[300px] items-center justify-center">
-            <p className="text-gray-500">
-              Loading categories...
-            </p>
+            <p className="text-gray-500">Loading categories...</p>
           </div>
-
         </div>
       </section>
     );
@@ -285,25 +251,20 @@ export default function Category() {
 
   return (
     <section className="w-full bg-[#f6f9fd] py-12">
-
       <div className="mx-auto max-w-[1800px] px-5">
-
         {/* =================================================
             HEADER
         ================================================= */}
 
         <div className="flex items-center justify-between border-b border-[#d7e0ea]">
-
           {/* TITLE */}
 
           <div className="relative">
-
             <h2 className="pb-4 text-[32px] font-bold leading-none text-black">
               Shop by Categories
             </h2>
 
             <span className="absolute bottom-[-1px] left-0 h-[2px] w-[174px] bg-[#ff4b4b]" />
-
           </div>
 
           {/* EXPLORE */}
@@ -314,7 +275,6 @@ export default function Category() {
           >
             Explore All
           </Link>
-
         </div>
 
         {/* =================================================
@@ -323,12 +283,8 @@ export default function Category() {
 
         {error && (
           <div className="flex min-h-[300px] items-center justify-center">
-
             <div className="text-center">
-
-              <p className="text-lg text-red-500">
-                {error}
-              </p>
+              <p className="text-lg text-red-500">{error}</p>
 
               <p className="mt-2 text-sm text-gray-400">
                 Please check the categories API.
@@ -336,16 +292,12 @@ export default function Category() {
 
               <button
                 type="button"
-                onClick={() =>
-                  window.location.reload()
-                }
+                onClick={() => window.location.reload()}
                 className="mt-4 rounded-md bg-black px-5 py-2 text-sm font-medium text-white transition hover:bg-[#ff4b4b]"
               >
                 Try Again
               </button>
-
             </div>
-
           </div>
         )}
 
@@ -353,103 +305,73 @@ export default function Category() {
             EMPTY
         ================================================= */}
 
-        {!error &&
-          categories.length === 0 && (
-            <div className="flex min-h-[300px] items-center justify-center">
+        {!error && categories.length === 0 && (
+          <div className="flex min-h-[300px] items-center justify-center">
+            <div className="text-center">
+              <p className="text-lg text-gray-500">No categories found.</p>
 
-              <div className="text-center">
-
-                <p className="text-lg text-gray-500">
-                  No categories found.
-                </p>
-
-                <p className="mt-2 text-sm text-gray-400">
-                  Please check the categories API response.
-                </p>
-
-              </div>
-
+              <p className="mt-2 text-sm text-gray-400">
+                Please check the categories API response.
+              </p>
             </div>
-          )}
+          </div>
+        )}
 
         {/* =================================================
             CATEGORY GRID
         ================================================= */}
 
-        {!error &&
-          categories.length > 0 && (
-            <div className="mt-8 grid grid-cols-1 border-l border-t border-[#d7e0ea] sm:grid-cols-2 lg:grid-cols-5">
+        {!error && categories.length > 0 && (
+          <div className="mt-8 grid grid-cols-1 border-l border-t border-[#d7e0ea] sm:grid-cols-2 lg:grid-cols-5">
+            {categories.map((category, index) => {
+              /* Product Count */
 
-              {categories.map(
-                (category, index) => {
+              const productCount =
+                category.productsCount ??
+                category.productCount ??
+                (Array.isArray(category.products)
+                  ? category.products.length
+                  : 0);
 
-                  /* Product Count */
+              /* Category ID */
 
-                  const productCount =
-                    category.productsCount ??
-                    category.productCount ??
-                    (Array.isArray(
-                      category.products
-                    )
-                      ? category.products.length
-                      : 0);
+              const categoryId = category._id || String(index);
 
-                  /* Category ID */
+              return (
+                <Link
+                  key={categoryId}
+                  href={`/shop?category=${categoryId}`}
+                  className="group flex min-h-[160px] items-center gap-4 border-b border-r border-[#d7e0ea] bg-white px-6 transition-all duration-300 hover:bg-gray-50 sm:px-8"
+                >
+                  {/* IMAGE */}
 
-                  const categoryId =
-                    category._id ||
-                    String(index);
+                  <div className="flex h-[84px] w-[84px] shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#e7edf4]">
+                    <Image
+                      src={getCategoryImage(category.image)}
+                      alt={category.name || "Category"}
+                      width={84}
+                      height={84}
+                      className="h-[84px] w-[84px] object-contain transition duration-300 group-hover:scale-105"
+                    />
+                  </div>
 
-                  return (
-                    <Link
-                      key={categoryId}
-                      href={`/shop?category=${categoryId}`}
-                      className="group flex min-h-[160px] items-center gap-4 border-b border-r border-[#d7e0ea] bg-white px-6 transition-all duration-300 hover:bg-gray-50 sm:px-8"
-                    >
+                  {/* CONTENT */}
 
-                      {/* IMAGE */}
+                  <div className="min-w-0">
+                    <h3 className="text-[16px] font-semibold leading-6 text-black transition-colors group-hover:text-[#ff4b4b]">
+                      {category.name}
+                    </h3>
 
-                      <div className="flex h-[84px] w-[84px] shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#e7edf4]">
-
-                        <Image
-                          src={getCategoryImage(
-                            category.image
-                          )}
-                          alt={
-                            category.name ||
-                            "Category"
-                          }
-                          width={84}
-                          height={84}
-                          className="h-[84px] w-[84px] object-contain transition duration-300 group-hover:scale-105"
-                        />
-
-                      </div>
-
-                      {/* CONTENT */}
-
-                      <div className="min-w-0">
-
-                        <h3 className="text-[16px] font-semibold leading-6 text-black transition-colors group-hover:text-[#ff4b4b]">
-                          {category.name}
-                        </h3>
-
-                        <p className="mt-1 text-[14px] text-[#536273]">
-                          {productCount} Products
-                        </p>
-
-                      </div>
-
-                    </Link>
-                  );
-                }
-              )}
-
-            </div>
-          )}
-
+                    <p className="mt-1 text-[14px] text-[#536273]">
+                      {productCount} Products
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
-
     </section>
   );
 }

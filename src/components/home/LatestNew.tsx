@@ -45,7 +45,7 @@ export default function LatestNews() {
   return (
     <section
       id="blog-sec"
-      className="overflow-hidden py-16 lg:py-20"
+      className="overflow-hidden py-16 lg:py-20 bg-[#eeeeea]"
     >
       <div className="mx-auto w-full max-w-[1320px] px-4 sm:px-6 lg:px-8">
 

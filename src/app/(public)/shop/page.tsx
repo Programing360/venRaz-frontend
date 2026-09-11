@@ -62,17 +62,14 @@ export default function ShopPage() {
           if (minRating) params.set("minRating", minRating);
           params.set("sort", sortBy);
 
-          const res = await fetch(
-            `${API_URL}/shops?${params.toString()}`,
-            {
-              signal: controller.signal,
-            },
-          ).finally(() => clearTimeout(timeoutId));
+          const res = await fetch(`${API_URL}/shops?${params.toString()}`, {
+            signal: controller.signal,
+          }).finally(() => clearTimeout(timeoutId));
 
           if (res.ok) {
             const data = await res.json();
             const fetched = data.data;
-            console.log(fetched);
+            fetched;
             if (Array.isArray(fetched) && fetched.length > 0 && !cancelled) {
               setProducts(fetched);
               return;
@@ -181,7 +178,7 @@ export default function ShopPage() {
     currentPage * PRODUCTS_PER_PAGE,
   );
 
-  console.log(paginatedProducts);
+  paginatedProducts;
 
   return (
     <main className="min-h-screen bg-[#fcfdfd] py-10 md:py-16 md:mt-10">

@@ -52,7 +52,7 @@ export const AddProductForm = () => {
           setCategory(res.data.suggestedCategory);
       }
 
-      // console.log(res.data);
+      // (res.data);
     } catch {
       alert("AI জেনারেট করতে ব্যর্থ হয়েছে!");
     } finally {
@@ -88,21 +88,25 @@ export const AddProductForm = () => {
     });
 
     // FormData দেখার জন্য সঠিক কাস্টম লগ
-    // console.log("---- FormData Values ----");
+    // ("---- FormData Values ----");
     // for (let [key, value] of formData.entries()) {
-    //   console.log(`${key}:`, value);
+    //   (`${key}:`, value);
     // }
 
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.post("http://localhost:5000/api/v1/products", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
+      const res = await axios.post(
+        "http://localhost:5000/api/v1/products",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
-      console.log(res);
+      res;
 
       alert("প্রোডাক্ট এবং ব্যাকগ্রাউন্ড রিমুভড ছবি সফলভাবে যোগ হয়েছে!");
     } catch (error) {

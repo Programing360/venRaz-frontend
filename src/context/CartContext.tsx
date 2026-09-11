@@ -7,7 +7,6 @@ import React, {
   useEffect,
   useCallback,
   useMemo,
-  useRef,
 } from "react";
 import { useSession } from "@/lib/auth-client";
 import { useToast } from "./ToastContext";
@@ -41,7 +40,7 @@ interface CartContextType {
   addToCart: (product: ProductInput, quantity?: number) => Promise<void>;
   removeFromCart: (id: string) => Promise<void>;
   updateQuantity: (id: string, type: "increase" | "decrease") => Promise<void>;
-  clearCart: () => void;
+  clearCart: () => Promise<void>;
   totalItems: number;
   subtotal: number;
   shipping: number;
@@ -51,156 +50,72 @@ interface CartContextType {
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
-const CART_STORAGE_KEY = "venraz_cart_items";
 
-const mergeCartItems = (
-  serverItems: CartItem[],
-  guestItems: CartItem[],
-): CartItem[] => {
-  const merged = [...serverItems];
-  for (const guest of guestItems) {
-    const existing = merged.find((item) => item.id === guest.id);
-    if (existing) {
-      const maxStock = existing.stock ?? guest.stock ?? 99;
-      merged[merged.indexOf(existing)] = {
-        ...existing,
-        quantity: Math.min(existing.quantity + guest.quantity, maxStock),
-      };
-    } else {
-      merged.push(guest);
-    }
-  }
-  return merged;
-};
+// Map backend cart schema ({ product, quantity, price }) to the frontend CartItem shape.
+const formatServerItems = (serverItems: unknown[]): CartItem[] =>
+  serverItems.map((raw): CartItem => {
+    const item = raw as Record<string, unknown>;
+    const product =
+      typeof item.product === "object" && item.product !== null
+        ? (item.product as Record<string, unknown>)
+        : {};
+    const images = product.images;
+    const firstImage = Array.isArray(images) ? images[0] : undefined;
+    return {
+      id: String(product._id ?? product.id ?? item.product ?? item.id ?? ""),
+      name: String(product.name ?? item.name ?? "Product"),
+      price: Number(product.flashSalePrice ?? product.price ?? item.price ?? 0),
+      image: String(
+        firstImage ?? product.image ?? item.image ?? "/placeholder.svg",
+      ),
+      quantity: Number(item.quantity ?? 1),
+      stock: Number(product.stock ?? item.stock ?? 99),
+      brand: String(product.brand ?? item.brand ?? ""),
+    };
+  });
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
-  const { data: session } = useSession(); // Authenticated user check
+  const { data: session } = useSession();
   const { success, info } = useToast();
-
+  const token = session?.session?.token;
   const isAuthenticated = !!session?.user;
 
-  // Tracks whether the current items came from a successful server fetch.
-  // Only persist to localStorage when the cart is NOT sourced from the server,
-  // so a reachable backend stays the source of truth and offline carts survive reloads.
-  const fromServerRef = useRef(false);
-
-  // Helper function to build headers
   const getAuthHeaders = useCallback(() => {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+    // (headers);
     return headers;
-  }, []);
+  }, [token]);
 
-  // 1. Fetch Cart from Backend or LocalStorage
+  // 1. Load Cart (server-backed only)
   const loadCart = useCallback(async () => {
     try {
       if (isAuthenticated) {
-        // Logged-in User: Fetch from API
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart`, {
           headers: getAuthHeaders(),
-          credentials: "include", // Cookie/Session পাঠানোর জন্য
+          credentials: "include",
         });
 
         if (res.ok) {
           const responseData = await res.json();
           const serverItems =
             responseData?.data?.items || responseData?.data || [];
-
-          // Map backend schema to frontend CartItem standard
-          const formattedItems: CartItem[] = serverItems.map(
-            (raw: unknown): CartItem => {
-              const item = raw as Record<string, unknown>;
-              const product =
-                typeof item.productId === "object" && item.productId !== null
-                  ? (item.productId as Record<string, unknown>)
-                  : {};
-              const images = product.images;
-              const firstImage = Array.isArray(images) ? images[0] : undefined;
-              return {
-                id: String(
-                  product._id ?? product.id ?? item.productId ?? item.id ?? "",
-                ),
-                name: String(product.name ?? item.name ?? "Product"),
-                price: Number(
-                  product.flashSalePrice ?? product.price ?? item.price ?? 0,
-                ),
-                image: String(
-                  firstImage ??
-                    product.image ??
-                    item.image ??
-                    "/placeholder.svg",
-                ),
-                quantity: Number(item.quantity ?? 1),
-                stock: Number(product.stock ?? item.stock ?? 99),
-                brand: String(product.brand ?? item.brand ?? ""),
-              };
-            },
-          );
-
-          // Local storage cart synchronization on login
-          const localSaved = localStorage.getItem(CART_STORAGE_KEY);
-          const guestItems: CartItem[] = localSaved
-            ? JSON.parse(localSaved)
-            : [];
-          if (guestItems.length > 0) {
-            try {
-              for (const guestItem of guestItems) {
-                const syncRes = await fetch(
-                  `${process.env.NEXT_PUBLIC_API_URL}/cart`,
-                  {
-                    method: "POST",
-                    headers: getAuthHeaders(),
-                    credentials: "include",
-                    body: JSON.stringify({
-                      productId: guestItem.id,
-                      quantity: guestItem.quantity,
-                    }),
-                  },
-                );
-                if (!syncRes.ok) throw new Error("Guest cart sync failed");
-              }
-              localStorage.removeItem(CART_STORAGE_KEY);
-              fromServerRef.current = true;
-              setItems(mergeCartItems(formattedItems, guestItems));
-            } catch {
-              fromServerRef.current = false;
-              setItems(guestItems);
-            }
-          } else {
-            fromServerRef.current = true;
-            setItems(formattedItems);
-          }
-        } else {
-          // Server cart unavailable (unauthenticated by backend, offline, etc.)
-          // Fall back to the local/guest cart so the user keeps their items.
-          fromServerRef.current = false;
-          const saved = localStorage.getItem(CART_STORAGE_KEY);
-          if (saved) {
-            setItems(JSON.parse(saved));
-          } else {
-            setItems([]);
-          }
-        }
-      } else {
-        // Guest User: Fetch from LocalStorage
-        fromServerRef.current = false;
-        const saved = localStorage.getItem(CART_STORAGE_KEY);
-        if (saved) {
-          setItems(JSON.parse(saved));
+          setItems(formatServerItems(serverItems));
         } else {
           setItems([]);
         }
+      } else {
+        setItems([]);
       }
     } catch (err) {
       console.error("Cart loading failed:", err);
-      fromServerRef.current = false;
-      const saved = localStorage.getItem(CART_STORAGE_KEY);
-      if (saved) {
-        setItems(JSON.parse(saved));
-      }
+      setItems([]);
     } finally {
       setIsLoaded(true);
     }
@@ -222,16 +137,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     };
   }, [loadCart]);
 
-  // Save to LocalStorage when the cart is not sourced from the server,
-  // so offline/fallback carts survive page reloads for all users.
-  useEffect(() => {
-    if (isLoaded && !fromServerRef.current) {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
-    }
-  }, [items, isLoaded]);
-
-  // Shared local (guest-style) add logic, used by both guests and as a
-  // fallback when the backend cart API is unavailable.
+  // Local in-memory update for guests and as a fallback when the API is down.
   const applyLocalAdd = useCallback((item: CartItem, addedQty: number) => {
     setItems((prev) => {
       const existingIndex = prev.findIndex((i) => i.id === item.id);
@@ -256,23 +162,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     async (product: ProductInput, quantity: number = 1) => {
       const productId = String(product._id || product.id);
       const name = product.name || "Product";
-      const price = Number(product.flashSalePrice || product.price || 0);
-      const image = product.images?.[0] || product.image || "/placeholder.svg";
-      const brand = product.brand || "";
-      const stock = typeof product.stock === "number" ? product.stock : 99;
 
       const localItem: CartItem = {
         id: productId,
         name,
-        price,
+        price: Number(product.flashSalePrice || product.price || 0),
         discount: product.discount,
-        image,
-        quantity: Math.min(quantity, stock),
-        stock,
-        brand,
+        image: product.images?.[0] || product.image || "/placeholder.svg",
+        quantity: Math.min(
+          quantity,
+          typeof product.stock === "number" ? product.stock : 99,
+        ),
+        stock: typeof product.stock === "number" ? product.stock : 99,
+        brand: product.brand || "",
       };
-
-      let syncedToServer = false;
 
       if (isAuthenticated) {
         try {
@@ -282,24 +185,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             credentials: "include",
             body: JSON.stringify({ productId, quantity }),
           });
+          console.log(res, productId, quantity);
           if (res.ok) {
-            syncedToServer = true;
             await loadCart(); // Refetch database items
+            success(`Added "${name}" to your shopping cart!`, "Added to Cart");
+            return;
           }
         } catch {
           // Fall through to local fallback below
         }
-      }
-
-      if (isAuthenticated && !syncedToServer) {
-        fromServerRef.current = false;
         applyLocalAdd(localItem, quantity);
-        info("Account sync unavailable — item saved to this device.", "Cart");
-      } else if (!isAuthenticated) {
+        info(`Added "${name}" locally — server sync unavailable.`, "Cart");
+      } else {
         applyLocalAdd(localItem, quantity);
+        success(`Added "${name}" to your shopping cart!`, "Added to Cart");
       }
-
-      success(`Added "${name}" to your shopping cart!`, "Added to Cart");
     },
     [isAuthenticated, loadCart, getAuthHeaders, applyLocalAdd, success, info],
   );
@@ -323,11 +223,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           if (res.ok) {
             await loadCart();
           } else {
-            fromServerRef.current = false;
             setItems((prev) => prev.filter((item) => item.id !== id));
           }
         } catch {
-          fromServerRef.current = false;
           setItems((prev) => prev.filter((item) => item.id !== id));
         }
       } else {
@@ -377,11 +275,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           if (res.ok) {
             await loadCart();
           } else {
-            fromServerRef.current = false;
             applyLocalUpdate();
           }
         } catch {
-          fromServerRef.current = false;
           applyLocalUpdate();
         }
       } else {
@@ -392,14 +288,24 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   );
 
   // 5. Clear Cart
-  const clearCart = useCallback(() => {
-    setItems([]);
-    if (!isAuthenticated) {
-      localStorage.removeItem(CART_STORAGE_KEY);
+  const clearCart = useCallback(async () => {
+    if (isAuthenticated && items.length > 0) {
+      try {
+        for (const item of items) {
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart/${item.id}`, {
+            method: "DELETE",
+            headers: getAuthHeaders(),
+            credentials: "include",
+          });
+        }
+      } catch {
+        // Best-effort: items cleared locally even if server fails
+      }
     }
-  }, [isAuthenticated]);
+    setItems([]);
+  }, [isAuthenticated, items, getAuthHeaders]);
 
-  // Calculations
+  // 6. Calculations
   const totalItems = useMemo(
     () => items.reduce((sum, item) => sum + item.quantity, 0),
     [items],

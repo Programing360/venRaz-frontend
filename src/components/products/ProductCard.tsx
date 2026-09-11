@@ -30,7 +30,7 @@ interface ProductCardProps {
 const ProductCard = ({ product }: ProductCardProps) => {
   const { addToCart } = useCart();
   const [added, setAdded] = React.useState(false);
-  // console.log(product);
+  // (product);
   const image = product.images?.[0] || "/placeholder.svg";
 
   const hasDiscount =

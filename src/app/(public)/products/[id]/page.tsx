@@ -63,10 +63,10 @@ export default function ProductDetailsPage({
           const res = await fetch(`${API_URL}/products/${id}`, {
             signal: controller.signal,
           }).finally(() => clearTimeout(timeoutId));
-          console.log(res);
+          res;
           if (res.ok) {
             const data = await res.json();
-            console.log(data);
+            data;
             const productData = data?.data || data;
             if (productData && productData._id) {
               setProduct(productData);
@@ -98,9 +98,7 @@ export default function ProductDetailsPage({
             rating: found.rating,
             reviews: found.totalReviews,
           });
-          setSelectedImage(
-            found.images?.[0] || "/placeholder.svg",
-          );
+          setSelectedImage(found.images?.[0] || "/placeholder.svg");
         }
       } catch (err) {
         console.error("Product fetch error:", err);
@@ -108,9 +106,7 @@ export default function ProductDetailsPage({
           MOCK_PRODUCTS.find((p) => p._id === id) || MOCK_PRODUCTS[0];
         if (found) {
           setProduct(found);
-          setSelectedImage(
-            found.images?.[0] || "/placeholder.svg",
-          );
+          setSelectedImage(found.images?.[0] || "/placeholder.svg");
         }
       } finally {
         setLoading(false);

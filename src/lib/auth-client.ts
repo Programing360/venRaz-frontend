@@ -9,13 +9,6 @@ export const authClient = createAuthClient({
     inferAdditionalFields<typeof auth>(), // Automatically attaches role to session.user
   ],
   baseURL: "http://localhost:3000",
-
-  
 });
 
-export const {
-  signIn,
-  signUp,
-  signOut,
-  useSession,
-} = authClient;
+export const { signIn, signUp, signOut, useSession } = authClient;

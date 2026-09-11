@@ -82,6 +82,15 @@ export default function RegisterPage() {
       if (data) {
         router.push("/");
         router.refresh();
+        await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/orders/sync-guest-orders`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          },
+        );
       }
     } catch {
       setError("Something went wrong. Please try again.");
@@ -160,17 +169,17 @@ export default function RegisterPage() {
 
           <div>
             <Field label="Password" htmlFor="password" />
-<PasswordInput
-            id="password"
-            type="password"
-            autoComplete="new-password"
-            required
-            minLength={8}
-            maxLength={128}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Minimum 8 characters"
-          />
+            <PasswordInput
+              id="password"
+              type="password"
+              autoComplete="new-password"
+              required
+              minLength={8}
+              maxLength={128}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Minimum 8 characters"
+            />
             <p className="mt-2 text-xs text-[#9A9488]">
               Use at least 8 characters.
             </p>
@@ -178,15 +187,15 @@ export default function RegisterPage() {
 
           <div>
             <Field label="Confirm password" htmlFor="confirmPassword" />
-<PasswordInput
-            id="confirmPassword"
-            type="password"
-            autoComplete="new-password"
-            required
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Re-enter your password"
-          />
+            <PasswordInput
+              id="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              required
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Re-enter your password"
+            />
           </div>
 
           <label className="flex items-start gap-3">

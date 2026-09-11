@@ -1,6 +1,3 @@
-
-
-
 import BestSellers from "@/components/home/BestSellerss";
 import Category from "@/components/home/Category";
 import FeaturedProducts from "@/components/home/FeaturedProducts";

@@ -16,3 +16,4 @@ export interface Product {
 }
 
 export type ProductFormData = Omit<Product, 'id' | 'createdAt' | 'updatedAt'>;
+
