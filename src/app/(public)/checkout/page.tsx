@@ -103,7 +103,7 @@ export default function CheckoutPage() {
         },
         paymentMethod: paymentMethod === "cod" ? "cash_on_delivery" : "online",
       };
-      orderPayload;
+
       // Send to Backend API
       const API_URL = process.env.NEXT_PUBLIC_API_URL;
       if (API_URL) {

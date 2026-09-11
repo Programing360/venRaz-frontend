@@ -14,8 +14,8 @@ import {
   PackageX,
   AlertCircle,
 } from "lucide-react";
-import { auth } from "@/lib/auth";
-import { useSession } from "@/lib/auth-client";
+import { authHeaders } from "@/lib/core/orders";
+import axios from "axios";
 
 interface OrderItem {
   product?: {
@@ -90,7 +90,7 @@ export default function MyOrdersPage() {
   const [state, setState] = useState<FetchState>("loading");
   const [refreshKey, setRefreshKey] = useState(0);
   // const { data: session } = useSession();
-  orders;
+  console.log(orders);
   useEffect(() => {
     let active = true;
     const controller = new AbortController();
@@ -98,16 +98,20 @@ export default function MyOrdersPage() {
 
     (async () => {
       try {
-        const res = await fetch(
+        // 1. axios.get-এর আগে await ব্যবহার করুন
+        const res = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/orders/my-orders`,
           {
-            credentials: "include",
-            cache: "no-store",
             signal: controller.signal,
+            headers: await authHeaders(),
           },
         );
-        const json = res.ok ? await res.json() : null;
+
         if (!active) return;
+
+        // 2. Axios-এ ডাটা সরাসরি res.data-তে থাকে
+        const json = res.data;
+        console.log(json);
 
         if (json && Array.isArray(json.data)) {
           setOrders(json.data as Order[]);
@@ -115,7 +119,7 @@ export default function MyOrdersPage() {
         } else {
           throw new Error("Invalid response");
         }
-      } catch {
+      } catch (err) {
         if (active) setState("error");
       }
     })();

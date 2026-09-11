@@ -18,6 +18,8 @@ import {
   Home,
 } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
+import axios from "axios";
+import { authHeaders } from "@/lib/core/orders";
 
 interface OrderItem {
   product?: {
@@ -78,15 +80,14 @@ export default function OrderDetailsPage() {
 
     (async () => {
       try {
-        const res = await fetch(
+        const res = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/orders/${params.id}`,
           {
-            credentials: "include",
-            cache: "no-store",
             signal: controller.signal,
+            headers: await authHeaders()
           },
         );
-        const json = res.ok ? await res.json() : null;
+        const json = res.data
         if (!active) return;
 
         if (json && json.data) {

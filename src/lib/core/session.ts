@@ -20,7 +20,7 @@ export const getUserToken = async () => {
   }
 
   // (session);
-  return session.session.token;
+  return session?.session?.token;
 };
 
 export const requiredRole = async (role: "user") => {
