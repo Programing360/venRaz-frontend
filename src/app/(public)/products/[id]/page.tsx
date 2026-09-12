@@ -17,6 +17,9 @@ import {
 import { useCart } from "@/context/CartContext";
 import { MOCK_PRODUCTS } from "@/lib/products/mockCatalog";
 import EmptyState from "@/components/common/EmptyState";
+import ReviewsSection from "@/components/products/ReviewsSection";
+import RelatedProducts from "@/components/products/RelatedProducts";
+import { trackCategoryVisit } from "@/utils/categoryTracker";
 
 type Product = {
   _id: string;
@@ -27,7 +30,7 @@ type Product = {
   discount?: number;
   image?: string;
   images?: string[];
-  category?: string;
+  category?: string | { _id?: string; name?: string; [key: string]: unknown };
   brand?: string;
   stock?: number;
   rating?: number;
@@ -117,6 +120,18 @@ export default function ProductDetailsPage({
       fetchProduct();
     }
   }, [id, API_URL]);
+  useEffect(() => {
+    const cat =
+      typeof product?.category === "object" && product?.category !== null
+        ? product.category._id
+        : typeof product?.category === "string"
+          ? product.category
+          : undefined;
+    if (cat) {
+      // ইউজার ভিউ করার সাথে সাথে ক্যাটাগরি ট্রাক হবে
+      trackCategoryVisit(cat);
+    }
+  }, [product]);
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -160,8 +175,20 @@ export default function ProductDetailsPage({
   const finalPrice = product.discountPrice || product.price;
   const isOutOfStock = product.stock === 0;
 
+  const categoryObj =
+    typeof product.category === "object" && product.category !== null
+      ? (product.category as { _id?: string; name?: string })
+      : null;
+  const categoryId =
+    categoryObj?._id ||
+    (typeof product.category === "string" ? product.category : undefined);
+  const categoryName =
+    categoryObj?.name ||
+    (typeof product.category === "string" ? product.category : undefined);
+  const reviewCount = product.reviews || product.totalReviews || 0;
+
   return (
-    <main className="min-h-screen bg-[#fcfdfd] py-12 md:py-16">
+    <main className="min-h-screen bg-[#fcfdfd] py-12 md:py-16 mt-10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Breadcrumb Back Link */}
         <div className="mb-8">
@@ -329,6 +356,18 @@ export default function ProductDetailsPage({
             </div>
           </div>
         </div>
+      {/* Customer Reviews + Related Products */}
+        <ReviewsSection
+          productId={product._id}
+          initialRating={product.rating}
+          initialTotalReviews={reviewCount}
+        />
+
+        <RelatedProducts
+          productId={product._id}
+          categoryId={categoryId}
+          categoryName={categoryName}
+        />
       </div>
     </main>
   );

@@ -13,13 +13,18 @@ export default function Home() {
   return (
     <>
       <Hero />
-      <FlashSale></FlashSale>
-      <Category />
-      <TrendingProducts />
-      <FeaturedProducts></FeaturedProducts>
-      <BestSellers></BestSellers>
-      <ShopBySmartWatchest></ShopBySmartWatchest>
-      <ShopByBrand></ShopByBrand>
+      <div className="bg-[#f7faff]">
+        <div className="container mx-auto ">
+          <FlashSale></FlashSale>
+          <Category />
+          <TrendingProducts />
+          <FeaturedProducts></FeaturedProducts>
+          <BestSellers></BestSellers>
+          <ShopBySmartWatchest></ShopBySmartWatchest>
+          <ShopByBrand></ShopByBrand>
+        </div>
+      </div>
+
       <CustomerReviews></CustomerReviews>
       <LatestNews></LatestNews>
     </>

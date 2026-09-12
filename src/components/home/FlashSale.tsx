@@ -34,6 +34,7 @@ type Product = {
   discount?: number;
   rating?: number;
   stock?: number;
+  flashSalePrice?: number;
 };
 
 type HomeSectionsData = {
@@ -47,7 +48,7 @@ type HomeSectionsData = {
 type ApiResponse = {
   success: boolean;
   message?: string;
-  data?: HomeSectionsData;
+  data?: HomeSectionsData | Product[];
 };
 
 /* =========================================================
@@ -57,19 +58,16 @@ type ApiResponse = {
 const FALLBACK_IMAGE = "/placeholder.svg";
 
 /* =========================================================
-   PRODUCT IMAGE HELPER
+   PRODUCT IMAGE HELPER (FIXED)
    ========================================================= */
 
-function getProductImage(images?: string[]) {
+function getProductImage(images?: string[]): string {
   const image = images?.[0];
 
   if (!image) {
     return FALLBACK_IMAGE;
   }
 
-  /*
-   * API dummy image হলে local image ব্যবহার করবে
-   */
   if (
     image.includes("example.com") ||
     image.includes("placehold.co") ||
@@ -101,11 +99,8 @@ function getCountdown() {
 
   return {
     days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-
     hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-
     minutes: Math.floor((difference / (1000 * 60)) % 60),
-
     seconds: Math.floor((difference / 1000) % 60),
   };
 }
@@ -135,23 +130,23 @@ function getRatingStars(rating = 0) {
 }
 
 /* =========================================================
-   PRODUCT CARD
+   PRODUCT CARD (FIXED IMAGE SRC)
    ========================================================= */
 
 function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useCart();
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
-  console.log(product);
 
   const rating = Number(product.rating ?? 0);
-
   const stock = Number(product.stock ?? 0);
+const price = Number(product.flashSalePrice ?? product.price ?? 0);
 
-  const price = Number(product.price ?? 0);
-
-  const oldPrice = getOldPrice(price, product.discount);
-
+  const oldPrice =
+    product.flashSalePrice !== undefined && product.flashSalePrice !== null
+      ? Number(product.price ?? 0)
+      : getOldPrice(price, product.discount);
+  // Directly returns primary string image path
   const image = getProductImage(product.images);
 
   const handleAddToCart = async () => {
@@ -165,13 +160,10 @@ function ProductCard({ product }: { product: Product }) {
 
   return (
     <div className="group relative h-full overflow-hidden rounded-lg border border-[#dce5ee] bg-transparent">
-      {/* =================================================
-          IMAGE
-          ================================================= */}
-
+      {/* IMAGE */}
       <div className="relative mx-2 mt-2 flex h-[243px] items-center justify-center overflow-hidden rounded-lg bg-[#e3ebf4]">
         <Image
-          src={image}
+          src={image} // FIX: image variable is already a string
           alt={product.name || "Product image"}
           width={230}
           height={230}
@@ -181,23 +173,15 @@ function ProductCard({ product }: { product: Product }) {
           }
         />
 
-        {/* =================================================
-            DISCOUNT
-            ================================================= */}
-
+        {/* DISCOUNT */}
         {product.discount !== undefined && product.discount > 0 && (
           <span className="absolute left-0 top-0 rounded-br-[16px] rounded-tl-[7px] bg-[#ed2939] px-3 py-1 text-[14px] font-bold text-white">
             -{product.discount}%
           </span>
         )}
 
-        {/* =================================================
-            ACTIONS
-            ================================================= */}
-
+        {/* ACTIONS */}
         <div className="absolute right-3 top-3 flex translate-x-10 flex-col gap-2 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
-          {/* Wishlist */}
-
           <Link
             href="/wishlist"
             aria-label="Add to wishlist"
@@ -206,8 +190,6 @@ function ProductCard({ product }: { product: Product }) {
             <Heart size={17} />
           </Link>
 
-          {/* Compare */}
-
           <Link
             href="/compare"
             aria-label="Compare product"
@@ -215,8 +197,6 @@ function ProductCard({ product }: { product: Product }) {
           >
             <ArrowLeftRight size={17} />
           </Link>
-
-          {/* Quick View */}
 
           <button
             type="button"
@@ -228,13 +208,8 @@ function ProductCard({ product }: { product: Product }) {
         </div>
       </div>
 
-      {/* =================================================
-          CONTENT
-          ================================================= */}
-
+      {/* CONTENT */}
       <div className="flex min-h-[255px] flex-col px-6 pb-6 pt-5">
-        {/* Product Name */}
-
         <h3 className="min-h-[52px] text-[16px] font-semibold leading-[1.45] text-[#111]">
           <Link
             href={`/shop-details/${product._id}`}
@@ -244,10 +219,7 @@ function ProductCard({ product }: { product: Product }) {
           </Link>
         </h3>
 
-        {/* =================================================
-            RATING
-            ================================================= */}
-
+        {/* RATING */}
         <div className="mt-2 flex items-center gap-5">
           <div
             className="flex gap-[1px] text-[19px] leading-none text-[#ff594d]"
@@ -261,10 +233,7 @@ function ProductCard({ product }: { product: Product }) {
           <span className="text-[13px] text-[#999]">({rating})</span>
         </div>
 
-        {/* =================================================
-            PRICE
-            ================================================= */}
-
+        {/* PRICE */}
         <div className="mt-3 flex items-center gap-2">
           <span className="text-[17px] font-bold text-[#111]">
             ${price.toFixed(2)}
@@ -277,10 +246,7 @@ function ProductCard({ product }: { product: Product }) {
           )}
         </div>
 
-        {/* =================================================
-            STOCK
-            ================================================= */}
-
+        {/* STOCK */}
         <div className="mt-5 flex items-center gap-1.5 text-[13px]">
           <Check
             size={15}
@@ -295,10 +261,7 @@ function ProductCard({ product }: { product: Product }) {
           {stock > 0 && <span className="text-[#111]">{stock} Products</span>}
         </div>
 
-        {/* =================================================
-            ADD TO CART
-            ================================================= */}
-
+        {/* ADD TO CART */}
         <button
           type="button"
           disabled={stock <= 0 || adding}
@@ -337,35 +300,20 @@ function ProductCard({ product }: { product: Product }) {
    ========================================================= */
 
 export default function FlashSale() {
-  /* =======================================================
-     SWIPER
-     ======================================================= */
-
   const swiperRef = useRef<SwiperType | null>(null);
 
-  /* =======================================================
-     STATES
-     ======================================================= */
-
   const [products, setProducts] = useState<Product[]>([]);
-  
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
-
   const [time, setTime] = useState({
     days: 0,
     hours: 0,
     minutes: 0,
     seconds: 0,
   });
-
   const [mounted, setMounted] = useState(false);
 
-  /* =======================================================
-     FETCH FLASH SALE PRODUCTS
-     ======================================================= */
-
+  /* FETCH FLASH SALE PRODUCTS (FIXED PAYLOAD EXTRACTION) */
   useEffect(() => {
     const fetchFlashSaleProducts = async () => {
       try {
@@ -378,76 +326,36 @@ export default function FlashSale() {
           throw new Error("NEXT_PUBLIC_API_URL is not configured");
         }
 
-        const response = await fetch(
-          `${apiUrl}/products/home-sections`,
-          {
-            method: "GET",
-            headers: {
-              Accept: "application/json",
-            },
-            cache: "no-store",
-          },
-        );
+        const response = await fetch(`${apiUrl}/products/flash-sale`, {
+          cache: "no-store",
+        });
 
         if (!response.ok) {
           throw new Error(`Failed to fetch products: ${response.status}`);
         }
 
         const result: ApiResponse = await response.json();
-
+        console.log(response);
         if (!result.success) {
           throw new Error(
             result.message || "Failed to load flash sale products",
           );
         }
 
-        const flashSaleProducts = result.data?.flashSale ?? [];
-        
+        const data = result.data;
+
+        // FIX: Extract dynamic array safely
+        let flashSaleProducts: Product[] = [];
+        if (Array.isArray(data)) {
+          flashSaleProducts = data;
+        } else if (data && typeof data === "object") {
+          flashSaleProducts = data.flashSale ?? [];
+        }
+
         setProducts(flashSaleProducts);
-      } catch (error) {
-        console.warn("Flash Sale API offline, using fallback catalog:", error);
-
-        // Graceful fallback to rich mock data
-        setProducts([
-          {
-            _id: "prod-1",
-            name: "Samsung Galaxy Watch6 Aluminum Smart Watch",
-            images: ["/placeholder.svg"],
-            price: 289.99,
-            discount: 15,
-            rating: 4.8,
-            stock: 45,
-          },
-          {
-            _id: "prod-2",
-            name: "Beat True Wireless Noise Cancelling Earbuds",
-            images: ["/placeholder.svg"],
-            price: 189.99,
-            discount: 20,
-            rating: 4.7,
-            stock: 60,
-          },
-          {
-            _id: "prod-5",
-            name: "Precision Optical Wireless Gaming Mouse",
-            images: ["/placeholder.svg"],
-            price: 69.99,
-            discount: 12,
-            rating: 4.6,
-            stock: 50,
-          },
-          {
-            _id: "prod-6",
-            name: "Portable Bluetooth 360 Speaker Waterproof",
-            images: ["/placeholder.svg"],
-            price: 119.99,
-            discount: 25,
-            rating: 4.8,
-            stock: 35,
-          },
-        ]);
-
-        setError("");
+      } catch (err: unknown) {
+        console.warn("Flash Sale API call issue, checking data flow:", err);
+        setError("Could not load products.");
       } finally {
         setLoading(false);
       }
@@ -456,10 +364,7 @@ export default function FlashSale() {
     fetchFlashSaleProducts();
   }, []);
 
-  /* =======================================================
-     COUNTDOWN
-     ======================================================= */
-
+  /* COUNTDOWN */
   useEffect(() => {
     const timer = setTimeout(() => {
       setMounted(true);
@@ -476,104 +381,60 @@ export default function FlashSale() {
     };
   }, []);
 
-  /* =======================================================
-     RETURN
-     ======================================================= */
-
   return (
     <section className="overflow-hidden bg-[#f7faff] py-[60px] md:py-[70px]">
       <div className="mx-auto w-full max-w-[1860px] px-5 lg:px-8">
-        {/* =================================================
-            HEADER
-            ================================================= */}
-
+        {/* HEADER */}
         <div className="mb-8 flex flex-col justify-between gap-7 xl:flex-row xl:items-center">
-          {/* =================================================
-              TITLE
-              ================================================= */}
-
           <div>
             <h2 className="text-[30px] font-bold leading-none text-[#111] sm:text-[34px] md:text-[38px]">
               Flash Sale Today
             </h2>
-
-            {/* Underline */}
-
             <div className="relative mt-5 h-[2px] w-[250px] bg-[#dce5ee] sm:w-[308px]">
               <span className="absolute left-0 top-0 h-[2px] w-[150px] bg-[#ff594d] sm:w-[172px]" />
             </div>
           </div>
 
-          {/* =================================================
-              RIGHT SIDE
-              ================================================= */}
-
+          {/* TIMER & EXPLORE */}
           <div className="flex flex-wrap items-center gap-3">
-            {/* Fire + Text */}
-
             <div className="flex items-center gap-2 sm:gap-3">
               <Flame
                 size={27}
                 strokeWidth={2.5}
                 className="fill-[#ed2939] text-[#ed2939] sm:h-[30px] sm:w-[30px]"
               />
-
               <span className="text-[15px] font-semibold text-[#ed2939] sm:text-[18px]">
                 Hurry up! Sale end in:
               </span>
             </div>
 
-            {/* =================================================
-                DAYS
-                ================================================= */}
-
             <div className="flex h-[52px] w-[57px] flex-col items-center justify-center rounded-lg bg-[#ed2939] text-white">
               <span className="text-[17px] font-bold leading-none">
                 {mounted ? String(time.days).padStart(2, "0") : "00"}
               </span>
-
               <span className="mt-1 text-[12px]">Days</span>
             </div>
-
-            {/* =================================================
-                HOURS
-                ================================================= */}
 
             <div className="flex h-[52px] w-[57px] flex-col items-center justify-center rounded-lg bg-[#ed2939] text-white">
               <span className="text-[17px] font-bold leading-none">
                 {mounted ? String(time.hours).padStart(2, "0") : "00"}
               </span>
-
               <span className="mt-1 text-[12px]">Hours</span>
             </div>
-
-            {/* =================================================
-                MINUTES
-                ================================================= */}
 
             <div className="flex h-[52px] w-[57px] flex-col items-center justify-center rounded-lg bg-[#ed2939] text-white">
               <span className="text-[17px] font-bold leading-none">
                 {mounted ? String(time.minutes).padStart(2, "0") : "00"}
               </span>
-
               <span className="mt-1 text-[12px]">Mins</span>
             </div>
-
-            {/* =================================================
-                SECONDS
-                ================================================= */}
 
             <div className="flex h-[52px] w-[57px] flex-col items-center justify-center rounded-lg bg-[#ed2939] text-white">
               <span className="text-[17px] font-bold leading-none">
                 {mounted ? String(time.seconds).padStart(2, "0") : "00"}
               </span>
-
               <span className="mt-1 text-[12px]">Secs</span>
             </div>
-
-            {/* =================================================
-                EXPLORE
-                ================================================= */}
 
             <Link
               href="/shop"
@@ -584,10 +445,7 @@ export default function FlashSale() {
           </div>
         </div>
 
-        {/* =================================================
-            LOADING
-            ================================================= */}
-
+        {/* LOADING */}
         {loading && (
           <div className="flex min-h-[400px] items-center justify-center">
             <p className="text-lg text-gray-500">
@@ -596,15 +454,11 @@ export default function FlashSale() {
           </div>
         )}
 
-        {/* =================================================
-            ERROR
-            ================================================= */}
-
+        {/* ERROR */}
         {!loading && error && (
           <div className="flex min-h-[400px] items-center justify-center">
             <div className="text-center">
               <p className="text-lg text-red-500">{error}</p>
-
               <button
                 type="button"
                 onClick={() => window.location.reload()}
@@ -616,10 +470,7 @@ export default function FlashSale() {
           </div>
         )}
 
-        {/* =================================================
-            EMPTY
-            ================================================= */}
-
+        {/* EMPTY */}
         {!loading && !error && products.length === 0 && (
           <div className="flex min-h-[400px] items-center justify-center">
             <p className="text-lg text-gray-500">
@@ -628,10 +479,7 @@ export default function FlashSale() {
           </div>
         )}
 
-        {/* =================================================
-            PRODUCT SLIDER
-            ================================================= */}
-
+        {/* PRODUCT SLIDER */}
         {!loading && !error && products.length > 0 && (
           <div className="relative mt-8">
             <Swiper
@@ -640,63 +488,18 @@ export default function FlashSale() {
               }}
               slidesPerView={1}
               spaceBetween={16}
-              loop={products.length > 6}
+              loop={products.length > 4}
               speed={600}
               breakpoints={{
-                /* Mobile */
-
-                0: {
-                  slidesPerView: 1,
-                  spaceBetween: 16,
-                },
-
-                /* Large Mobile */
-
-                480: {
-                  slidesPerView: 1,
-                  spaceBetween: 18,
-                },
-
-                /* Small Tablet */
-
-                640: {
-                  slidesPerView: 2,
-                  spaceBetween: 18,
-                },
-
-                /* Tablet */
-
-                768: {
-                  slidesPerView: 3,
-                  spaceBetween: 20,
-                },
-
-                /* Laptop */
-
-                1024: {
-                  slidesPerView: 4,
-                  spaceBetween: 22,
-                },
-
-                /* Desktop */
-
-                1280: {
-                  slidesPerView: 5,
-                  spaceBetween: 22,
-                },
-
-                /* Large Desktop */
-
-                1536: {
-                  slidesPerView: 6,
-                  spaceBetween: 24,
-                },
+                0: { slidesPerView: 1, spaceBetween: 16 },
+                480: { slidesPerView: 1, spaceBetween: 18 },
+                640: { slidesPerView: 2, spaceBetween: 18 },
+                768: { slidesPerView: 3, spaceBetween: 20 },
+                1024: { slidesPerView: 4, spaceBetween: 22 },
+                1280: { slidesPerView: 5, spaceBetween: 22 },
+                1536: { slidesPerView: 6, spaceBetween: 24 },
               }}
             >
-              {/* =================================================
-                    PRODUCTS
-                    ================================================= */}
-
               {products.map((product) => (
                 <SwiperSlide key={product._id} className="h-auto">
                   <ProductCard product={product} />
@@ -704,37 +507,12 @@ export default function FlashSale() {
               ))}
             </Swiper>
 
-            {/* =================================================
-                  PREVIOUS ARROW
-                  ================================================= */}
-
+            {/* PREVIOUS ARROW */}
             <button
               type="button"
               aria-label="Previous products"
               onClick={() => swiperRef.current?.slidePrev()}
-              className="
-                  group
-                  absolute
-                  left-[-18px]
-                  top-1/2
-                  z-30
-                  hidden
-                  h-11
-                  w-11
-                  -translate-y-1/2
-                  items-center
-                  justify-center
-                  rounded-full
-                  border
-                  border-[#dce5ee]
-                  bg-white
-                  shadow-md
-                  transition-all
-                  duration-300
-                  hover:bg-black
-                  md:flex
-                  lg:left-[-22px]
-                "
+              className="group absolute left-[-18px] top-1/2 z-30 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-[#dce5ee] bg-white shadow-md transition-all duration-300 hover:bg-black md:flex lg:left-[-22px]"
             >
               <ChevronLeft
                 size={26}
@@ -743,37 +521,12 @@ export default function FlashSale() {
               />
             </button>
 
-            {/* =================================================
-                  NEXT ARROW
-                  ================================================= */}
-
+            {/* NEXT ARROW */}
             <button
               type="button"
               aria-label="Next products"
               onClick={() => swiperRef.current?.slideNext()}
-              className="
-                  group
-                  absolute
-                  right-[-18px]
-                  top-1/2
-                  z-30
-                  hidden
-                  h-11
-                  w-11
-                  -translate-y-1/2
-                  items-center
-                  justify-center
-                  rounded-full
-                  border
-                  border-[#dce5ee]
-                  bg-white
-                  shadow-md
-                  transition-all
-                  duration-300
-                  hover:bg-black
-                  md:flex
-                  lg:right-[-22px]
-                "
+              className="group absolute right-[-18px] top-1/2 z-30 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-[#dce5ee] bg-white shadow-md transition-all duration-300 hover:bg-black md:flex lg:right-[-22px]"
             >
               <ChevronRight
                 size={26}
@@ -784,10 +537,7 @@ export default function FlashSale() {
           </div>
         )}
 
-        {/* =================================================
-            MOBILE EXPLORE
-            ================================================= */}
-
+        {/* MOBILE EXPLORE */}
         <div className="mt-7 text-center md:hidden">
           <Link
             href="/shop"

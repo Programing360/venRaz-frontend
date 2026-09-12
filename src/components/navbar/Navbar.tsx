@@ -30,7 +30,6 @@ export default function Navbar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const { totalItems } = useCart();
-  session;
   // Active route checking helper
   const isActive = (path: string) => {
     if (path === "/") {
@@ -109,7 +108,7 @@ export default function Navbar() {
           : "bg-white shadow-sm"
       }`}
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className=" px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link
@@ -123,7 +122,7 @@ export default function Navbar() {
           </Link>
 
           {/* DESKTOP NAVIGATION */}
-          <div className="hidden items-center gap-1 md:flex lg:gap-2">
+          <div className="hidden items-center gap-1 md:flex lg:gap-2 mx-auto max-w-7xl  ">
             {navLinks.map((link) => {
               const active = isActive(link.href);
               return (
@@ -136,7 +135,7 @@ export default function Navbar() {
                       : "text-gray-700 hover:bg-gray-100 hover:text-[#ff594d]"
                   }`}
                 >
-                  {link.name}
+                  <span className="text-[10px}">{link.name}</span>
                 </Link>
               );
             })}

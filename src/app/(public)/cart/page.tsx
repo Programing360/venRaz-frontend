@@ -38,7 +38,7 @@ export default function CartPage() {
       <main className="min-h-[70vh] flex items-center justify-center bg-[#fcfdfd] py-16">
         <EmptyState
           type="cart"
-          title="Your Shopping Cart is Empty"
+          title="Your VenRaz Cart is Empty"
           description="Looks like you haven't added any products to your cart yet. Explore our latest electronics and gadget deals!"
           actionText="Start Shopping"
           actionHref="/shop"
@@ -49,7 +49,10 @@ export default function CartPage() {
 
   const freeShippingThreshold = 100;
   const neededForFreeShipping = Math.max(0, freeShippingThreshold - subtotal);
-  const shippingProgress = Math.min(100, (subtotal / freeShippingThreshold) * 100);
+  const shippingProgress = Math.min(
+    100,
+    (subtotal / freeShippingThreshold) * 100,
+  );
 
   return (
     <main className="min-h-screen bg-[#fcfdfd] py-10 md:py-16 mt-10">
@@ -61,7 +64,8 @@ export default function CartPage() {
               Shopping Cart
             </h1>
             <p className="text-sm text-slate-500 mt-1">
-              You have {totalItems} {totalItems === 1 ? "item" : "items"} in your cart.
+              You have {totalItems} {totalItems === 1 ? "item" : "items"} in
+              your cart.
             </p>
           </div>
 

@@ -406,7 +406,7 @@ export default function SmartWatches() {
 
   if (loading) {
     return (
-      <section className="overflow-hidden bg-white pb-16">
+      <section className="overflow-hidden bg-white pb-16 ">
         <div className="mx-auto max-w-[1860px] px-5 lg:px-8">
 
           <div className="flex items-center justify-between">
@@ -530,7 +530,7 @@ export default function SmartWatches() {
   ======================================================= */
 
   return (
-    <section className="overflow-hidden bg-white pb-16">
+    <section className="overflow-hidden bg-white pb-16 p-4">
 
       <div className="mx-auto max-w-[1860px] px-5 lg:px-8">
 
