@@ -1,503 +1,555 @@
-"use client"
-import React, { useState } from 'react';
-import { Shop, ShopCategory, ShopStatus } from '../../types';
+"use client";
 
-import { ImageUploader } from '../components/imageUploader';
-import { 
-  Store, 
-  Sparkles, 
-  ArrowLeft, 
-  Send, 
-  Save, 
-  HelpCircle, 
-  Phone, 
-  MapPin, 
-  Layers, 
-  FileText, 
-  Check, 
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Store,
+  Phone,
+  MapPin,
   AlertCircle,
-  Loader2
-} from 'lucide-react';
-import { motion } from 'motion/react';
-import { PRESET_BANNERS, PRESET_LOGOS, SHOP_CATEGORIES } from '@/data/mockdata';
-import { verifyShop, VerificationResult } from '@/services/shopVerification';
-import VerificationResultModal from './verificationResultModal';
+  Send,
+  Loader2,
+  Check,
+  ArrowRight,
+  Sparkles,
+} from "lucide-react";
+import { motion } from "framer-motion";
+import { ImageUploader } from "./imageUploader";
+import { useSession } from "@/lib/auth-client";
+import { useToast } from "@/context/ToastContext";
+import { SHOP_CATEGORIES } from "@/data/mockdata";
+import { Shop, ShopCategory } from "@/types";
 
 interface CreateShopFormProps {
-  onSaveShop?: (shop: Shop, status: ShopStatus) => void;
+  onSaveShop?: (shop: Partial<Shop>, status: string) => void;
   onCancel?: () => void;
-  onOpenCloudinarySettings?: () => void;
-  initialValues?: Partial<Shop>;
 }
 
 export const CreateShopForm: React.FC<CreateShopFormProps> = ({
   onSaveShop,
   onCancel,
-  onOpenCloudinarySettings,
-  initialValues,
 }) => {
+  const { data: session } = useSession();
+  const router = useRouter();
+  const { success, error: showError } = useToast();
+
   const [formData, setFormData] = useState({
-    name: initialValues?.name || '',
-    logoUrl: initialValues?.logoUrl || '',
-    bannerUrl: initialValues?.bannerUrl || '',
-    description: initialValues?.description || '',
-    category: (initialValues?.category as ShopCategory) || 'Fashion & Apparel',
-    phone: initialValues?.phone || '',
-    address: initialValues?.address || '',
+    name: "",
+    description: "",
+    category: SHOP_CATEGORIES[0],
+    address: "",
+    phone: "",
+    photoUrl: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
-  const [showVerificationModal, setShowVerificationModal] = useState(false);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (!formData.name.trim()) newErrors.name = 'Shop name is required';
-    if (!formData.logoUrl.trim()) newErrors.logoUrl = 'Shop logo is required';
-    if (!formData.bannerUrl.trim()) newErrors.bannerUrl = 'Shop banner is required';
-    if (!formData.description.trim()) newErrors.description = 'Shop description is required';
-    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
-    if (!formData.address.trim()) newErrors.address = 'Store address is required';
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Shop name is required";
+    }
+
+    if (!formData.description.trim()) {
+      newErrors.description = "Description is required";
+    }
+
+    if (!formData.address.trim()) {
+      newErrors.address = "Address is required";
+    }
+
+    if (!formData.phone.trim()) {
+      newErrors.phone = "Phone number is required";
+    }
+
+    if (!formData.photoUrl.trim()) {
+      newErrors.photoUrl = "Shop photo is required";
+    }
 
     setErrors(newErrors);
+
     return Object.keys(newErrors).length === 0;
   };
 
-  const buildShop = (targetStatus: ShopStatus): Shop => ({
-    id: initialValues?.id || `shp_${Date.now().toString().slice(-6)}`,
-    name: formData.name.trim(),
-    logoUrl: formData.logoUrl.trim() || PRESET_LOGOS[0].url,
-    bannerUrl: formData.bannerUrl.trim() || PRESET_BANNERS[0].url,
-    description: formData.description.trim() || 'No description provided.',
-    category: formData.category,
-    phone: formData.phone.trim() || '+880 1700-000000',
-    address: formData.address.trim() || 'Not specified',
-    status: targetStatus,
-    statusReason: targetStatus === 'Pending'
-      ? 'Application submitted on ' + new Date().toLocaleDateString() + ' — pending administrator review.'
-      : 'Saved as draft.',
-    createdAt: initialValues?.createdAt || new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    sellerName: 'Shamsul Haque',
-    sellerEmail: 'webdevlopershamsul@gmail.com',
-    totalProducts: initialValues?.totalProducts || 0,
-    totalOrders: initialValues?.totalOrders || 0,
-    totalSales: initialValues?.totalSales || 0,
-    rating: initialValues?.rating || 5.0,
-    reviewCount: initialValues?.reviewCount || 0,
-  });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const handleSubmitForApproval = async () => {
     if (!validate()) return;
 
-    setIsVerifying(true);
+    setIsSubmitting(true);
+
     try {
-      const result = await verifyShop({
-        shopName: formData.name.trim(),
+      const payload = {
+        ownerId: session?.user?.id || session?.user?.email,
+        name: formData.name.trim(),
         description: formData.description.trim(),
+        category: formData.category,
         address: formData.address.trim(),
         phone: formData.phone.trim(),
-        logoUrl: formData.logoUrl.trim(),
-        bannerUrl: formData.bannerUrl.trim(),
-        ownerName: 'Shamsul Haque',
+        images: [formData.photoUrl.trim()],
+        status: "pending",
+      };
+
+      const token = (session as any)?.session?.token;
+
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/shops/create-shop`,
+        {
+          method: "POST",
+          headers,
+          credentials: "include",
+          body: JSON.stringify(payload),
+        },
+      );
+
+      if (!response.ok) {
+        const text = await response.text();
+
+        let errMsg = `API returned status ${response.status}`;
+
+        try {
+          const parsed = JSON.parse(text);
+          errMsg = parsed.message || parsed.error || errMsg;
+        } catch (_) {}
+
+        throw new Error(errMsg);
+      }
+
+      const json = await response.json();
+
+      if (json.success === false) {
+        throw new Error(json.message || "Failed to create shop");
+      }
+
+      onSaveShop?.(payload as unknown as Shop, "Pending");
+
+      success("Your shop has been submitted for approval.");
+
+      router.push("/shop");
+    } catch (err: any) {
+      console.error("Create Shop Error:", err);
+
+      showError(err.message || "Failed to submit shop for approval.");
+
+      setErrors({
+        api: err.message || "An error occurred during submission.",
       });
-      setVerificationResult(result);
-      setShowVerificationModal(true);
-    } catch {
-      // Fallback: submit directly if verification API is unreachable
-      const shop = buildShop('Pending');
-      onSaveShop?.(shop, 'Pending');
     } finally {
-      setIsVerifying(false);
-    }
-  };
-
-  const handleAcceptVerification = () => {
-    const targetStatus = verificationResult?.status === 'rejected' ? 'Draft' : 'Pending';
-    const shop = buildShop(targetStatus);
-    setShowVerificationModal(false);
-    setVerificationResult(null);
-    onSaveShop?.(shop, targetStatus);
-  };
-
-  const handleEditFromVerification = () => {
-    setShowVerificationModal(false);
-    setVerificationResult(null);
-  };
-
-  const handleSubmit = (targetStatus: ShopStatus) => {
-    if (targetStatus === 'Pending') {
-      handleSubmitForApproval();
-      return;
-    }
-
-    // Draft requires at least a shop name
-    if (!formData.name.trim()) {
-      setErrors({ name: 'Please enter a shop name to save as draft' });
-      return;
-    }
-
-    setIsSubmitting(true);
-    const newShop = buildShop(targetStatus);
-    setTimeout(() => {
-      onSaveShop?.(newShop, targetStatus);
       setIsSubmitting(false);
-    }, 400);
+    }
   };
 
-  const handleFillDemoData = () => {
-    setFormData({
-      name: 'Bengal Loom & Craft Studio',
-      logoUrl: PRESET_LOGOS[1].url,
-      bannerUrl: PRESET_BANNERS[0].url,
-      description: 'Exclusive heritage Jamdani sarees, handcrafted ceramic tableware, and sustainably sourced bamboo decor crafted in Bangladesh.',
-      category: 'Artisanal & Crafts',
-      phone: '+880 1819-234567',
-      address: 'Suite 4B, Gulshan Pink City, Road 103, Dhaka 1212',
-    });
-    setErrors({});
+  const updateField = (
+    field: keyof typeof formData,
+    value: string,
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+
+    if (errors[field]) {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: "",
+      }));
+    }
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 15 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -15 }}
-      transition={{ duration: 0.3 }}
-      className="max-w-4xl mx-auto"
+      transition={{ duration: 0.35 }}
+      className="mx-auto w-full max-w-5xl"
     >
-      {/* Top Header & Breadcrumb */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-          <button
-            type="button"
-            id="back-to-dashboard-btn"
-            onClick={onCancel}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors mb-2"
-          >
-            <ArrowLeft size={14} />
-            <span>Back to Dashboard</span>
-          </button>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600">
-              <Store size={22} />
-            </div>
-            <span>Create New Shop</span>
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Complete the details below to establish your vendor storefront on the marketplace.
-          </p>
-        </div>
-
-        {/* Quick Demo Pre-fill */}
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            id="fill-sample-shop-btn"
-            onClick={handleFillDemoData}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition-colors shadow-2xs"
-          >
-            <Sparkles size={14} />
-            <span>Autofill Sample Shop</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Main Form Card */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 md:p-8 space-y-8">
-        {/* Section 1: Basic Information */}
-        <section className="space-y-4">
-          <div className="border-b border-slate-100 pb-3">
-            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <Store size={18} className="text-indigo-600" />
-              <span>Shop Essentials</span>
-            </h2>
-            <p className="text-xs text-slate-500">Provide your official store identity and category</p>
+      {/* ───────────────── Header ───────────────── */}
+      <header className="mb-10">
+        <div className="mb-5 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-950 text-white">
+            <Store className="h-5 w-5" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Shop Name */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Shop Name <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="shop-name-input"
-                placeholder="e.g., Artisan Heritage Studio"
-                value={formData.name}
-                onChange={(e) => {
-                  setFormData({ ...formData, name: e.target.value });
-                  if (errors.name) setErrors({ ...errors, name: '' });
-                }}
-                className={`w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 transition-all ${
-                  errors.name
-                    ? 'border-rose-400 focus:ring-rose-500/20 bg-rose-50/20'
-                    : 'border-slate-200 focus:border-indigo-600 focus:ring-indigo-500/20'
-                }`}
-              />
-              {errors.name && (
-                <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
-                  <AlertCircle size={12} /> {errors.name}
-                </p>
-              )}
-            </div>
+          <div className="h-px w-10 bg-amber-400" />
 
-            {/* Category */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Primary Category <span className="text-rose-500">*</span>
-              </label>
-              <select
-                id="shop-category-select"
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value as ShopCategory })}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 transition-all text-slate-800"
-              >
-                {SHOP_CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+          <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">
+            Merchant Center
+          </span>
+        </div>
 
-          {/* Description */}
+        <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Shop Description <span className="text-rose-500">*</span>
-            </label>
-            <textarea
-              id="shop-description-input"
-              rows={3}
-              placeholder="Tell buyers what makes your shop unique, products you offer, and brand story..."
-              value={formData.description}
-              onChange={(e) => {
-                setFormData({ ...formData, description: e.target.value });
-                if (errors.description) setErrors({ ...errors, description: '' });
-              }}
-              className={`w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 transition-all ${
-                errors.description
-                  ? 'border-rose-400 focus:ring-rose-500/20 bg-rose-50/20'
-                  : 'border-slate-200 focus:border-indigo-600 focus:ring-indigo-500/20'
-              }`}
-            />
-            {errors.description && (
-              <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
-                <AlertCircle size={12} /> {errors.description}
-              </p>
-            )}
-          </div>
-        </section>
+            <h1 className="text-3xl font-bold tracking-[-0.03em] text-slate-950 sm:text-4xl">
+              Create your shop
+            </h1>
 
-        {/* Section 2: Visual Branding (Cloudinary Uploads) */}
-        <section className="space-y-4">
-          <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <Layers size={18} className="text-indigo-600" />
-                <span>Shop Branding & Media</span>
-              </h2>
-              <p className="text-xs text-slate-500">
-                Uploaded securely via <strong>Cloudinary</strong> for fast global CDN delivery
-              </p>
-            </div>
-            <button
-              type="button"
-              id="open-cloudinary-settings-from-form"
-              onClick={onOpenCloudinarySettings}
-              className="text-xs text-sky-600 hover:text-sky-700 font-medium underline"
-            >
-              Cloudinary Config
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Shop Logo */}
-            <div className="md:col-span-1">
-              <ImageUploader
-                label="Shop Logo"
-                sublabel="Square 1:1 format (400x400px recommended)"
-                value={formData.logoUrl}
-                onChange={(url) => {
-                  setFormData({ ...formData, logoUrl: url });
-                  if (errors.logoUrl) setErrors({ ...errors, logoUrl: '' });
-                }}
-                aspectRatio="square"
-                presets={PRESET_LOGOS}
-                onOpenCloudinarySettings={onOpenCloudinarySettings}
-                idPrefix="shop-logo"
-              />
-              {errors.logoUrl && (
-                <p className="text-xs text-rose-600 mt-1.5 flex items-center gap-1">
-                  <AlertCircle size={12} /> {errors.logoUrl}
-                </p>
-              )}
-            </div>
-
-            {/* Shop Banner */}
-            <div className="md:col-span-2">
-              <ImageUploader
-                label="Shop Banner"
-                sublabel="Panoramic 3:1 banner for your seller storefront header (1200x400px recommended)"
-                value={formData.bannerUrl}
-                onChange={(url) => {
-                  setFormData({ ...formData, bannerUrl: url });
-                  if (errors.bannerUrl) setErrors({ ...errors, bannerUrl: '' });
-                }}
-                aspectRatio="banner"
-                presets={PRESET_BANNERS}
-                onOpenCloudinarySettings={onOpenCloudinarySettings}
-                idPrefix="shop-banner"
-              />
-              {errors.bannerUrl && (
-                <p className="text-xs text-rose-600 mt-1.5 flex items-center gap-1">
-                  <AlertCircle size={12} /> {errors.bannerUrl}
-                </p>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* Section 3: Contact & Address */}
-        <section className="space-y-4">
-          <div className="border-b border-slate-100 pb-3">
-            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <MapPin size={18} className="text-indigo-600" />
-              <span>Contact & Physical Address</span>
-            </h2>
-            <p className="text-xs text-slate-500">
-              Required for compliance, dispatch logistics, and customer support
+            <p className="mt-3 max-w-xl text-sm leading-6 text-slate-500">
+              Tell customers what makes your business special. Once submitted,
+              our team will review your application.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Phone */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Contact Phone <span className="text-rose-500">*</span>
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                  <Phone size={16} />
-                </div>
-                <input
-                  type="tel"
-                  id="shop-phone-input"
-                  placeholder="+880 1712-345678"
-                  value={formData.phone}
-                  onChange={(e) => {
-                    setFormData({ ...formData, phone: e.target.value });
-                    if (errors.phone) setErrors({ ...errors, phone: '' });
-                  }}
-                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 transition-all ${
-                    errors.phone
-                      ? 'border-rose-400 focus:ring-rose-500/20 bg-rose-50/20'
-                      : 'border-slate-200 focus:border-indigo-600 focus:ring-indigo-500/20'
-                  }`}
-                />
-              </div>
-              {errors.phone && (
-                <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
-                  <AlertCircle size={12} /> {errors.phone}
-                </p>
-              )}
-            </div>
-
-            {/* Address */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Shop / Warehouse Address <span className="text-rose-500">*</span>
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                  <MapPin size={16} />
-                </div>
-                <input
-                  type="text"
-                  id="shop-address-input"
-                  placeholder="Street address, City, Postal Code"
-                  value={formData.address}
-                  onChange={(e) => {
-                    setFormData({ ...formData, address: e.target.value });
-                    if (errors.address) setErrors({ ...errors, address: '' });
-                  }}
-                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 transition-all ${
-                    errors.address
-                      ? 'border-rose-400 focus:ring-rose-500/20 bg-rose-50/20'
-                      : 'border-slate-200 focus:border-indigo-600 focus:ring-indigo-500/20'
-                  }`}
-                />
-              </div>
-              {errors.address && (
-                <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
-                  <AlertCircle size={12} /> {errors.address}
-                </p>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* Footer Actions */}
-        <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-xs text-slate-500">
-            <span>By submitting, you agree to the Seller Terms of Service.</span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-            <button
-              type="button"
-              id="cancel-create-shop-btn"
-              onClick={onCancel}
-              className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors"
-            >
-              Cancel
-            </button>
-
-            <button
-              type="button"
-              id="save-draft-btn"
-              disabled={isSubmitting}
-              onClick={() => handleSubmit('Draft')}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 transition-colors"
-            >
-              <Save size={15} />
-              <span>Save as Draft</span>
-            </button>
-
-            <button
-              type="button"
-              id="submit-shop-btn"
-              disabled={isSubmitting || isVerifying}
-              onClick={() => handleSubmit('Pending')}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20 transition-all hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isVerifying ? (
-                <>
-                  <Loader2 size={15} className="animate-spin" />
-                  <span>Verifying...</span>
-                </>
-              ) : (
-                <>
-                  <Send size={15} />
-                  <span>Submit for Approval</span>
-                </>
-              )}
-            </button>
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+            <Sparkles className="h-4 w-4 text-amber-500" />
+            Start selling with confidence
           </div>
         </div>
-      </div>
+      </header>
 
-      <VerificationResultModal
-        result={verificationResult}
-        isOpen={showVerificationModal}
-        onClose={handleEditFromVerification}
-        onAccept={handleAcceptVerification}
-        onEdit={handleEditFromVerification}
-      />
+      {/* ───────────────── Application ───────────────── */}
+      <form onSubmit={handleSubmit}>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
+          {/* Left Rail */}
+          <aside className="hidden lg:block">
+            <div className="sticky top-6">
+              <div className="border-l-2 border-slate-200 pl-5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-600">
+                  Application
+                </p>
+
+                <h2 className="mt-2 text-lg font-bold text-slate-950">
+                  Shop details
+                </h2>
+
+                <p className="mt-2 text-xs leading-5 text-slate-500">
+                  Complete each section with accurate information so customers
+                  can easily understand your business.
+                </p>
+              </div>
+
+              <div className="mt-8 space-y-5 pl-5">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-950 text-[10px] font-bold text-white">
+                    01
+                  </span>
+                  <span className="text-xs font-semibold text-slate-700">
+                    Identity
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 text-[10px] font-bold text-slate-400">
+                    02
+                  </span>
+                  <span className="text-xs font-medium text-slate-400">
+                    Contact
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 text-[10px] font-bold text-slate-400">
+                    03
+                  </span>
+                  <span className="text-xs font-medium text-slate-400">
+                    Submit
+                  </span>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          {/* Main Form */}
+          <div className="space-y-6">
+            {/* Error */}
+            {errors.api && (
+              <motion.div
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-start gap-3 border border-red-200 bg-red-50 px-4 py-3.5 text-sm text-red-700"
+              >
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+
+                <div>
+                  <p className="font-semibold">Something went wrong</p>
+                  <p className="mt-0.5 text-xs text-red-600">
+                    {errors.api}
+                  </p>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ───────── Identity ───────── */}
+            <section className="border border-slate-200 bg-white">
+              <div className="border-b border-slate-200 px-5 py-5 sm:px-7">
+                <div className="flex items-start gap-4">
+                  <span className="text-xs font-bold text-amber-600">
+                    01
+                  </span>
+
+                  <div>
+                    <h2 className="text-base font-bold text-slate-950">
+                      Shop identity
+                    </h2>
+
+                    <p className="mt-1 text-xs text-slate-500">
+                      Give your store a recognizable identity.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-6 p-5 sm:p-7">
+                {/* Photo */}
+                <div>
+                  <ImageUploader
+                    label="Shop image"
+                    sublabel="Use a clear, professional image that represents your store."
+                    value={formData.photoUrl}
+                    onChange={(url) => updateField("photoUrl", url)}
+                    aspectRatio="square"
+                    idPrefix="shop-photo"
+                  />
+
+                  {errors.photoUrl && (
+                    <p className="mt-2 flex items-center gap-1 text-xs text-red-600">
+                      <AlertCircle className="h-3 w-3" />
+                      {errors.photoUrl}
+                    </p>
+                  )}
+                </div>
+
+                {/* Name */}
+                <div>
+                  <label className="mb-2 block text-xs font-bold text-slate-700">
+                    Shop name
+                    <span className="ml-1 text-amber-500">*</span>
+                  </label>
+
+                  <input
+                    type="text"
+                    placeholder="e.g. Apex Supplies"
+                    value={formData.name}
+                    onChange={(e) =>
+                      updateField("name", e.target.value)
+                    }
+                    className={`w-full border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 ${
+                      errors.name
+                        ? "border-red-400 focus:ring-2 focus:ring-red-100"
+                        : "border-slate-200 focus:border-slate-950 focus:ring-2 focus:ring-slate-100"
+                    }`}
+                  />
+
+                  {errors.name && (
+                    <p className="mt-1.5 flex items-center gap-1 text-xs text-red-600">
+                      <AlertCircle className="h-3 w-3" />
+                      {errors.name}
+                    </p>
+                  )}
+                </div>
+
+                {/* Category */}
+                <div>
+                  <label className="mb-2 block text-xs font-bold text-slate-700">
+                    Category
+                    <span className="ml-1 text-amber-500">*</span>
+                  </label>
+
+                  <select
+                    value={formData.category}
+                    onChange={(e) =>
+                      updateField(
+                        "category",
+                        e.target.value as ShopCategory,
+                      )
+                    }
+                    className="w-full border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-slate-950 focus:ring-2 focus:ring-slate-100"
+                  >
+                    {SHOP_CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="mb-2 block text-xs font-bold text-slate-700">
+                    About your shop
+                    <span className="ml-1 text-amber-500">*</span>
+                  </label>
+
+                  <textarea
+                    rows={5}
+                    placeholder="What do you sell? What makes your shop different?"
+                    value={formData.description}
+                    onChange={(e) =>
+                      updateField("description", e.target.value)
+                    }
+                    className={`w-full resize-none border bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition-all placeholder:text-slate-400 ${
+                      errors.description
+                        ? "border-red-400 focus:ring-2 focus:ring-red-100"
+                        : "border-slate-200 focus:border-slate-950 focus:ring-2 focus:ring-slate-100"
+                    }`}
+                  />
+
+                  {errors.description && (
+                    <p className="mt-1.5 flex items-center gap-1 text-xs text-red-600">
+                      <AlertCircle className="h-3 w-3" />
+                      {errors.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            {/* ───────── Contact ───────── */}
+            <section className="border border-slate-200 bg-white">
+              <div className="border-b border-slate-200 px-5 py-5 sm:px-7">
+                <div className="flex items-start gap-4">
+                  <span className="text-xs font-bold text-amber-600">
+                    02
+                  </span>
+
+                  <div>
+                    <h2 className="text-base font-bold text-slate-950">
+                      Contact information
+                    </h2>
+
+                    <p className="mt-1 text-xs text-slate-500">
+                      Add reliable contact details for your customers.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 p-5 sm:p-7 md:grid-cols-2">
+                {/* Address */}
+                <div>
+                  <label className="mb-2 block text-xs font-bold text-slate-700">
+                    Business address
+                    <span className="ml-1 text-amber-500">*</span>
+                  </label>
+
+                  <div className="relative">
+                    <MapPin className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                    <input
+                      type="text"
+                      placeholder="Store address"
+                      value={formData.address}
+                      onChange={(e) =>
+                        updateField("address", e.target.value)
+                      }
+                      className={`w-full border bg-white py-3 pl-10 pr-4 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 ${
+                        errors.address
+                          ? "border-red-400 focus:ring-2 focus:ring-red-100"
+                          : "border-slate-200 focus:border-slate-950 focus:ring-2 focus:ring-slate-100"
+                      }`}
+                    />
+                  </div>
+
+                  {errors.address && (
+                    <p className="mt-1.5 flex items-center gap-1 text-xs text-red-600">
+                      <AlertCircle className="h-3 w-3" />
+                      {errors.address}
+                    </p>
+                  )}
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label className="mb-2 block text-xs font-bold text-slate-700">
+                    Phone number
+                    <span className="ml-1 text-amber-500">*</span>
+                  </label>
+
+                  <div className="relative">
+                    <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                    <input
+                      type="tel"
+                      placeholder="Phone number"
+                      value={formData.phone}
+                      onChange={(e) =>
+                        updateField("phone", e.target.value)
+                      }
+                      className={`w-full border bg-white py-3 pl-10 pr-4 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 ${
+                        errors.phone
+                          ? "border-red-400 focus:ring-2 focus:ring-red-100"
+                          : "border-slate-200 focus:border-slate-950 focus:ring-2 focus:ring-slate-100"
+                      }`}
+                    />
+                  </div>
+
+                  {errors.phone && (
+                    <p className="mt-1.5 flex items-center gap-1 text-xs text-red-600">
+                      <AlertCircle className="h-3 w-3" />
+                      {errors.phone}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            {/* ───────── Review ───────── */}
+            <section className="border border-slate-200 bg-slate-50">
+              <div className="p-5 sm:p-7">
+                <div className="flex gap-4">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                    <Check className="h-4 w-4" />
+                  </div>
+
+                  <div>
+                    <h2 className="text-sm font-bold text-slate-950">
+                      Ready to submit?
+                    </h2>
+
+                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                      Your shop will be reviewed before it becomes visible to
+                      customers. Make sure all information is accurate.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* ───────── Actions ───────── */}
+            <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                {onCancel && (
+                  <button
+                    type="button"
+                    onClick={onCancel}
+                    className="px-1 py-2 text-xs font-semibold text-slate-500 transition-colors hover:text-slate-950"
+                  >
+                    Cancel application
+                  </button>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="group inline-flex items-center justify-center gap-3 bg-slate-950 px-6 py-3.5 text-xs font-bold text-white transition-all hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Submitting application
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" />
+                    Submit for approval
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
     </motion.div>
   );
 };
