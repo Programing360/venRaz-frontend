@@ -7,8 +7,8 @@ export interface CatalogProduct {
   price: number;
   discount?: number;
   stock: number;
-  brand: string;
-  category: string;
+  brand?: string;
+  category?: string | { _id?: string; name?: string };
   categoryId?: string;
   rating: number;
   totalReviews: number;

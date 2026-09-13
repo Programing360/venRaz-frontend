@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ProductCard from "@/components/products/ProductCard";
-import { getProducts } from "@/lib/products/data";
+import { getProducts, getCategories } from "@/lib/products/data";
+import { SlidersHorizontal, Search } from "lucide-react";
 
 interface Product {
   _id: string;
@@ -23,6 +24,9 @@ interface ProductsPageProps {
   searchParams: Promise<{
     search?: string;
     category?: string;
+    minPrice?: string;
+    maxPrice?: string;
+    sort?: string;
     page?: string;
   }>;
 }
@@ -33,22 +37,46 @@ const ProductsPage = async ({ searchParams }: ProductsPageProps) => {
   const search = typeof params?.search === "string" ? params.search.trim() : "";
   const category =
     typeof params?.category === "string" ? params.category.trim() : "";
+  const minPrice =
+    typeof params?.minPrice === "string" ? params.minPrice.trim() : "";
+  const maxPrice =
+    typeof params?.maxPrice === "string" ? params.maxPrice.trim() : "";
+  const sort = typeof params?.sort === "string" ? params.sort.trim() : "";
 
   // URL parameters dynamic handle
   const page = Math.max(1, parseInt(params?.page || "1", 10));
-  const limit = 10; // Per page 10 products
+  const limit = 12; // Per page 12 products
 
-  // Backend API Call
-  const {
-    products = [],
-    totalPages = 1,
-    totalProducts = 0,
-    categories = [],
-  } = await getProducts({
-    page,
-    limit,
-    search,
-    category,
+  // Backend API Calls (server-side)
+  const [categories, { products = [], totalPages = 1, totalProducts = 0 }] =
+    await Promise.all([
+      getCategories(),
+      getProducts({
+        page,
+        limit,
+        search,
+        category,
+        minPrice,
+        maxPrice,
+        sort,
+      }),
+    ]);
+
+  // Display name for the selected category
+  const selectedCategoryName =
+    categories.find((c) => c._id === category || c.slug === category)?.name ||
+    category;
+
+  const isFiltered = Boolean(search || category || minPrice || maxPrice);
+
+  // Build the shared query object for pagination links
+  const buildQuery = (nextPage: number) => ({
+    ...(search && { search }),
+    ...(category && { category }),
+    ...(minPrice && { minPrice }),
+    ...(maxPrice && { maxPrice }),
+    ...(sort && { sort }),
+    page: nextPage,
   });
 
   // Dynamic 4-Page Window Calculation
@@ -85,61 +113,91 @@ const ProductsPage = async ({ searchParams }: ProductsPageProps) => {
           method="GET"
           className="mb-10 rounded-3xl bg-white p-6 shadow-sm"
         >
-          <div className="flex flex-col gap-4 md:flex-row">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Search Input */}
             <input
               type="text"
               name="search"
               placeholder="Search product..."
               defaultValue={search}
-              className="flex-1 rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#205A44]"
+              className="min-w-[200px] flex-1 rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#205A44]"
             />
 
-            {categories.length > 0 && (
-              <select
-                name="category"
-                defaultValue={category}
-                className="rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#205A44] md:w-56"
-              >
-                <option value="">All categories</option>
-                {categories.map((cat: string) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            )}
+            {/* Category Select (from backend /categories) */}
+            <select
+              name="category"
+              defaultValue={category}
+              className="rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#205A44]"
+            >
+              <option value="">All Categories</option>
+              {categories.map((cat) => (
+                <option key={cat._id} value={cat.name}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+
+            {/* Price Range */}
+            <input
+              type="number"
+              name="minPrice"
+              min="0"
+              placeholder="Min price ($)"
+              defaultValue={minPrice}
+              className="w-36 rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#205A44]"
+            />
+            <input
+              type="number"
+              name="maxPrice"
+              min="0"
+              placeholder="Max price ($)"
+              defaultValue={maxPrice}
+              className="w-36 rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#205A44]"
+            />
+
+            {/* Sort */}
+            <select
+              name="sort"
+              defaultValue={sort}
+              className="rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#205A44]"
+            >
+              <option value="">Sort: Newest</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+            </select>
 
             <button
               type="submit"
-              className="rounded-xl bg-[#ff594d] shadow-lg shadow-amber-800 px-6 py-3 font-medium text-white transition-colors hover:bg-[#ab75fa] hover:shadow-purple-400"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#ff594d] px-6 py-3 font-medium text-white transition-colors hover:bg-[#163B33]"
             >
+              <Search className="h-4 w-4" />
               Search
             </button>
 
             {/* URL প্যারামিটার থাকলে URL রিসেট লিঙ্ক, অন্যথায় Client-side Input Clear বাটন */}
-            {search || category ? (
+            {isFiltered ? (
               <Link
                 href="/products"
                 className="rounded-xl border border-gray-300 px-6 py-3 text-center font-medium text-gray-600 transition hover:bg-gray-100"
               >
                 Clear
               </Link>
-            ) : (
-              <button
-                type="reset"
-                className="rounded-xl border border-gray-300 px-6 py-3 font-medium text-gray-600 transition hover:bg-gray-100"
-              >
-                Reset
-              </button>
-            )}
+            ) : null}
           </div>
+
+          {isFiltered && (
+            <p className="mt-4 flex items-center gap-1.5 text-xs font-medium text-gray-500">
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              Filters applied — refine your search anytime.
+            </p>
+          )}
         </form>
 
         {/* Product Count Info */}
         {products.length > 0 && (
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-xl font-semibold text-[#163B33]">
-              {category ? category : "All Products"}
+              {selectedCategoryName || search || "All Products"}
             </h2>
 
             <span className="text-sm text-gray-500">
@@ -164,11 +222,7 @@ const ProductsPage = async ({ searchParams }: ProductsPageProps) => {
                 <Link
                   href={{
                     pathname: "/products",
-                    query: {
-                      ...(search && { search }),
-                      ...(category && { category }),
-                      page: page > 1 ? page - 1 : 1,
-                    },
+                    query: buildQuery(page > 1 ? page - 1 : 1),
                   }}
                   className={`rounded-xl border px-4 py-2 font-medium transition ${
                     page <= 1
@@ -185,11 +239,7 @@ const ProductsPage = async ({ searchParams }: ProductsPageProps) => {
                     key={pNum}
                     href={{
                       pathname: "/products",
-                      query: {
-                        ...(search && { search }),
-                        ...(category && { category }),
-                        page: pNum,
-                      },
+                      query: buildQuery(pNum),
                     }}
                     className={`rounded-xl px-4 py-2 font-medium transition ${
                       pNum === page
@@ -205,11 +255,9 @@ const ProductsPage = async ({ searchParams }: ProductsPageProps) => {
                 <Link
                   href={{
                     pathname: "/products",
-                    query: {
-                      ...(search && { search }),
-                      ...(category && { category }),
-                      page: page < totalPages ? page + 1 : totalPages,
-                    },
+                    query: buildQuery(
+                      page < totalPages ? page + 1 : totalPages,
+                    ),
                   }}
                   className={`rounded-xl border px-4 py-2 font-medium transition ${
                     page >= totalPages
@@ -224,31 +272,29 @@ const ProductsPage = async ({ searchParams }: ProductsPageProps) => {
           </>
         ) : (
           /* Empty State */
-          <div className="rounded-3xl shadow-2xl bg-white p-20 text-center">
+          <div className="rounded-3xl bg-white p-20 text-center shadow-2xl">
             <div className="mb-4 text-6xl">🛍️</div>
 
             <h2 className="text-2xl font-bold text-gray-700">
-              {search || category
-                ? "No Products Found"
-                : "No Products Available"}
+              {isFiltered ? "No Products Found" : "No Products Available"}
             </h2>
 
             <p className="mt-2 text-gray-500">
               {search
                 ? `No products matched "${search}". Try another search.`
-                : category
-                  ? `No products found in "${category}". Try another category.`
-                  : "Products will appear here when available."}
+                : selectedCategoryName
+                  ? `No products found in "${selectedCategoryName}".`
+                  : isFiltered
+                    ? "No products match the selected filters."
+                    : "Products will appear here when available."}
             </p>
 
-            {(search || category) && (
-              <Link
-                href="/products"
-                className="mt-6 inline-block rounded-xl shadow-lg shadow-amber-600 hover:shadow-purple-400 bg-[#ff594d] px-6 py-3 font-medium text-white transition hover:bg-purple-400"
-              >
-                View All Products
-              </Link>
-            )}
+            <Link
+              href="/products"
+              className="mt-6 inline-block rounded-xl bg-[#ff594d] px-6 py-3 font-medium text-white transition hover:bg-[#163B33]"
+            >
+              View All Products
+            </Link>
           </div>
         )}
       </main>

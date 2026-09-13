@@ -64,9 +64,13 @@ export default function RelatedProducts({
 
         // Fallback: match mock catalog by category label
         if (!list.length && categoryName) {
-          list = MOCK_PRODUCTS.filter(
-            (p) => p.category?.toLowerCase() === categoryName.toLowerCase(),
-          );
+          list = MOCK_PRODUCTS.filter((p) => {
+            const label =
+              typeof p.category === "object" ? p.category?.name : p.category;
+            return (
+              label && label.toLowerCase() === categoryName.toLowerCase()
+            );
+          });
         }
 
         setProducts(list.filter((p) => String(p._id) !== String(productId)));

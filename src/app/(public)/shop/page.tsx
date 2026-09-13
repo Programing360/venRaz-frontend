@@ -18,6 +18,15 @@ import { MOCK_PRODUCTS, CatalogProduct } from "@/lib/products/mockCatalog";
 
 const PRODUCTS_PER_PAGE = 12;
 
+// category can be a plain string, a populated { _id, name } object, or missing
+function getCategoryLabel(product: CatalogProduct): string {
+  if (!product.category) return "";
+  if (typeof product.category === "object") {
+    return product.category.name || "";
+  }
+  return product.category;
+}
+
 export default function ShopPage() {
   const { addToCart } = useCart();
 
@@ -35,13 +44,17 @@ export default function ShopPage() {
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-  // Categories list
+  // Categories list derived from fetched products
   const categories = useMemo(() => {
-    const cats = Array.from(new Set(products.map((p) => p.category)));
-    return ["All", ...cats];
-  }, []);
+    const set = new Set<string>();
+    for (const p of products) {
+      const label = getCategoryLabel(p);
+      if (label) set.add(label);
+    }
+    return ["All", ...Array.from(set)];
+  }, [products]);
 
-  // Fetch or load catalog
+  // Fetch all products once from the products API
   useEffect(() => {
     let cancelled = false;
 
@@ -51,26 +64,16 @@ export default function ShopPage() {
 
         if (API_URL) {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 2000);
+          const timeoutId = setTimeout(() => controller.abort(), 4000);
 
-          const params = new URLSearchParams();
-          if (search.trim()) params.set("search", search.trim());
-          if (selectedCategory !== "All")
-            params.set("category", selectedCategory);
-          if (minPrice) params.set("minPrice", minPrice);
-          if (maxPrice) params.set("maxPrice", maxPrice);
-          if (minRating) params.set("minRating", minRating);
-          params.set("sort", sortBy);
-
-          const res = await fetch(`${API_URL}/shops?${params.toString()}`, {
+          const res = await fetch(`${API_URL}/shops`, {
             signal: controller.signal,
           }).finally(() => clearTimeout(timeoutId));
-
           if (res.ok) {
             const data = await res.json();
-            const fetched = data.data;
-            fetched;
-            if (Array.isArray(fetched) && fetched.length > 0 && !cancelled) {
+            console.log(data);
+            const fetched = data?.data;
+            if (Array.isArray(fetched) && !cancelled) {
               setProducts(fetched);
               return;
             }
@@ -78,56 +81,12 @@ export default function ShopPage() {
         }
 
         // Resilient Fallback to rich Mock Catalog
-        let filtered = [...products];
-
-        if (search.trim()) {
-          const q = search.toLowerCase();
-          filtered = filtered.filter(
-            (p) =>
-              p.name.toLowerCase().includes(q) ||
-              p.brand.toLowerCase().includes(q) ||
-              p.category.toLowerCase().includes(q),
-          );
-        }
-
-        if (selectedCategory !== "All") {
-          filtered = filtered.filter((p) => p.category === selectedCategory);
-        }
-
-        if (minPrice) {
-          filtered = filtered.filter((p) => p.price >= Number(minPrice));
-        }
-
-        if (maxPrice) {
-          filtered = filtered.filter((p) => p.price <= Number(maxPrice));
-        }
-
-        if (minRating) {
-          filtered = filtered.filter((p) => p.rating >= Number(minRating));
-        }
-
-        if (sortBy === "price") {
-          filtered.sort((a, b) => a.price - b.price);
-        } else if (sortBy === "price-desc") {
-          filtered.sort((a, b) => b.price - a.price);
-        } else if (sortBy === "rating") {
-          filtered.sort((a, b) => b.rating - a.rating);
-        } else if (sortBy === "popularity") {
-          filtered.sort((a, b) => b.soldCount - a.soldCount);
-        } else {
-          // latest
-          filtered.sort(
-            (a, b) =>
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-          );
-        }
-
         if (!cancelled) {
-          setProducts(filtered);
+          setProducts(MOCK_PRODUCTS);
         }
       } catch (err) {
         console.warn("Shop backend API fallback triggered:", err);
-        if (!cancelled && products.length === 0) {
+        if (!cancelled) {
           setProducts(MOCK_PRODUCTS);
         }
       } finally {
@@ -142,8 +101,61 @@ export default function ShopPage() {
     return () => {
       cancelled = true;
     };
+  }, [API_URL]);
+
+  // Client-side filter + sort
+  const filteredProducts = useMemo(() => {
+    let filtered = [...products];
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(
+        (p) =>
+          (p.name || "").toLowerCase().includes(q) ||
+          (p.brand || "").toLowerCase().includes(q) ||
+          getCategoryLabel(p).toLowerCase().includes(q),
+      );
+    }
+
+    if (selectedCategory !== "All") {
+      filtered = filtered.filter(
+        (p) => getCategoryLabel(p) === selectedCategory,
+      );
+    }
+
+    if (minPrice) {
+      filtered = filtered.filter((p) => p.price >= Number(minPrice));
+    }
+
+    if (maxPrice) {
+      filtered = filtered.filter((p) => p.price <= Number(maxPrice));
+    }
+
+    if (minRating) {
+      filtered = filtered.filter((p) => p.rating >= Number(minRating));
+    }
+
+    const sorted = [...filtered];
+    if (sortBy === "price") {
+      sorted.sort((a, b) => a.price - b.price);
+    } else if (sortBy === "price-desc") {
+      sorted.sort((a, b) => b.price - a.price);
+    } else if (sortBy === "rating") {
+      sorted.sort((a, b) => b.rating - a.rating);
+    } else if (sortBy === "popularity") {
+      sorted.sort((a, b) => b.soldCount - a.soldCount);
+    } else {
+      // latest (fall back to original order when createdAt is missing)
+      sorted.sort((a, b) => {
+        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return timeB - timeA;
+      });
+    }
+
+    return sorted;
   }, [
-    API_URL,
+    products,
     search,
     selectedCategory,
     minPrice,
@@ -172,13 +184,11 @@ export default function ShopPage() {
     }, 1500);
   };
 
-  const totalPages = Math.ceil(products.length / PRODUCTS_PER_PAGE);
-  const paginatedProducts = products.slice(
+  const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
+  const paginatedProducts = filteredProducts.slice(
     (currentPage - 1) * PRODUCTS_PER_PAGE,
     currentPage * PRODUCTS_PER_PAGE,
   );
-
-  paginatedProducts;
 
   return (
     <main className="min-h-screen bg-[#fcfdfd] py-10 md:py-16 md:mt-10">
@@ -392,7 +402,7 @@ export default function ShopPage() {
                           <div className="space-y-1.5">
                             <div className="flex items-center justify-between text-xs">
                               <span className="text-slate-400 font-medium">
-                                {product.brand}
+                                {product.brand || "VenRaz"}
                               </span>
                               <div className="flex items-center gap-1 text-amber-500 font-bold">
                                 <Star className="w-3.5 h-3.5 fill-amber-400" />
@@ -563,7 +573,7 @@ export default function ShopPage() {
                 onClick={() => setMobileFilterOpen(false)}
                 className="w-full bg-[#ff594d] text-white py-3 rounded-xl font-bold text-xs"
               >
-                Apply Filters ({products.length} Products)
+                Apply Filters ({filteredProducts.length} Products)
               </button>
               <button
                 type="button"

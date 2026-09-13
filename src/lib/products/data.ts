@@ -35,16 +35,30 @@ export interface HomeSections {
   newArrivals: Product[];
 }
 
+export interface Category {
+  _id: string;
+  name: string;
+  slug?: string;
+  icon?: string;
+  description?: string;
+}
+
 export const getProducts = async ({
   page = 1,
   limit = 10,
   search = "",
   category = "",
+  minPrice = "",
+  maxPrice = "",
+  sort = "",
 }: {
   page?: number;
   limit?: number;
   search?: string;
   category?: string;
+  minPrice?: string;
+  maxPrice?: string;
+  sort?: string;
 }) => {
   const fallbackData = {
     products: [],
@@ -58,16 +72,22 @@ export const getProducts = async ({
       return fallbackData;
     }
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2000);
+    const params = new URLSearchParams();
+    params.set("page", String(page));
+    params.set("limit", String(limit));
+    if (search) params.set("search", search);
+    if (category) params.set("category", category);
+    if (minPrice) params.set("minPrice", minPrice);
+    if (maxPrice) params.set("maxPrice", maxPrice);
+    if (sort) params.set("sort", sort);
 
-    const res = await fetch(
-      `${API}/products?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}&category=${encodeURIComponent(category)}`,
-      {
-        cache: "no-store",
-        signal: controller.signal,
-      },
-    ).finally(() => clearTimeout(timeoutId));
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+    const res = await fetch(`${API}/products?${params.toString()}`, {
+      cache: "no-store",
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeoutId));
 
     if (!res.ok) {
       return fallbackData;
@@ -75,7 +95,6 @@ export const getProducts = async ({
 
     const response = await res.json();
     const data = response?.data;
-    data;
 
     return {
       totalPages: data?.totalPages || 1,
@@ -85,6 +104,32 @@ export const getProducts = async ({
     };
   } catch {
     return fallbackData;
+  }
+};
+
+export const getCategories = async (): Promise<Category[]> => {
+  try {
+    if (!API) {
+      return [];
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+    const res = await fetch(`${API}/categories`, {
+      cache: "no-store",
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeoutId));
+
+    if (!res.ok) {
+      return [];
+    }
+
+    const response = await res.json();
+    const list = response?.data ?? response?.categories ?? [];
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
   }
 };
 
