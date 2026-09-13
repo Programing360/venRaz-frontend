@@ -119,6 +119,10 @@ export default function ChatWidget() {
     setMessages((prev) => [...prev, userMsg]);
     if (!customText) setInputMessage("");
     setIsLoading(true);
+    const formattedHistory = messages.map((msg) => ({
+      role: msg.sender === "user" ? "user" : "assistant",
+      content: msg.reply,
+    }));
 
     try {
       const baseUrl =
@@ -128,6 +132,7 @@ export default function ChatWidget() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: textToSend,
+          history: formattedHistory,
           userId: currentUser?.id,
         }),
       });

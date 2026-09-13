@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -32,10 +32,10 @@ export default function CheckoutPage() {
     paymentMethod: string;
   } | null>(null);
 
-  // Form State
+  // Form State (Default with session user info if available)
   const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
+    fullName: session?.user?.name || "",
+    email: session?.user?.email || "",
     phone: "",
     address: "",
     city: "Dhaka",
@@ -43,8 +43,53 @@ export default function CheckoutPage() {
     notes: "",
   });
 
+  // Session data load হলে Email/Name auto populate করা
+  useEffect(() => {
+    if (session?.user) {
+      setFormData((prev) => ({
+        ...prev,
+        fullName: prev.fullName || session.user.name || "",
+        email: prev.email || session.user.email || "",
+      }));
+    }
+  }, [session]);
+
   const discountAmount = (subtotal * discountPercent) / 100;
   const finalTotal = Math.max(0, subtotal + shipping - discountAmount);
+
+  // 🛒 🚀 Abandoned Cart Tracking Handler (Auto-Save on Input Blur)
+  const trackAbandonedCart = useCallback(async () => {
+    if (items.length === 0) return;
+    // অন্ততপক্ষে Phone, Email অথবা Name পূরণ হলে ট্র্যাকিং শুরু হবে
+    if (!formData.phone && !formData.email && !formData.fullName) return;
+
+    const API_URL =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+
+    try {
+      await fetch(`${API_URL}/abandoned-cart/track`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: session?.user?.id,
+          name: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          items: items.map((item) => ({
+            productId: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+            image: item.image,
+          })),
+          totalAmount: finalTotal,
+        }),
+      });
+      console.log("🛒 Abandoned cart status auto-saved!");
+    } catch (err) {
+      console.warn("Failed to auto-track abandoned cart:", err);
+    }
+  }, [items, formData, finalTotal, session]);
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -105,11 +150,12 @@ export default function CheckoutPage() {
       };
 
       // Send to Backend API
-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
       if (API_URL) {
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 2000);
+          const timeoutId = setTimeout(() => controller.abort(), 4000);
           const res = await fetch(`${API_URL}/orders`, {
             method: "POST",
             headers: {
@@ -279,6 +325,7 @@ export default function CheckoutPage() {
                       required
                       value={formData.fullName}
                       onChange={handleInputChange}
+                      onBlur={trackAbandonedCart} // 👈 Auto Track on Blur
                       placeholder="e.g. Tanvir Hasan"
                       className="w-full text-sm border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-[#ff594d] focus:ring-1 focus:ring-[#ff594d]"
                     />
@@ -294,6 +341,7 @@ export default function CheckoutPage() {
                       required
                       value={formData.phone}
                       onChange={handleInputChange}
+                      onBlur={trackAbandonedCart} // 👈 Auto Track on Blur
                       placeholder="e.g. +880 1712 345678"
                       className="w-full text-sm border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-[#ff594d] focus:ring-1 focus:ring-[#ff594d]"
                     />
@@ -308,6 +356,7 @@ export default function CheckoutPage() {
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
+                      onBlur={trackAbandonedCart} // 👈 Auto Track on Blur
                       placeholder="you@example.com"
                       className="w-full text-sm border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-[#ff594d] focus:ring-1 focus:ring-[#ff594d]"
                     />
@@ -323,6 +372,7 @@ export default function CheckoutPage() {
                       required
                       value={formData.address}
                       onChange={handleInputChange}
+                      onBlur={trackAbandonedCart} // 👈 Auto Track on Blur
                       placeholder="House, Road, Area, Ward"
                       className="w-full text-sm border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-[#ff594d] focus:ring-1 focus:ring-[#ff594d]"
                     />
@@ -336,6 +386,7 @@ export default function CheckoutPage() {
                       name="city"
                       value={formData.city}
                       onChange={handleInputChange}
+                      onBlur={trackAbandonedCart} // 👈 Auto Track on Blur
                       className="w-full text-sm border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-[#ff594d] focus:ring-1 focus:ring-[#ff594d] bg-white"
                     >
                       <option value="Dhaka">Dhaka</option>
@@ -357,6 +408,7 @@ export default function CheckoutPage() {
                       name="postalCode"
                       value={formData.postalCode}
                       onChange={handleInputChange}
+                      onBlur={trackAbandonedCart} // 👈 Auto Track on Blur
                       placeholder="e.g. 1216"
                       className="w-full text-sm border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-[#ff594d] focus:ring-1 focus:ring-[#ff594d]"
                     />

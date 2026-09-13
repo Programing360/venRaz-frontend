@@ -52,7 +52,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
   };
 
   return (
-    <div className="group relative bg-white rounded-3xl border border-slate-200 overflow-hidden hover:shadow-xl hover:border-slate-300 transition-all duration-300 h-full flex flex-col w-full">
+    <div className="group relative bg-white rounded-3xl shadow border-slate-200 overflow-hidden hover:shadow-2xl hover:border-slate-300 transition-all duration-300 h-full flex flex-col w-full">
       <Link
         href={`/products/${product._id}`}
         className="block flex-1 flex flex-col"
@@ -62,9 +62,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <Image
             src={image}
             alt={product.name || "Product"}
-            fill
-            className="object-contain p-4 group-hover:scale-105 transition duration-300"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            width={500}
+            height={600}
+            className=" w-[300px] h-[300px] rounded-4xl p-4 group-hover:scale-105 transition duration-300"
           />
 
           {/* Discount Badge */}

@@ -335,14 +335,14 @@ export default function FlashSale() {
         }
 
         const result: ApiResponse = await response.json();
-        console.log(response);
         if (!result.success) {
           throw new Error(
             result.message || "Failed to load flash sale products",
           );
         }
-
+        
         const data = result.data;
+        console.log(result);
 
         // FIX: Extract dynamic array safely
         let flashSaleProducts: Product[] = [];

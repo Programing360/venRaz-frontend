@@ -111,7 +111,7 @@ const ProductsPage = async ({ searchParams }: ProductsPageProps) => {
 
             <button
               type="submit"
-              className="rounded-xl bg-[#ff594d] px-6 py-3 font-medium text-white transition-colors hover:bg-[#184433]"
+              className="rounded-xl bg-[#ff594d] shadow-lg shadow-amber-800 px-6 py-3 font-medium text-white transition-colors hover:bg-[#ab75fa] hover:shadow-purple-400"
             >
               Search
             </button>
@@ -224,7 +224,7 @@ const ProductsPage = async ({ searchParams }: ProductsPageProps) => {
           </>
         ) : (
           /* Empty State */
-          <div className="rounded-3xl border bg-white p-20 text-center">
+          <div className="rounded-3xl shadow-2xl bg-white p-20 text-center">
             <div className="mb-4 text-6xl">🛍️</div>
 
             <h2 className="text-2xl font-bold text-gray-700">
@@ -244,7 +244,7 @@ const ProductsPage = async ({ searchParams }: ProductsPageProps) => {
             {(search || category) && (
               <Link
                 href="/products"
-                className="mt-6 inline-block rounded-xl bg-[#132573] px-6 py-3 font-medium text-white transition hover:bg-[#184433]"
+                className="mt-6 inline-block rounded-xl shadow-lg shadow-amber-600 hover:shadow-purple-400 bg-[#ff594d] px-6 py-3 font-medium text-white transition hover:bg-purple-400"
               >
                 View All Products
               </Link>

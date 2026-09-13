@@ -3,6 +3,7 @@
 import React, { use, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ShoppingBag,
   Star,
@@ -13,6 +14,8 @@ import {
   ShieldCheck,
   Truck,
   RotateCcw,
+  Zap,
+  Loader2,
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { MOCK_PRODUCTS } from "@/lib/products/mockCatalog";
@@ -44,13 +47,15 @@ export default function ProductDetailsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const { addToCart } = useCart();
+  const { addToCart, clearCart } = useCart();
+  const router = useRouter();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState<string>("");
   const [added, setAdded] = useState(false);
+  const [buying, setBuying] = useState(false);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -66,10 +71,10 @@ export default function ProductDetailsPage({
           const res = await fetch(`${API_URL}/products/${id}`, {
             signal: controller.signal,
           }).finally(() => clearTimeout(timeoutId));
-          res;
+
           if (res.ok) {
             const data = await res.json();
-            data;
+
             const productData = data?.data || data;
             if (productData && productData._id) {
               setProduct(productData);
@@ -140,6 +145,18 @@ export default function ProductDetailsPage({
     setTimeout(() => setAdded(false), 2000);
   };
 
+  const handleBuyNow = async () => {
+    if (!product || buying) return;
+    setBuying(true);
+    try {
+      // await clearCart();
+      await addToCart(product, quantity);
+      router.push("/checkout");
+    } finally {
+      setBuying(false);
+    }
+  };
+
   if (loading) {
     return (
       <main className="min-h-screen bg-[#fcfdfd] py-16">
@@ -204,14 +221,14 @@ export default function ProductDetailsPage({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 bg-white p-6 sm:p-10 rounded-3xl border border-slate-200 shadow-sm">
           {/* Gallery Image */}
           <div className="flex flex-col items-center">
-            <div className="relative w-full aspect-square max-h-[500px] bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 flex items-center justify-center p-8">
+            <div className="relative w-[500px] aspect-square max-h-[500px] bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 flex items-center justify-center p-8">
               <Image
                 src={selectedImage || "/placeholder.svg"}
                 alt={product.name}
-                fill
+                width={500}
+                height={500}
                 priority
-                className="object-contain p-6 hover:scale-105 transition-transform duration-300"
-                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover w-full h-full p-6 hover:scale-105 transition-transform duration-300"
               />
             </div>
           </div>
@@ -290,38 +307,38 @@ export default function ProductDetailsPage({
 
             {/* Quantity & Actions */}
             <div className="space-y-4">
-              <div className="flex flex-wrap items-center gap-4">
-                {/* Quantity Control */}
-                <div className="flex items-center border border-slate-300 rounded-xl overflow-hidden bg-slate-50">
-                  <button
-                    type="button"
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    disabled={quantity <= 1 || isOutOfStock}
-                    className="p-3.5 hover:bg-slate-200 transition disabled:opacity-30"
-                    aria-label="Decrease quantity"
-                  >
-                    <Minus className="w-4 h-4 text-slate-700" />
-                  </button>
-                  <span className="px-5 font-bold text-slate-900 text-sm">
-                    {quantity}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setQuantity((q) => q + 1)}
-                    disabled={isOutOfStock}
-                    className="p-3.5 hover:bg-slate-200 transition disabled:opacity-30"
-                    aria-label="Increase quantity"
-                  >
-                    <Plus className="w-4 h-4 text-slate-700" />
-                  </button>
-                </div>
+              {/* Quantity Control */}
+              <div className="flex items-center border border-slate-300 rounded-xl overflow-hidden bg-slate-50 w-fit">
+                <button
+                  type="button"
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  disabled={quantity <= 1 || isOutOfStock}
+                  className="p-3.5 hover:bg-slate-200 transition disabled:opacity-30"
+                  aria-label="Decrease quantity"
+                >
+                  <Minus className="w-4 h-4 text-slate-700" />
+                </button>
+                <span className="px-5 font-bold text-slate-900 text-sm">
+                  {quantity}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setQuantity((q) => q + 1)}
+                  disabled={isOutOfStock}
+                  className="p-3.5 hover:bg-slate-200 transition disabled:opacity-30"
+                  aria-label="Increase quantity"
+                >
+                  <Plus className="w-4 h-4 text-slate-700" />
+                </button>
+              </div>
 
+              <div className="flex flex-col sm:flex-row gap-3">
                 {/* Add to Cart Button */}
                 <button
                   type="button"
                   onClick={handleAddToCart}
                   disabled={isOutOfStock}
-                  className={`flex-1 min-w-[200px] flex items-center justify-center gap-2 py-4 px-8 rounded-xl font-bold text-sm shadow-lg transition-all duration-200 ${
+                  className={`flex-1 min-w-[200px] flex items-center justify-center gap-2 py-4 px-6 rounded-xl font-bold text-sm shadow-lg transition-all duration-200 ${
                     added
                       ? "bg-emerald-600 text-white shadow-emerald-500/20"
                       : "bg-[#ff594d] hover:bg-black text-white shadow-red-500/20"
@@ -341,6 +358,28 @@ export default function ProductDetailsPage({
                     </>
                   )}
                 </button>
+
+                {/* Buy Now Button */}
+                <button
+                  type="button"
+                  onClick={handleBuyNow}
+                  disabled={isOutOfStock || buying}
+                  className="flex-1 min-w-[200px] flex items-center justify-center gap-2 py-4 px-6 rounded-xl font-bold text-sm shadow-lg transition-all duration-200 bg-slate-900 hover:bg-[#ff594d] text-white shadow-slate-900/20 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  {buying ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Redirecting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="w-5 h-5" />
+                      <span>
+                        Buy Now (${(finalPrice * quantity).toFixed(2)})
+                      </span>
+                    </>
+                  )}
+                </button>
               </div>
 
               {added && (
@@ -356,7 +395,7 @@ export default function ProductDetailsPage({
             </div>
           </div>
         </div>
-      {/* Customer Reviews + Related Products */}
+        {/* Customer Reviews + Related Products */}
         <ReviewsSection
           productId={product._id}
           initialRating={product.rating}

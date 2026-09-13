@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -7,92 +8,69 @@ import {
   Smartphone,
   Home,
   Sparkles,
-  Dumbbell,
-  BookOpen,
-  Baby,
   ShoppingBasket,
-  Headphones,
-  Watch,
-  Laptop,
-  Gamepad2,
+  Tag,
 } from "lucide-react";
 
-const categories = [
-  {
-    name: "Fashion",
-    description: "Trendy clothing and accessories",
-    icon: Shirt,
-    items: "1,250+ Products",
-  },
-  {
-    name: "Electronics",
-    description: "Latest gadgets and technology",
-    icon: Smartphone,
-    items: "980+ Products",
-  },
-  {
-    name: "Home & Living",
-    description: "Everything for your beautiful home",
-    icon: Home,
-    items: "1,100+ Products",
-  },
-  {
-    name: "Beauty",
-    description: "Beauty and personal care products",
-    icon: Sparkles,
-    items: "750+ Products",
-  },
-  {
-    name: "Sports",
-    description: "Sports gear and fitness essentials",
-    icon: Dumbbell,
-    items: "620+ Products",
-  },
-  {
-    name: "Books",
-    description: "Books for learning and entertainment",
-    icon: BookOpen,
-    items: "890+ Products",
-  },
-  {
-    name: "Baby & Kids",
-    description: "Products for babies and children",
-    icon: Baby,
-    items: "540+ Products",
-  },
-  {
-    name: "Grocery",
-    description: "Daily essentials and groceries",
-    icon: ShoppingBasket,
-    items: "1,500+ Products",
-  },
-  {
-    name: "Audio",
-    description: "Headphones, speakers and more",
-    icon: Headphones,
-    items: "430+ Products",
-  },
-  {
-    name: "Watches",
-    description: "Stylish watches for every occasion",
-    icon: Watch,
-    items: "320+ Products",
-  },
-  {
-    name: "Computers",
-    description: "Laptops, PCs and accessories",
-    icon: Laptop,
-    items: "680+ Products",
-  },
-  {
-    name: "Gaming",
-    description: "Gaming consoles and accessories",
-    icon: Gamepad2,
-    items: "390+ Products",
-  },
-];
+interface Category {
+  _id: string;
+  name: string;
+  slug?: string;
+  icon?: string;
+  image?: string;
+  description?: string;
+  isActive?: boolean;
+  isDeleted?: boolean;
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function CategoriesPage() {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchCategories = async () => {
+      setLoading(true);
+      try {
+        if (!API_URL) {
+          if (!cancelled) setError("API is not configured. Please set NEXT_PUBLIC_API_URL.");
+          return;
+        }
+
+        const res = await fetch(`${API_URL}/categories`, { cache: "no-store" });
+        if (!res.ok) {
+          throw new Error(`Failed to load categories (${res.status})`);
+        }
+
+        const result = await res.json();
+        const list = result?.data ?? result?.categories ?? [];
+
+        if (!cancelled) {
+          setCategories(Array.isArray(list) ? list : []);
+          setError("");
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof Error ? err.message : "Failed to load categories",
+          );
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    fetchCategories();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <main className="min-h-screen bg-white">
       {/* =========================
@@ -153,14 +131,67 @@ export default function CategoriesPage() {
             </Link>
           </div>
 
-          {/* Categories Grid */}
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {categories.map((category) => {
-              const Icon = category.icon;
+          {/* Loading State */}
+          {loading && (
+            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-56 animate-pulse rounded-2xl border border-gray-100 bg-gray-50"
+                />
+              ))}
+            </div>
+          )}
 
-              return (
+          {/* Error State */}
+          {!loading && error && (
+            <div className="mt-10 flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 py-20 text-center">
+              <p className="text-sm text-slate-500">{error}</p>
+              <button
+                type="button"
+                onClick={async () => {
+                  setLoading(true);
+                  try {
+                    const res = await fetch(`${API_URL}/categories`, {
+                      cache: "no-store",
+                    });
+                    const result = await res.json();
+                    const list = result?.data ?? result?.categories ?? [];
+                    setCategories(Array.isArray(list) ? list : []);
+                    setError("");
+                  } catch (err) {
+                    setError(
+                      err instanceof Error
+                        ? err.message
+                        : "Failed to load categories",
+                    );
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#ff594d] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#e94d43]"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!loading && !error && categories.length === 0 && (
+            <div className="mt-10 flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 py-20 text-center">
+              <Tag className="h-10 w-10 text-slate-300" />
+              <p className="mt-3 text-sm text-slate-500">
+                No categories available right now.
+              </p>
+            </div>
+          )}
+
+          {/* Categories Grid */}
+          {!loading && !error && categories.length > 0 && (
+            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {categories.map((category) => (
                 <Link
-                  key={category.name}
+                  key={category._id}
                   href={`/products?category=${encodeURIComponent(
                     category.name,
                   )}`}
@@ -170,7 +201,16 @@ export default function CategoriesPage() {
                     {/* Icon */}
                     <div className="flex items-center justify-between">
                       <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#ff594d]/10 transition duration-300 group-hover:bg-[#ff594d]">
-                        <Icon className="h-7 w-7 text-[#ff594d] transition group-hover:text-white" />
+                        {category.icon ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={category.icon}
+                            alt=""
+                            className="h-7 w-7"
+                          />
+                        ) : (
+                          <Tag className="h-7 w-7 text-[#ff594d] transition group-hover:text-white" />
+                        )}
                       </div>
 
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-50 transition group-hover:bg-[#ff594d]/10">
@@ -186,15 +226,11 @@ export default function CategoriesPage() {
                     <p className="mt-2 text-sm leading-6 text-gray-500">
                       {category.description}
                     </p>
-
-                    <p className="mt-4 text-sm font-semibold text-[#ff594d]">
-                      {category.items}
-                    </p>
                   </div>
                 </Link>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -261,7 +297,7 @@ export default function CategoriesPage() {
       <section className="py-20">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
           <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-            Can't Find What You're Looking For?
+            Can&apos;t Find What You&apos;re Looking For?
           </h2>
 
           <p className="mx-auto mt-4 max-w-2xl text-gray-600">
