@@ -14,8 +14,8 @@ import {
   PackageX,
   AlertCircle,
 } from "lucide-react";
-import { authHeaders } from "@/lib/core/orders";
 import axios from "axios";
+import { authHeaders } from "@/lib/core/orders";
 
 interface OrderItem {
   product?: {
@@ -47,29 +47,33 @@ const statusLabel = (status: string) =>
 
 const statusTone = (status: string) => {
   const s = status.toLowerCase();
+
   if (s === "delivered") {
     return {
-      badge: "bg-emerald-500/10 text-emerald-500",
+      badge: "bg-emerald-50 text-emerald-700 border-emerald-200",
       dot: "bg-emerald-500",
       pulse: false,
     };
   }
+
   if (s === "cancelled") {
     return {
-      badge: "bg-rose-500/10 text-rose-500",
-      dot: "bg-rose-500",
+      badge: "bg-red-50 text-red-700 border-red-200",
+      dot: "bg-red-500",
       pulse: false,
     };
   }
+
   if (s === "shipped" || s === "out_for_delivery") {
     return {
-      badge: "bg-blue-500/10 text-blue-500",
+      badge: "bg-blue-50 text-blue-700 border-blue-200",
       dot: "bg-blue-500",
       pulse: true,
     };
   }
+
   return {
-    badge: "bg-amber-500/10 text-amber-500",
+    badge: "bg-amber-50 text-amber-700 border-amber-200",
     dot: "bg-amber-500",
     pulse: true,
   };
@@ -89,8 +93,7 @@ export default function MyOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [state, setState] = useState<FetchState>("loading");
   const [refreshKey, setRefreshKey] = useState(0);
-  // const { data: session } = useSession();
-  console.log(orders);
+
   useEffect(() => {
     let active = true;
     const controller = new AbortController();
@@ -98,7 +101,6 @@ export default function MyOrdersPage() {
 
     (async () => {
       try {
-        // 1. axios.get-এর আগে await ব্যবহার করুন
         const res = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/orders/my-orders`,
           {
@@ -109,9 +111,7 @@ export default function MyOrdersPage() {
 
         if (!active) return;
 
-        // 2. Axios-এ ডাটা সরাসরি res.data-তে থাকে
         const json = res.data;
-        console.log(json);
 
         if (json && Array.isArray(json.data)) {
           setOrders(json.data as Order[]);
@@ -119,7 +119,7 @@ export default function MyOrdersPage() {
         } else {
           throw new Error("Invalid response");
         }
-      } catch (err) {
+      } catch {
         if (active) setState("error");
       }
     })();
@@ -136,334 +136,402 @@ export default function MyOrdersPage() {
     setRefreshKey((key) => key + 1);
   }, []);
 
-  const delivered = orders.filter((o) => o.status === "delivered").length;
-  const pending = orders.filter(
-    (o) => o.status !== "delivered" && o.status !== "cancelled",
+  const delivered = orders.filter(
+    (o) => o.status.toLowerCase() === "delivered",
   ).length;
 
+  const pending = orders.filter((o) => {
+    const status = o.status.toLowerCase();
+    return status !== "delivered" && status !== "cancelled";
+  }).length;
+
   return (
-    <div className="min-h-screen space-y-7 bg-background">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-primary">
-            <ShoppingBag className="h-3.5 w-3.5" />
-            Purchase History
-          </div>
-
-          <h1 className="text-3xl font-black tracking-tight sm:text-4xl">
-            My Orders<span className="text-primary">.</span>
-          </h1>
-
-          <p className="mt-1 text-sm text-muted-foreground">
-            Track and manage all your purchases.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-          <Package className="h-4 w-4 text-primary" />
-          {state === "ready" ? `${orders.length} total orders` : "Loading..."}
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {/* Total */}
-        <div className="group relative overflow-hidden rounded-2xl border bg-card p-5 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
-          <div className="absolute -right-5 -top-5 h-20 w-20 rounded-full bg-primary/10 blur-2xl transition-all group-hover:bg-primary/20" />
-
-          <div className="relative flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                Total Orders
-              </p>
-              <p className="mt-2 text-3xl font-black">
-                {state === "ready" ? orders.length : "—"}
-              </p>
-            </div>
-
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <Package className="h-5 w-5" />
-            </div>
-          </div>
-        </div>
-
-        {/* Delivered */}
-        <div className="group relative overflow-hidden rounded-2xl border bg-card p-5 transition-all duration-300 hover:-translate-y-1 hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/5">
-          <div className="absolute -right-5 -top-5 h-20 w-20 rounded-full bg-emerald-500/10 blur-2xl" />
-
-          <div className="relative flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                Delivered
-              </p>
-              <p className="mt-2 text-3xl font-black">
-                {state === "ready" ? delivered : "—"}
-              </p>
-            </div>
-
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
-              <CheckCircle2 className="h-5 w-5" />
-            </div>
-          </div>
-        </div>
-
-        {/* Pending */}
-        <div className="group relative overflow-hidden rounded-2xl border bg-card p-5 transition-all duration-300 hover:-translate-y-1 hover:border-amber-500/30 hover:shadow-lg hover:shadow-amber-500/5">
-          <div className="absolute -right-5 -top-5 h-20 w-20 rounded-full bg-amber-500/10 blur-2xl" />
-
-          <div className="relative flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                Active Orders
-              </p>
-              <p className="mt-2 text-3xl font-black">
-                {state === "ready" ? pending : "—"}
-              </p>
-            </div>
-
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
-              <Clock3 className="h-5 w-5" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Orders */}
-      <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
-        {/* Section Header */}
-        <div className="flex items-center justify-between border-b p-5 sm:p-6">
+    <main className="min-h-screen bg-white px-4 py-6 text-slate-900 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        {/* Header */}
+        <div className="mb-8 flex flex-col gap-5 border-b border-slate-200 pb-7 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="font-bold">Recent Orders</h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Your latest purchases
+            <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
+              <ShoppingBag className="h-4 w-4" />
+              Purchase History
+            </div>
+
+            <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+              My Orders
+            </h1>
+
+            <p className="mt-2 text-sm text-slate-500">
+              Track and manage your recent purchases.
             </p>
           </div>
 
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <ShoppingBag className="h-4 w-4" />
+          <div className="flex w-fit items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-medium text-slate-600">
+            <Package className="h-4 w-4 text-slate-500" />
+            {state === "ready" ? `${orders.length} total orders` : "Loading..."}
           </div>
         </div>
 
-        {/* Error State */}
-        {state === "error" && (
-          <div className="flex flex-col items-center justify-center gap-4 px-6 py-16 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500">
-              <AlertCircle className="h-7 w-7" />
+        {/* Stats */}
+        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {/* Total Orders */}
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Total Orders
+                </p>
+
+                <p className="mt-2 text-3xl font-bold tracking-tight text-slate-950">
+                  {state === "ready" ? orders.length : "—"}
+                </p>
+
+                <p className="mt-1 text-xs text-slate-400">
+                  All purchases
+                </p>
+              </div>
+
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+                <Package className="h-5 w-5" />
+              </div>
             </div>
+          </div>
+
+          {/* Delivered */}
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Delivered
+                </p>
+
+                <p className="mt-2 text-3xl font-bold tracking-tight text-slate-950">
+                  {state === "ready" ? delivered : "—"}
+                </p>
+
+                <p className="mt-1 text-xs text-slate-400">
+                  Successfully completed
+                </p>
+              </div>
+
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                <CheckCircle2 className="h-5 w-5" />
+              </div>
+            </div>
+          </div>
+
+          {/* Active */}
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Active Orders
+                </p>
+
+                <p className="mt-2 text-3xl font-bold tracking-tight text-slate-950">
+                  {state === "ready" ? pending : "—"}
+                </p>
+
+                <p className="mt-1 text-xs text-slate-400">
+                  Currently processing
+                </p>
+              </div>
+
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                <Clock3 className="h-5 w-5" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Orders Container */}
+        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          {/* Section Header */}
+          <div className="flex items-center justify-between border-b border-slate-200 px-5 py-5 sm:px-6">
             <div>
-              <p className="font-bold">Couldn&apos;t load your orders</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Please try again or check your connection.
+              <h2 className="text-base font-semibold text-slate-950">
+                Recent Orders
+              </h2>
+
+              <p className="mt-1 text-xs text-slate-500">
+                View details and track your purchases
               </p>
             </div>
-            <button
-              onClick={retry}
-              className="inline-flex items-center gap-2 rounded-xl border bg-background px-4 py-2 text-xs font-bold text-foreground transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground"
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-              Retry
-            </button>
-          </div>
-        )}
 
-        {/* Empty State */}
-        {state === "ready" && orders.length === 0 && (
-          <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted text-muted-foreground">
-              <PackageX className="h-10 w-10" />
+            <div className="hidden rounded-lg border border-slate-200 bg-slate-50 p-2 sm:flex">
+              <ShoppingBag className="h-4 w-4 text-slate-500" />
             </div>
-            <h3 className="mt-5 text-xl font-black">No orders yet</h3>
-            <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-              You haven&apos;t placed any orders. Explore our products and make
-              your first purchase today.
-            </p>
-            <Link
-              href="/products"
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]"
-            >
-              Start Shopping
-              <ArrowUpRight className="h-4 w-4" />
-            </Link>
           </div>
-        )}
 
-        {/* Loading State */}
-        {state === "loading" && (
-          <div className="flex flex-col items-center justify-center gap-3 px-6 py-16">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">
-              Fetching your orders...
-            </p>
-          </div>
-        )}
+          {/* Error */}
+          {state === "error" && (
+            <div className="flex flex-col items-center justify-center px-6 py-20 text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-red-500">
+                <AlertCircle className="h-6 w-6" />
+              </div>
 
-        {/* Desktop Table */}
-        {state === "ready" && orders.length > 0 && (
-          <div className="hidden md:block">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b bg-muted/30 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                <tr>
-                  <th className="px-6 py-4">Order</th>
-                  <th className="px-6 py-4">Date</th>
-                  <th className="px-6 py-4">Items</th>
-                  <th className="px-6 py-4">Total</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4 text-right">Action</th>
-                </tr>
-              </thead>
+              <h3 className="mt-5 text-base font-semibold text-slate-900">
+                Unable to load orders
+              </h3>
 
-              <tbody className="divide-y">
-                {orders.map((order) => {
-                  const tone = statusTone(order.status);
-                  const items = orderItemCount(order.items);
+              <p className="mt-1 max-w-sm text-sm text-slate-500">
+                Something went wrong while loading your order history.
+              </p>
 
-                  return (
-                    <tr
-                      key={order._id}
-                      className="group transition-all duration-200 hover:bg-muted/20"
-                    >
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform group-hover:scale-110">
-                            <Package className="h-4 w-4" />
-                          </div>
+              <button
+                onClick={retry}
+                className="mt-5 inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Try Again
+              </button>
+            </div>
+          )}
 
-                          <div>
-                            <p className="font-mono text-sm font-bold">
-                              {order.trackingId}
-                            </p>
-                            <p className="text-[11px] text-muted-foreground">
-                              {order.items[0]?.product?.name || "Purchase"}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
+          {/* Empty */}
+          {state === "ready" && orders.length === 0 && (
+            <div className="flex flex-col items-center justify-center px-6 py-20 text-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                <PackageX className="h-8 w-8" />
+              </div>
 
-                      <td className="px-6 py-5 text-muted-foreground">
-                        {formatDate(order.createdAt)}
-                      </td>
+              <h3 className="mt-5 text-lg font-semibold text-slate-950">
+                No orders yet
+              </h3>
 
-                      <td className="px-6 py-5">
-                        <span className="rounded-lg bg-muted px-2.5 py-1 text-xs font-semibold">
-                          {items} {items === 1 ? "Item" : "Items"}
-                        </span>
-                      </td>
+              <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">
+                You haven&apos;t placed any orders yet. Browse our products and
+                make your first purchase.
+              </p>
 
-                      <td className="px-6 py-5 font-black">
-                        ${order.totalAmount.toFixed(2)}
-                      </td>
+              <Link
+                href="/products"
+                className="mt-6 inline-flex items-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+              >
+                Start Shopping
+                <ArrowUpRight className="h-4 w-4" />
+              </Link>
+            </div>
+          )}
 
-                      <td className="px-6 py-5">
-                        <span
-                          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${tone.badge}`}
-                        >
-                          <span
-                            className={`h-1.5 w-1.5 rounded-full ${tone.dot} ${
-                              tone.pulse ? "animate-pulse" : ""
-                            }`}
-                          />
-                          {statusLabel(order.status)}
-                        </span>
-                      </td>
+          {/* Loading */}
+          {state === "loading" && (
+            <div className="flex flex-col items-center justify-center px-6 py-20">
+              <Loader2 className="h-7 w-7 animate-spin text-slate-400" />
 
-                      <td className="px-6 py-5 text-right">
-                        <Link
-                          href={`/userDashboard/orders/${order._id}`}
-                          className="group/link inline-flex items-center gap-2 rounded-xl border bg-background px-3.5 py-2 text-xs font-bold transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground"
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                          View
-                          <ArrowUpRight className="h-3 w-3 transition-transform group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5" />
-                        </Link>
-                      </td>
+              <p className="mt-3 text-sm text-slate-500">
+                Loading your orders...
+              </p>
+            </div>
+          )}
+
+          {/* Desktop Table */}
+          {state === "ready" && orders.length > 0 && (
+            <div className="hidden md:block">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead className="border-b border-slate-200 bg-slate-50/70">
+                    <tr>
+                      <th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                        Order
+                      </th>
+
+                      <th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                        Date
+                      </th>
+
+                      <th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                        Items
+                      </th>
+
+                      <th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                        Total
+                      </th>
+
+                      <th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                        Status
+                      </th>
+
+                      <th className="px-6 py-3.5 text-right text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                        Action
+                      </th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+                  </thead>
 
-        {/* Mobile Cards */}
-        {state === "ready" && orders.length > 0 && (
-          <div className="divide-y md:hidden">
-            {orders.map((order) => {
-              const tone = statusTone(order.status);
-              const items = orderItemCount(order.items);
+                  <tbody className="divide-y divide-slate-100">
+                    {orders.map((order) => {
+                      const tone = statusTone(order.status);
+                      const items = orderItemCount(order.items);
 
-              return (
-                <div
-                  key={order._id}
-                  className="p-4 transition-colors hover:bg-muted/20"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                      <Package className="h-5 w-5" />
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="font-mono text-sm font-black">
-                            {order.trackingId}
-                          </p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">
-                            {formatDate(order.createdAt)}
-                          </p>
-                        </div>
-
-                        <span
-                          className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${tone.badge}`}
+                      return (
+                        <tr
+                          key={order._id}
+                          className="transition-colors hover:bg-slate-50/70"
                         >
-                          {statusLabel(order.status)}
-                        </span>
+                          {/* Order */}
+                          <td className="px-6 py-5">
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500">
+                                <Package className="h-4 w-4" />
+                              </div>
+
+                              <div className="min-w-0">
+                                <p className="font-mono text-sm font-semibold text-slate-900">
+                                  {order.trackingId}
+                                </p>
+
+                                <p className="mt-0.5 max-w-[220px] truncate text-xs text-slate-500">
+                                  {order.items[0]?.product?.name || "Purchase"}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Date */}
+                          <td className="px-6 py-5 text-sm text-slate-500">
+                            {formatDate(order.createdAt)}
+                          </td>
+
+                          {/* Items */}
+                          <td className="px-6 py-5">
+                            <span className="inline-flex rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
+                              {items} {items === 1 ? "item" : "items"}
+                            </span>
+                          </td>
+
+                          {/* Total */}
+                          <td className="px-6 py-5 text-sm font-semibold text-slate-900">
+                            ${order.totalAmount.toFixed(2)}
+                          </td>
+
+                          {/* Status */}
+                          <td className="px-6 py-5">
+                            <span
+                              className={`inline-flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs font-semibold ${tone.badge}`}
+                            >
+                              <span
+                                className={`h-1.5 w-1.5 rounded-full ${tone.dot} ${
+                                  tone.pulse ? "animate-pulse" : ""
+                                }`}
+                              />
+
+                              {statusLabel(order.status)}
+                            </span>
+                          </td>
+
+                          {/* Action */}
+                          <td className="px-6 py-5 text-right">
+                            <Link
+                              href={`/userDashboard/orders/${order._id}`}
+                              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-50"
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                              View
+                              <ArrowUpRight className="h-3 w-3" />
+                            </Link>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Mobile Cards */}
+          {state === "ready" && orders.length > 0 && (
+            <div className="divide-y divide-slate-100 md:hidden">
+              {orders.map((order) => {
+                const tone = statusTone(order.status);
+                const items = orderItemCount(order.items);
+
+                return (
+                  <div key={order._id} className="p-4">
+                    <div className="flex gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-500">
+                        <Package className="h-4 w-4" />
                       </div>
 
-                      <div className="mt-4 flex items-center justify-between">
-                        <div>
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                            Total
-                          </p>
-                          <p className="font-black">
-                            ${order.totalAmount.toFixed(2)}
-                          </p>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate font-mono text-sm font-semibold text-slate-900">
+                              {order.trackingId}
+                            </p>
+
+                            <p className="mt-1 text-xs text-slate-500">
+                              {formatDate(order.createdAt)}
+                            </p>
+                          </div>
+
+                          <span
+                            className={`shrink-0 inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[10px] font-semibold ${tone.badge}`}
+                          >
+                            <span
+                              className={`h-1.5 w-1.5 rounded-full ${tone.dot}`}
+                            />
+
+                            {statusLabel(order.status)}
+                          </span>
                         </div>
 
-                        <div>
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                            Items
-                          </p>
-                          <p className="font-bold">{items}</p>
-                        </div>
+                        <p className="mt-3 truncate text-xs text-slate-500">
+                          {order.items[0]?.product?.name || "Purchase"}
+                        </p>
 
-                        <Link
-                          href={`/userDashboard/orders/${order._id}`}
-                          className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-105"
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                          View
-                        </Link>
+                        <div className="mt-4 flex items-end justify-between gap-3">
+                          <div className="flex gap-7">
+                            <div>
+                              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                Total
+                              </p>
+
+                              <p className="mt-1 text-sm font-bold text-slate-900">
+                                ${order.totalAmount.toFixed(2)}
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                Items
+                              </p>
+
+                              <p className="mt-1 text-sm font-bold text-slate-900">
+                                {items}
+                              </p>
+                            </div>
+                          </div>
+
+                          <Link
+                            href={`/userDashboard/orders/${order._id}`}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-slate-800"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                            View
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
 
-        {/* Footer */}
-        {state === "ready" && orders.length > 0 && (
-          <div className="border-t bg-muted/20 px-5 py-4">
-            <p className="text-center text-xs text-muted-foreground">
-              Showing{" "}
-              <span className="font-bold text-foreground">{orders.length}</span>{" "}
-              recent orders
-            </p>
-          </div>
-        )}
+          {/* Footer */}
+          {state === "ready" && orders.length > 0 && (
+            <div className="border-t border-slate-200 bg-slate-50/50 px-5 py-3.5">
+              <p className="text-center text-xs text-slate-500">
+                Showing{" "}
+                <span className="font-semibold text-slate-700">
+                  {orders.length}
+                </span>{" "}
+                recent {orders.length === 1 ? "order" : "orders"}
+              </p>
+            </div>
+          )}
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

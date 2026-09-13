@@ -6,7 +6,6 @@ import {
 } from "../services/cloudinary";
 import {
   Upload,
-  Image as ImageIcon,
   X,
   Check,
   Cloud,
@@ -16,6 +15,7 @@ import {
   AlertCircle,
   RefreshCw,
 } from "lucide-react";
+import Image from "next/image";
 
 interface ImageUploaderProps {
   label: string;
@@ -49,7 +49,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     message?: string;
   }>({
     type: value
-      ? value.includes("cloudinary")
+      ? value.includes("cloudinary.com")
         ? "cloudinary"
         : "local"
       : "idle",
@@ -66,15 +66,14 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     }
 
     setIsUploading(true);
-    setUploadProgress(10);
+    setUploadProgress(0);
     setUploadStatus({ type: "idle" });
 
     try {
       const result = await uploadToCloudinary(file, (progress) => {
         setUploadProgress(progress);
       });
-      result;
-
+console.log(result);
       onChange(result.url);
 
       if (result.isCloudinary) {
@@ -89,11 +88,11 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
             result.error || "Preview loaded (Cloudinary not configured).",
         });
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error("Upload error:", err);
       setUploadStatus({
         type: "error",
-        message: "Upload failed. Please try again.",
+        message: err?.message || "Upload failed. Please try again.",
       });
     } finally {
       setIsUploading(false);
@@ -188,16 +187,18 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                     message: `Selected: ${preset.name}`,
                   });
                 }}
-                className={`group relative overflow-hidden rounded-lg border border-slate-200 hover:border-indigo-500 transition-all text-left ${
-                  value === preset.url ? "ring-2 ring-indigo-600" : ""
-                }`}
+                className={`group relative overflow-hidden rounded-lg border border-slate-200 hover:border-indigo-500 transition-all text-left ${value === preset.url ? "ring-2 ring-indigo-600" : ""
+                  }`}
               >
                 <div
-                  className={`w-full overflow-hidden bg-slate-100 ${isBanner ? "h-14" : "h-16"}`}
+                  className={`w-full overflow-hidden bg-slate-100 ${isBanner ? "h-14" : "h-16"
+                    }`}
                 >
-                  <img
+                  <Image
                     src={preset.url}
                     alt={preset.name}
+                    width={400}
+                    height={400}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                     referrerPolicy="no-referrer"
                   />
@@ -252,13 +253,14 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         /* Image Preview Box */
         <div
           id={`${idPrefix}-preview-box`}
-          className={`relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 group ${
-            isBanner ? "h-40 w-full" : "h-32 w-32"
-          }`}
+          className={`relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 group ${isBanner ? "h-40 w-full" : "h-32 w-32"
+            }`}
         >
-          <img
+          <Image
             src={value}
             alt={label}
+            width={400}
+            height={400}
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
           />
@@ -290,7 +292,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
           {/* Cloudinary indicator badge */}
           <div className="absolute bottom-2 left-2 pointer-events-none">
-            {hasCloudinarySetup ? (
+            {value.includes("cloudinary.com") ? (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-sky-500/90 text-white shadow-xs backdrop-blur-xs">
                 <Cloud size={10} />
                 Cloudinary
@@ -313,19 +315,17 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           onDragLeave={() => setIsDragOver(false)}
           onDrop={onDrop}
           onClick={() => fileInputRef.current?.click()}
-          className={`cursor-pointer border-2 border-dashed rounded-2xl p-4 text-center transition-all duration-200 flex flex-col items-center justify-center ${
-            isBanner ? "h-36 w-full" : "h-32 w-full max-w-xs"
-          } ${
-            isDragOver
+          className={`cursor-pointer border-2 border-dashed rounded-2xl p-4 text-center transition-all duration-200 flex flex-col items-center justify-center ${isBanner ? "h-36 w-full" : "h-32 w-full max-w-xs"
+            } ${isDragOver
               ? "border-sky-500 bg-sky-50/50"
               : "border-slate-200 hover:border-sky-400 bg-slate-50/50 hover:bg-slate-50"
-          }`}
+            }`}
         >
           {isUploading ? (
             <div className="flex flex-col items-center gap-2">
               <Loader2 size={24} className="animate-spin text-sky-600" />
               <p className="text-xs font-semibold text-slate-700">
-                Uploading to Cloudinary...
+                Uploading to Cloudinary... ({uploadProgress}%)
               </p>
               <div className="w-32 bg-slate-200 h-1.5 rounded-full overflow-hidden">
                 <div
@@ -357,13 +357,12 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       {/* Status banner / feedback */}
       {uploadStatus.message && (
         <div
-          className={`flex items-center justify-between text-[11px] p-2 rounded-lg ${
-            uploadStatus.type === "cloudinary"
+          className={`flex items-center justify-between text-[11px] p-2 rounded-lg ${uploadStatus.type === "cloudinary"
               ? "bg-sky-50 text-sky-800 border border-sky-200"
               : uploadStatus.type === "error"
                 ? "bg-rose-50 text-rose-800 border border-rose-200"
                 : "bg-slate-100 text-slate-700"
-          }`}
+            }`}
         >
           <div className="flex items-center gap-1.5">
             {uploadStatus.type === "cloudinary" ? (
