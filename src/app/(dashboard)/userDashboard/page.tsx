@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ShoppingBag, Clock, CheckCircle2, Heart } from "lucide-react";
+import { ShoppingBag, Clock, CheckCircle2, Heart, Store, Phone, PlusCircle, ExternalLink } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 
 interface OverviewStats {
@@ -10,6 +10,17 @@ interface OverviewStats {
   pendingOrders: number;
   completedOrders: number;
   wishlistCount: number;
+}
+
+interface MyShop {
+  _id: string;
+  name: string;
+  description: string;
+  images: string[];
+  category: string;
+  phone: string;
+  status: string;
+  rating?: number;
 }
 
 interface RecentOrder {
@@ -86,6 +97,8 @@ export default function DashboardPage() {
   });
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [shop, setShop] = useState<MyShop | null>(null);
+  const [shopLoading, setShopLoading] = useState(true);
 
   useEffect(() => {
     if (!token) return;
@@ -145,6 +158,54 @@ export default function DashboardPage() {
     };
   }, [token]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      if (!token || !session?.user?.id || !API_URL) {
+        if (!cancelled) setShopLoading(false);
+        return;
+      }
+
+      const controller = new AbortController();
+
+      try {
+        const res = await fetch(`${API_URL}/shops/my-shop/${session.user.id}`, {
+          headers: getAuthHeaders(token),
+          credentials: "include",
+          signal: controller.signal,
+        });
+
+        if (controller.signal.aborted) return;
+
+        if (res.status === 404) {
+          setShop(null);
+          return;
+        }
+
+        if (!res.ok) {
+          throw new Error(`Failed to load shop: ${res.status}`);
+        }
+
+        const json = await res.json();
+        setShop(json?.data ?? null);
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") {
+          console.error("Failed to load my shop:", err);
+        }
+      } finally {
+        if (!cancelled && !controller.signal.aborted) {
+          setShopLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token, session?.user?.id]);
+
   const statCards = [
     {
       title: "Total Orders",
@@ -183,6 +244,124 @@ export default function DashboardPage() {
         <p className="mt-1 text-sm text-[#6B7268]">
           Here is an overview of your recent account activity and orders.
         </p>
+      </div>
+
+      {/* My Shop Panel */}
+      <div className="overflow-hidden rounded-xl border border-[#DEDACE] bg-white shadow-sm">
+        <div className="flex flex-col gap-3 border-b border-[#DEDACE] p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#0E1B1B] text-[#C08A3E]">
+              <Store size={20} />
+            </div>
+            <div>
+              <h3 className="font-semibold text-[#0E1B1B]">My Shop</h3>
+              <p className="text-xs text-[#6B7268]">
+                Your vendor storefront and its current status
+              </p>
+            </div>
+          </div>
+
+          <Link
+            href="/userDashboard/createShop"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[#C08A3E] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#A8762F] transition-colors"
+          >
+            <PlusCircle size={14} />
+            <span>Create Shop</span>
+          </Link>
+        </div>
+
+        <div className="p-5">
+          {shopLoading ? (
+            <p className="py-4 text-center text-sm text-[#6B7268]">
+              Loading your shop...
+            </p>
+          ) : shop ? (
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              {shop.images?.[0] ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={shop.images[0]}
+                  alt={shop.name}
+                  className="h-20 w-20 shrink-0 rounded-xl border border-[#DEDACE] object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-[#F4F2EC] text-[#C08A3E]">
+                  <Store size={28} />
+                </div>
+              )}
+
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h4 className="text-base font-bold text-[#0E1B1B]">
+                    {shop.name}
+                  </h4>
+                  <span
+                    className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-medium capitalize ${
+                      shop.status === "pending"
+                        ? "bg-amber-100 text-amber-800"
+                        : shop.status === "approved" ||
+                            shop.status === "active"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : shop.status === "rejected" ||
+                              shop.status === "suspended"
+                            ? "bg-rose-100 text-rose-700"
+                            : "bg-slate-100 text-slate-700"
+                    }`}
+                  >
+                    {shop.status}
+                  </span>
+                </div>
+
+                <p className="mt-1 truncate text-sm text-[#6B7268]">
+                  {shop.description}
+                </p>
+
+                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#6B7268]">
+                  <span>
+                    Category: <strong className="text-[#0E1B1B]">{shop.category}</strong>
+                  </span>
+                  <span>•</span>
+                  {shop.phone && (
+                    <span className="inline-flex items-center gap-1">
+                      <Phone size={12} /> {shop.phone}
+                    </span>
+                  )}
+                  {shop.rating != null && shop.rating > 0 && (
+                    <>
+                      <span>•</span>
+                      <span>Rating: <strong className="text-[#0E1B1B]">{shop.rating}</strong></span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <Link
+                href="/userDashboard"
+                className="inline-flex shrink-0 items-center gap-1.5 text-xs font-semibold text-[#C08A3E] hover:underline"
+              >
+                View dashboard <ExternalLink size={13} />
+              </Link>
+            </div>
+          ) : (
+            <div className="py-6 text-center">
+              <Store className="mx-auto text-[#C08A3E]" size={32} />
+              <p className="mt-2 text-sm font-medium text-[#0E1B1B]">
+                You don&apos;t have a shop yet
+              </p>
+              <p className="mt-1 text-xs text-[#6B7268]">
+                Create your vendor storefront and start selling on the marketplace.
+              </p>
+              <Link
+                href="/userDashboard/createShop"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-[#C08A3E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#A8762F] transition-colors"
+              >
+                <PlusCircle size={14} />
+                Create My Shop
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Stats */}
@@ -233,7 +412,7 @@ export default function DashboardPage() {
         ) : recentOrders.length === 0 ? (
           <div className="p-6 text-center">
             <p className="text-sm text-[#6B7268]">
-              You haven't placed any orders yet.
+              You haven&apos;t placed any orders yet.
             </p>
             <Link
               href="/shop"

@@ -48,6 +48,11 @@ export default function Sidebar({
       href: "/userDashboard/wishList",
       icon: ShoppingBag,
     },
+    {
+      name: "Create Shop",
+      href: "/userDashboard/createShop",
+      icon: ShoppingBag,
+    },
   ];
 
   if (role === "admin") {
