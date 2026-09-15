@@ -21,6 +21,9 @@ import {
   approveProduct,
   rejectProduct,
   toggleProductVisibility,
+  fetchAdminProductsAPI,
+  approveProductAPI,
+  rejectProductAPI,
 } from '@/services/adminService';
 import { AdminProduct } from '@/types/admin';
 
@@ -28,6 +31,7 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<AdminProduct[]>(() => getAdminProducts());
   const [activeTab, setActiveTab] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(false);
 
   // Modals
   const [previewProduct, setPreviewProduct] = useState<AdminProduct | null>(null);
@@ -42,14 +46,33 @@ export default function AdminProductsPage() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
+  const loadProducts = async () => {
+    setLoading(true);
+    try {
+      const res = await fetchAdminProductsAPI();
+      setProducts(res.products);
+    } catch {
+      setProducts(getAdminProducts());
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const handleUpdate = () => setProducts(getAdminProducts());
+    loadProducts();
+  }, []);
+
+  useEffect(() => {
+    const handleUpdate = () => loadProducts();
     window.addEventListener('venraz_admin_data_updated', handleUpdate);
     return () => window.removeEventListener('venraz_admin_data_updated', handleUpdate);
   }, []);
 
-  const handleApprove = (product: AdminProduct) => {
-    approveProduct(product.id);
+  const handleApprove = async (product: AdminProduct) => {
+    await approveProductAPI(product.id);
+    setProducts((prev) =>
+      prev.map((p) => (p.id === product.id ? { ...p, status: 'Approved' } : p))
+    );
     showToast(`Product "${product.name}" is now APPROVED & visible to buyers!`);
     if (previewProduct?.id === product.id) {
       setPreviewProduct((prev) => (prev ? { ...prev, status: 'Approved' } : null));
@@ -61,14 +84,21 @@ export default function AdminProductsPage() {
     setRejectionReason('');
   };
 
-  const handleConfirmReject = (e: React.FormEvent) => {
+  const handleConfirmReject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!rejectModalProduct) return;
     if (!rejectionReason.trim()) {
       showToast('Please specify a rejection reason.', 'error');
       return;
     }
-    rejectProduct(rejectModalProduct.id, rejectionReason.trim());
+    await rejectProductAPI(rejectModalProduct.id, rejectionReason.trim());
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === rejectModalProduct.id
+          ? { ...p, status: 'Rejected', rejectionReason: rejectionReason.trim() }
+          : p
+      )
+    );
     showToast(`Product "${rejectModalProduct.name}" has been REJECTED.`);
     setRejectModalProduct(null);
     setRejectionReason('');

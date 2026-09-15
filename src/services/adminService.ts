@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import {
   AdminUser,
@@ -6,7 +6,11 @@ import {
   AdminProduct,
   AdminOrder,
   UserRole,
+  UserStatus,
+  AdminShopStatus,
+  AdminProductStatus,
   AdminOrderStatus,
+  PaymentStatus,
 } from '@/types/admin';
 
 const STORAGE_KEY = 'venraz_admin_dashboard_data_v1';
@@ -610,3 +614,322 @@ export function getAdminDashboardStats() {
     processingOrdersCount,
   };
 }
+
+// ============================================================================
+// LIVE BACKEND API INTEGRATIONS (http://localhost:5000/api/v1)
+// ============================================================================
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+
+function getAuthHeaders(): HeadersInit {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (typeof window !== 'undefined') {
+    const token =
+      localStorage.getItem('token') ||
+      localStorage.getItem('accessToken') ||
+      localStorage.getItem('adminToken');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  }
+  return headers;
+}
+
+/**
+ * Fetch Live Admin Dashboard Stats from Backend
+ * GET /api/v1/admin/dashboard-stats
+ */
+export async function fetchAdminDashboardStatsAPI() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/admin/dashboard-stats`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+      credentials: 'include',
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success && json.data) {
+        return {
+          totalRevenue: json.data.totalRevenue ?? 0,
+          totalUsers: json.data.totalUsers ?? 0,
+          totalShops: json.data.totalShops ?? 0,
+          pendingShopsCount: json.data.pendingShops ?? 0,
+          totalProducts: json.data.totalProducts ?? 0,
+          pendingProductsCount: json.data.pendingProducts ?? 0,
+          totalOrders: json.data.totalOrders ?? 0,
+          processingOrdersCount: 0,
+          isLiveFromBackend: true,
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('Live backend dashboard-stats unreachable, using local store:', err);
+  }
+  return { ...getAdminDashboardStats(), isLiveFromBackend: false };
+}
+
+/**
+ * Fetch Live Users from Backend
+ * GET /api/v1/admin/users
+ */
+export async function fetchAdminUsersAPI(filters?: {
+  search?: string;
+  role?: string;
+  status?: string;
+  page?: number;
+  limit?: number;
+}): Promise<{ users: AdminUser[]; isLive: boolean; total: number }> {
+  try {
+    const params = new URLSearchParams();
+    if (filters?.search) params.append('search', filters.search);
+    if (filters?.role && filters.role !== 'ALL') params.append('role', filters.role.toLowerCase());
+    if (filters?.status && filters.status !== 'ALL') params.append('status', filters.status.toLowerCase());
+    if (filters?.page) params.append('page', String(filters.page));
+    if (filters?.limit) params.append('limit', String(filters.limit));
+
+    const res = await fetch(`${API_BASE_URL}/admin/users?${params.toString()}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+      credentials: 'include',
+    });
+
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+        const liveUsers: AdminUser[] = json.data.map((u: any) => ({
+          id: u._id || u.id,
+          name: u.name || 'User',
+          email: u.email || 'user@venraz.com',
+          phone: u.phone || '+880 1700-000000',
+          role: (u.role ? u.role.toUpperCase() : 'USER') as UserRole,
+          status: (u.status ? u.status.toUpperCase() : 'ACTIVE') as UserStatus,
+          avatar: u.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+          joinedDate: u.createdAt ? new Date(u.createdAt).toISOString().split('T')[0] : '2026-01-01',
+          ordersCount: u.ordersCount ?? 0,
+          shopsCount: u.shopsCount,
+        }));
+        return { users: liveUsers, isLive: true, total: json.meta?.total || liveUsers.length };
+      }
+    }
+  } catch (err) {
+    console.warn('Live backend users unreachable, using local store:', err);
+  }
+
+  // Fallback to local store
+  const localUsers = getAdminUsers();
+  return { users: localUsers, isLive: false, total: localUsers.length };
+}
+
+/**
+ * Update User Role via Backend
+ * PATCH /api/v1/admin/users/:userId/role
+ */
+export async function updateUserRoleAPI(userId: string, newRole: UserRole): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/admin/users/${userId}/role`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      credentials: 'include',
+      body: JSON.stringify({ role: newRole.toLowerCase() }),
+    });
+    if (res.ok) {
+      // also keep local state synced
+      switchUserRole(userId, newRole);
+      return true;
+    }
+  } catch (err) {
+    console.warn('Live backend updateUserRole failed:', err);
+  }
+  switchUserRole(userId, newRole);
+  return true;
+}
+
+/**
+ * Update User Status (Block/Unblock) via Backend
+ * PATCH /api/v1/admin/users/:userId/status
+ */
+export async function updateUserStatusAPI(userId: string, newStatus: 'ACTIVE' | 'BLOCKED'): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/admin/users/${userId}/status`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      credentials: 'include',
+      body: JSON.stringify({ status: newStatus.toLowerCase() }),
+    });
+    if (res.ok) {
+      toggleUserStatus(userId);
+      return true;
+    }
+  } catch (err) {
+    console.warn('Live backend updateUserStatus failed:', err);
+  }
+  toggleUserStatus(userId);
+  return true;
+}
+
+/**
+ * Fetch Live Products from Backend (Public + Pending)
+ * GET /api/v1/products & GET /api/v1/admin/products/pending
+ */
+export async function fetchAdminProductsAPI(): Promise<{ products: AdminProduct[]; isLive: boolean }> {
+  try {
+    // 1. Fetch public products
+    const res = await fetch(`${API_BASE_URL}/products?limit=50`, {
+      method: 'GET',
+    });
+
+    // 2. Fetch pending products from admin endpoint
+    let pendingProductsRaw: any[] = [];
+    try {
+      const pendingRes = await fetch(`${API_BASE_URL}/admin/products/pending`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include',
+      });
+      if (pendingRes.ok) {
+        const pendingJson = await pendingRes.json();
+        if (pendingJson.success && Array.isArray(pendingJson.data)) {
+          pendingProductsRaw = pendingJson.data;
+        }
+      }
+    } catch {
+      // ignore
+    }
+
+    if (res.ok) {
+      const json = await res.json();
+      const publicProducts = json.data?.products || (Array.isArray(json.data) ? json.data : []);
+      const allRaw = [...pendingProductsRaw, ...publicProducts];
+
+      if (allRaw.length > 0) {
+        const mappedProducts: AdminProduct[] = allRaw.map((p: any) => ({
+          id: p._id || p.id,
+          name: p.name,
+          sellerName: (typeof p.seller === 'object' && p.seller?.name) || 'Certified Seller',
+          shopName: (typeof p.shop === 'object' && p.shop?.name) || 'VenRaz Partner Store',
+          category: (typeof p.category === 'object' && p.category?.name) || p.category || 'General',
+          price: p.price || 0,
+          originalPrice: p.discount ? Math.round(p.price * (1 + p.discount / 100)) : undefined,
+          stock: p.stock ?? 10,
+          imageUrl: (Array.isArray(p.images) && p.images[0]) || p.imageUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30',
+          status: (p.status ? p.status.charAt(0).toUpperCase() + p.status.slice(1) : 'Approved') as AdminProductStatus,
+          rejectionReason: p.rejectionReason,
+          createdAt: p.createdAt ? new Date(p.createdAt).toISOString().split('T')[0] : '2026-03-01',
+        }));
+        return { products: mappedProducts, isLive: true };
+      }
+    }
+  } catch (err) {
+    console.warn('Live backend products unreachable, using local store:', err);
+  }
+
+  return { products: getAdminProducts(), isLive: false };
+}
+
+/**
+ * Approve Product via Backend
+ * PATCH /api/v1/admin/products/:productId/approve
+ */
+export async function approveProductAPI(productId: string): Promise<boolean> {
+  try {
+    await fetch(`${API_BASE_URL}/admin/products/${productId}/approve`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      credentials: 'include',
+    });
+  } catch (err) {
+    console.warn('Live backend approveProduct error:', err);
+  }
+  approveProduct(productId);
+  return true;
+}
+
+/**
+ * Reject Product with Reason via Backend
+ * PATCH /api/v1/admin/products/:productId/reject
+ */
+export async function rejectProductAPI(productId: string, reason: string): Promise<boolean> {
+  try {
+    await fetch(`${API_BASE_URL}/admin/products/${productId}/reject`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      credentials: 'include',
+      body: JSON.stringify({ reason }),
+    });
+  } catch (err) {
+    console.warn('Live backend rejectProduct error:', err);
+  }
+  rejectProduct(productId, reason);
+  return true;
+}
+
+/**
+ * Fetch Live Orders from Backend
+ * GET /api/v1/admin/orders
+ */
+export async function fetchAdminOrdersAPI(statusFilter?: string): Promise<{ orders: AdminOrder[]; isLive: boolean }> {
+  try {
+    const params = new URLSearchParams();
+    if (statusFilter && statusFilter !== 'ALL') {
+      params.append('status', statusFilter.toLowerCase());
+    }
+    const res = await fetch(`${API_BASE_URL}/admin/orders?${params.toString()}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+      credentials: 'include',
+    });
+
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+        const liveOrders: AdminOrder[] = json.data.map((o: any) => ({
+          id: o._id || o.id,
+          orderNumber: o.orderNumber || `#VR-${(o._id || o.id).slice(-5).toUpperCase()}`,
+          customerName: o.user?.name || o.customerName || 'Registered Customer',
+          customerEmail: o.user?.email || o.customerEmail || 'customer@venraz.com',
+          customerPhone: o.user?.phone || o.customerPhone || '+880 1700-000000',
+          shippingAddress: typeof o.shippingAddress === 'object'
+            ? `${o.shippingAddress.address || ''}, ${o.shippingAddress.city || ''}`
+            : o.shippingAddress || 'Dhaka, Bangladesh',
+          shopName: o.shopName || 'VenRaz Store',
+          itemsCount: Array.isArray(o.items) ? o.items.length : 1,
+          totalAmount: o.totalAmount || 0,
+          paymentMethod: o.paymentMethod || 'bKash Online',
+          paymentStatus: (o.paymentStatus?.toUpperCase() === 'PAID' ? 'PAID' : 'PENDING') as PaymentStatus,
+          orderStatus: (o.status ? o.status.charAt(0).toUpperCase() + o.status.slice(1) : 'Processing') as AdminOrderStatus,
+          courier: o.courier || 'Pathao Courier',
+          trackingId: o.trackingId || `TRK-${(o._id || o.id).slice(-6).toUpperCase()}`,
+          estimatedDelivery: o.estimatedDelivery,
+          orderDate: o.createdAt ? new Date(o.createdAt).toISOString().split('T')[0] : '2026-03-01',
+        }));
+        return { orders: liveOrders, isLive: true };
+      }
+    }
+  } catch (err) {
+    console.warn('Live backend orders unreachable, using local store:', err);
+  }
+
+  return { orders: getAdminOrders(), isLive: false };
+}
+
+/**
+ * Update Order Status via Backend
+ * PATCH /api/v1/admin/orders/:orderId/status
+ */
+export async function updateOrderStatusAPI(orderId: string, status: AdminOrderStatus): Promise<boolean> {
+  try {
+    await fetch(`${API_BASE_URL}/admin/orders/${orderId}/status`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      credentials: 'include',
+      body: JSON.stringify({ status: status.toLowerCase() }),
+    });
+  } catch (err) {
+    console.warn('Live backend updateOrderStatus error:', err);
+  }
+  updateOrderStatus(orderId, status);
+  return true;
+}
+

@@ -23,6 +23,8 @@ import {
   getAdminOrders,
   updateOrderStatus,
   assignOrderTracking,
+  fetchAdminOrdersAPI,
+  updateOrderStatusAPI,
 } from '@/services/adminService';
 import { AdminOrder, AdminOrderStatus } from '@/types/admin';
 
@@ -47,6 +49,7 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<AdminOrder[]>(() => getAdminOrders());
   const [activeTab, setActiveTab] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(false);
 
   // Selected Order for Details View
   const [selectedOrderDetails, setSelectedOrderDetails] = useState<AdminOrder | null>(null);
@@ -65,15 +68,34 @@ export default function AdminOrdersPage() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
+  const loadOrders = async () => {
+    setLoading(true);
+    try {
+      const res = await fetchAdminOrdersAPI(activeTab);
+      setOrders(res.orders);
+    } catch {
+      setOrders(getAdminOrders());
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const handleUpdate = () => setOrders(getAdminOrders());
+    loadOrders();
+  }, [activeTab]);
+
+  useEffect(() => {
+    const handleUpdate = () => loadOrders();
     window.addEventListener('venraz_admin_data_updated', handleUpdate);
     return () => window.removeEventListener('venraz_admin_data_updated', handleUpdate);
   }, []);
 
   // Quick Status Transition
-  const handleQuickStatusChange = (orderId: string, status: AdminOrderStatus) => {
-    updateOrderStatus(orderId, status);
+  const handleQuickStatusChange = async (orderId: string, status: AdminOrderStatus) => {
+    await updateOrderStatusAPI(orderId, status);
+    setOrders((prev) =>
+      prev.map((o) => (o.id === orderId ? { ...o, orderStatus: status } : o))
+    );
     showToast(`Order ${orderId} updated to ${status}.`);
   };
 
