@@ -85,7 +85,7 @@ export default function CheckoutPage() {
           totalAmount: finalTotal,
         }),
       });
-      console.log("🛒 Abandoned cart status auto-saved!");
+   
     } catch (err) {
       console.warn("Failed to auto-track abandoned cart:", err);
     }

@@ -73,7 +73,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       const result = await uploadToCloudinary(file, (progress) => {
         setUploadProgress(progress);
       });
-console.log(result);
+
       onChange(result.url);
 
       if (result.isCloudinary) {

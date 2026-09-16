@@ -70,7 +70,6 @@ export default function RegisterPage() {
         callbackURL: "/",
         role: "user",
       });
-      console.log(data, error);
 
       if (error) {
         setError(

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { fetchAdminDashboardStatsAPI } from '@/services/adminService';
+import React from "react";
+import { fetchAdminDashboardStatsAPI } from "@/services/adminService";
 import {
   DollarSign,
   Package,
@@ -18,7 +18,7 @@ import {
   Download,
   UserCheck,
   ShieldAlert,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface StatCardProps {
   title: string;
@@ -47,8 +47,8 @@ function StatCard({
         <div
           className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
             isPositive
-              ? 'bg-red-50 text-red-700'
-              : 'bg-slate-100 text-slate-700'
+              ? "bg-red-50 text-red-700"
+              : "bg-slate-100 text-slate-700"
           }`}
         >
           {isPositive ? (
@@ -61,15 +61,11 @@ function StatCard({
       </div>
 
       <div className="mt-6">
-        <p className="text-xs font-medium text-slate-500">
-          {title}
-        </p>
+        <p className="text-xs font-medium text-slate-500">{title}</p>
         <h3 className="mt-1.5 text-3xl font-extrabold tracking-tight text-slate-900">
           {value}
         </h3>
-        <p className="mt-1 text-xs text-slate-400">
-          {description}
-        </p>
+        <p className="mt-1 text-xs text-slate-400">{description}</p>
       </div>
     </div>
   );
@@ -77,52 +73,52 @@ function StatCard({
 
 const recentOrders = [
   {
-    id: '#VR-10284',
-    customer: 'Alex Morgan',
-    email: 'alex.m@example.com',
-    product: 'Premium Hoodie',
-    amount: '$89.00',
-    status: 'Completed',
+    id: "#VR-10284",
+    customer: "Alex Morgan",
+    email: "alex.m@example.com",
+    product: "Premium Hoodie",
+    amount: "$89.00",
+    status: "Completed",
   },
   {
-    id: '#VR-10283',
-    customer: 'Sarah Wilson',
-    email: 'sarah.w@example.com',
-    product: 'Leather Backpack',
-    amount: '$124.00',
-    status: 'Processing',
+    id: "#VR-10283",
+    customer: "Sarah Wilson",
+    email: "sarah.w@example.com",
+    product: "Leather Backpack",
+    amount: "$124.00",
+    status: "Processing",
   },
   {
-    id: '#VR-10282',
-    customer: 'Daniel Smith',
-    email: 'd.smith@example.com',
-    product: 'Smart Watch',
-    amount: '$249.00',
-    status: 'Completed',
+    id: "#VR-10282",
+    customer: "Daniel Smith",
+    email: "d.smith@example.com",
+    product: "Smart Watch",
+    amount: "$249.00",
+    status: "Completed",
   },
   {
-    id: '#VR-10281',
-    customer: 'Emma Brown',
-    email: 'emma.b@example.com',
-    product: 'Running Shoes',
-    amount: '$96.00',
-    status: 'Pending',
+    id: "#VR-10281",
+    customer: "Emma Brown",
+    email: "emma.b@example.com",
+    product: "Running Shoes",
+    amount: "$96.00",
+    status: "Pending",
   },
 ];
 
 const chartData = [
-  { month: 'Jan', height: 35, val: '$35k' },
-  { month: 'Feb', height: 48, val: '$48k' },
-  { month: 'Mar', height: 42, val: '$42k' },
-  { month: 'Apr', height: 65, val: '$65k' },
-  { month: 'May', height: 52, val: '$52k' },
-  { month: 'Jun', height: 72, val: '$72k' },
-  { month: 'Jul', height: 58, val: '$58k' },
-  { month: 'Aug', height: 80, val: '$80k' },
-  { month: 'Sep', height: 68, val: '$68k' },
-  { month: 'Oct', height: 91, val: '$91k' },
-  { month: 'Nov', height: 76, val: '$76k' },
-  { month: 'Dec', height: 96, val: '$96k' },
+  { month: "Jan", height: 35, val: "$35k" },
+  { month: "Feb", height: 48, val: "$48k" },
+  { month: "Mar", height: 42, val: "$42k" },
+  { month: "Apr", height: 65, val: "$65k" },
+  { month: "May", height: 52, val: "$52k" },
+  { month: "Jun", height: 72, val: "$72k" },
+  { month: "Jul", height: 58, val: "$58k" },
+  { month: "Aug", height: 80, val: "$80k" },
+  { month: "Sep", height: 68, val: "$68k" },
+  { month: "Oct", height: 91, val: "$91k" },
+  { month: "Nov", height: 76, val: "$76k" },
+  { month: "Dec", height: 96, val: "$96k" },
 ];
 
 export default function DashboardOverview() {
@@ -152,43 +148,79 @@ export default function DashboardOverview() {
 
   const stats: StatCardProps[] = [
     {
-      title: 'Total Revenue',
+      title: "Total Revenue",
       value: `$${dataStats.totalRevenue.toLocaleString()}`,
-      change: '+14.2%',
+      change: "+14.2%",
       isPositive: true,
       icon: DollarSign,
-      description: 'from confirmed orders',
+      description: "from confirmed orders",
     },
     {
-      title: 'Active Products',
+      title: "Active Products",
       value: dataStats.totalProducts.toLocaleString(),
-      change: '+5.4%',
+      change: "+5.4%",
       isPositive: true,
       icon: Package,
-      description: 'products in catalog',
+      description: "products in catalog",
     },
     {
-      title: 'Total Orders',
+      title: "Total Orders",
       value: dataStats.totalOrders.toLocaleString(),
-      change: '+8.1%',
+      change: "+8.1%",
       isPositive: true,
       icon: ShoppingCart,
-      description: 'all marketplace orders',
+      description: "all marketplace orders",
     },
     {
-      title: 'Registered Users & Sellers',
+      title: "Registered Users & Sellers",
       value: dataStats.totalUsers.toLocaleString(),
-      change: '+12.5%',
+      change: "+12.5%",
       isPositive: true,
       icon: Users,
-      description: 'active platform accounts',
+      description: "active platform accounts",
     },
   ];
+
+  const handleExportReport = () => {
+    const headers = [
+      "Order ID",
+      "Customer",
+      "Email",
+      "Product",
+      "Amount",
+      "Status",
+    ];
+
+    const rows = recentOrders.map((order) => [
+      order.id,
+      order.customer,
+      order.email,
+      order.product,
+      order.amount,
+      order.status,
+    ]);
+
+    const escapeCell = (value: string) => `"${value.replace(/"/g, '""')}"`;
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map(escapeCell).join(","))
+      .join("\n");
+
+    const blob = new Blob([`\uFEFF${csvContent}`], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `orders-report-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="min-h-screen bg-slate-50/50 p-4 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-7xl space-y-8">
-        
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -202,7 +234,8 @@ export default function DashboardOverview() {
               Store Overview
             </h1>
             <p className="mt-1 text-sm text-slate-500">
-              Monitor your marketplace performance and active metrics in real time.
+              Monitor your marketplace performance and active metrics in real
+              time.
             </p>
           </div>
 
@@ -215,7 +248,7 @@ export default function DashboardOverview() {
         </div>
 
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => (
             <StatCard key={stat.title} {...stat} />
           ))}
@@ -223,7 +256,6 @@ export default function DashboardOverview() {
 
         {/* Analytics Section */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          
           {/* Revenue Chart */}
           <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm lg:col-span-2">
             <div className="flex items-center justify-between">
@@ -253,7 +285,10 @@ export default function DashboardOverview() {
             {/* Interactive Column Visuals */}
             <div className="mt-8 flex h-56 items-end gap-2 border-b border-slate-100 pb-2">
               {chartData.map((item, index) => (
-                <div key={index} className="group relative flex h-full flex-1 flex-col justify-end">
+                <div
+                  key={index}
+                  className="group relative flex h-full flex-1 flex-col justify-end"
+                >
                   {/* Tooltip */}
                   <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 transition-opacity duration-200 group-hover:opacity-100 pointer-events-none">
                     <span className="rounded bg-slate-900 px-2 py-1 text-[10px] font-semibold text-white shadow-md">
@@ -402,11 +437,11 @@ export default function DashboardOverview() {
                     <td className="px-6 py-4">
                       <span
                         className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                          order.status === 'Completed'
-                            ? 'bg-red-50 text-red-700 border border-red-200'
-                            : order.status === 'Processing'
-                              ? 'bg-blue-50 text-blue-700'
-                              : 'bg-amber-50 text-amber-700'
+                          order.status === "Completed"
+                            ? "bg-red-50 text-red-700 border border-red-200"
+                            : order.status === "Processing"
+                              ? "bg-blue-50 text-blue-700"
+                              : "bg-amber-50 text-amber-700"
                         }`}
                       >
                         {order.status}
@@ -431,7 +466,11 @@ export default function DashboardOverview() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <button className="group flex items-start gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-red-500/30 hover:shadow-md">
+            <button
+              type="button"
+              onClick={handleExportReport}
+              className="group flex items-start gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-red-500/30 hover:shadow-md"
+            >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600 transition-colors group-hover:bg-red-600 group-hover:text-white">
                 <Download className="h-5 w-5" />
               </div>
@@ -474,7 +513,6 @@ export default function DashboardOverview() {
             </button>
           </div>
         </div>
-
       </div>
     </div>
   );

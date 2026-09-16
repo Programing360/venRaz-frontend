@@ -9,7 +9,6 @@ interface NavbarProps {
 
 export default function Navbar({ onMenuClick }: NavbarProps) {
   const { data: session } = authClient.useSession();
-  // (session);
 
   const name = session?.user?.name || "User";
   const email = session?.user?.email || "";
@@ -26,7 +25,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               type="button"
               onClick={onMenuClick}
               aria-label="Open navigation menu"
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-[#6B7268] transition-colors hover:bg-[#F4F2EC] hover:text-[#0E1B1B] lg:hidden"
+              className="flex h-9 w-9 items-center justify-center shadow shadow-gray-400 rounded-lg text-[#6B7268] transition-colors hover:bg-[#F4F2EC] hover:text-[#0E1B1B] lg:hidden"
             >
               <Menu size={20} strokeWidth={2} />
             </button>

@@ -23,6 +23,7 @@ import {
   rejectShop,
   toggleShopSuspension,
 } from "@/services/adminService";
+import { useSession } from "@/lib/auth-client";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -185,10 +186,12 @@ export default function VerifyShopsPage() {
     // Fallback AI simulation for local demo
     setVerification({
       status: shop.status === "rejected" ? "rejected" : "approved",
-      trustScore: shop.status === "rejected" ? 35 : shop.status === "suspended" ? 52 : 88,
+      trustScore:
+        shop.status === "rejected" ? 35 : shop.status === "suspended" ? 52 : 88,
       enhancedData: {
         shopName: shop.name,
-        description: shop.description || "Authentic registered vendor store on VenRaz.",
+        description:
+          shop.description || "Authentic registered vendor store on VenRaz.",
         tags: [shop.category, "Verified Vendor", "Fast Dispatch"],
       },
       feedback: {
@@ -204,6 +207,8 @@ export default function VerifyShopsPage() {
     });
   };
 
+  const { data: session } = useSession();
+
   const updateShopStatus = async (
     shopId: string,
     newStatus: string,
@@ -213,9 +218,10 @@ export default function VerifyShopsPage() {
     try {
       if (API_URL) {
         const token =
-          typeof window !== "undefined"
-            ? localStorage.getItem("token") || localStorage.getItem("accessToken")
-            : null;
+          (session as any)?.token ||
+          (session as any)?.session?.token ||
+          (session as any)?.accessToken;
+
         const headers: Record<string, string> = {
           "Content-Type": "application/json",
         };
@@ -270,7 +276,9 @@ export default function VerifyShopsPage() {
     );
     if (selectedShop?._id === shopId) {
       setSelectedShop((prev) =>
-        prev ? { ...prev, status: newStatus, rejectionReason: reason || "" } : null,
+        prev
+          ? { ...prev, status: newStatus, rejectionReason: reason || "" }
+          : null,
       );
     }
     setActionLoading(null);
@@ -286,8 +294,8 @@ export default function VerifyShopsPage() {
       type === "REJECT"
         ? "Failed verification checks and invalid trade registration."
         : type === "SUSPEND"
-        ? "Suspended due to policy violation or fulfillment complaints."
-        : "",
+          ? "Suspended due to policy violation or fulfillment complaints."
+          : "",
     );
   };
 
@@ -330,7 +338,8 @@ export default function VerifyShopsPage() {
 
   const filteredShops = shops.filter((s) => {
     if (activeTab === "pending") return s.status === "pending";
-    if (activeTab === "active") return s.status === "active" || s.status === "approved";
+    if (activeTab === "active")
+      return s.status === "active" || s.status === "approved";
     if (activeTab === "suspended") return s.status === "suspended";
     if (activeTab === "rejected") return s.status === "rejected";
     return true;
@@ -364,7 +373,8 @@ export default function VerifyShopsPage() {
             Shop Moderation & Verification
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Review pending registrations, evaluate trust score, approve, reject, or manage active/suspended vendor shops
+            Review pending registrations, evaluate trust score, approve, reject,
+            or manage active/suspended vendor shops
           </p>
         </div>
         <button
@@ -373,7 +383,10 @@ export default function VerifyShopsPage() {
           disabled={loading}
           className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm transition-colors"
         >
-          <RefreshCw size={14} className={loading ? "animate-spin text-red-600" : ""} />
+          <RefreshCw
+            size={14}
+            className={loading ? "animate-spin text-red-600" : ""}
+          />
           Refresh
         </button>
       </div>
@@ -483,7 +496,7 @@ export default function VerifyShopsPage() {
             </div>
           ) : filteredShops.length === 0 ? (
             <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-500 text-xs shadow-sm">
-              No shops found under "{activeTab}" filter.
+              No shops found under {activeTab} filter.
             </div>
           ) : (
             <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
@@ -551,7 +564,8 @@ export default function VerifyShopsPage() {
                 Select a shop to review & moderate
               </p>
               <p className="text-xs text-slate-500 mt-1">
-                Click any shop from the left list to review documents, trust score, and take moderation actions
+                Click any shop from the left list to review documents, trust
+                score, and take moderation actions
               </p>
             </div>
           ) : (
@@ -587,7 +601,10 @@ export default function VerifyShopsPage() {
                       : "bg-rose-50 border-rose-200 text-rose-800"
                   }`}
                 >
-                  <AlertTriangle size={15} className="shrink-0 mt-0.5 text-red-600" />
+                  <AlertTriangle
+                    size={15}
+                    className="shrink-0 mt-0.5 text-red-600"
+                  />
                   <div>
                     <span className="font-bold">
                       {selectedShop.status === "suspended"
@@ -656,8 +673,8 @@ export default function VerifyShopsPage() {
                           verification.trustScore >= 80
                             ? "text-red-600"
                             : verification.trustScore >= 50
-                            ? "text-amber-600"
-                            : "text-rose-600"
+                              ? "text-amber-600"
+                              : "text-rose-600"
                         }`}
                       >
                         {verification.trustScore}/100
@@ -669,8 +686,8 @@ export default function VerifyShopsPage() {
                           verification.trustScore >= 80
                             ? "bg-red-600"
                             : verification.trustScore >= 50
-                            ? "bg-amber-500"
-                            : "bg-rose-500"
+                              ? "bg-amber-500"
+                              : "bg-rose-500"
                         }`}
                         style={{ width: `${verification.trustScore}%` }}
                       />
@@ -765,7 +782,8 @@ export default function VerifyShopsPage() {
                 )}
 
                 {/* When Active/Approved: Suspend Control */}
-                {(selectedShop.status === "active" || selectedShop.status === "approved") && (
+                {(selectedShop.status === "active" ||
+                  selectedShop.status === "approved") && (
                   <button
                     type="button"
                     disabled={actionLoading === selectedShop._id}
@@ -815,12 +833,14 @@ export default function VerifyShopsPage() {
             <div className="flex items-center gap-3">
               <div
                 className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-                  modalAction.type === "APPROVE" || modalAction.type === "REACTIVATE"
+                  modalAction.type === "APPROVE" ||
+                  modalAction.type === "REACTIVATE"
                     ? "bg-red-50 text-red-600 border border-red-200"
                     : "bg-rose-50 text-rose-600 border border-rose-200"
                 }`}
               >
-                {modalAction.type === "APPROVE" || modalAction.type === "REACTIVATE" ? (
+                {modalAction.type === "APPROVE" ||
+                modalAction.type === "REACTIVATE" ? (
                   <CheckCircle2 size={20} />
                 ) : (
                   <AlertTriangle size={20} />
@@ -828,13 +848,18 @@ export default function VerifyShopsPage() {
               </div>
               <div>
                 <h3 className="text-base font-bold text-slate-900">
-                  {modalAction.type === "APPROVE" && "Approve Shop Registration"}
+                  {modalAction.type === "APPROVE" &&
+                    "Approve Shop Registration"}
                   {modalAction.type === "REJECT" && "Reject Shop Registration"}
                   {modalAction.type === "SUSPEND" && "Suspend Vendor Shop"}
-                  {modalAction.type === "REACTIVATE" && "Reactivate Vendor Shop"}
+                  {modalAction.type === "REACTIVATE" &&
+                    "Reactivate Vendor Shop"}
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Target Store: <span className="font-semibold text-slate-800">{modalAction.shop.name}</span>
+                  Target Store:{" "}
+                  <span className="font-semibold text-slate-800">
+                    {modalAction.shop.name}
+                  </span>
                 </p>
               </div>
             </div>
@@ -850,10 +875,12 @@ export default function VerifyShopsPage() {
                 "Are you sure you want to restore and reactivate this vendor shop?"}
             </p>
 
-            {(modalAction.type === "REJECT" || modalAction.type === "SUSPEND") && (
+            {(modalAction.type === "REJECT" ||
+              modalAction.type === "SUSPEND") && (
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  Reason for {modalAction.type === "REJECT" ? "Rejection" : "Suspension"}{" "}
+                  Reason for{" "}
+                  {modalAction.type === "REJECT" ? "Rejection" : "Suspension"}{" "}
                   <span className="text-red-500">*</span>
                 </label>
                 <textarea
@@ -881,7 +908,8 @@ export default function VerifyShopsPage() {
                 type="button"
                 onClick={handleConfirmModalAction}
                 className={`px-4 py-2 rounded-xl text-xs font-bold text-white shadow-sm transition-colors ${
-                  modalAction.type === "APPROVE" || modalAction.type === "REACTIVATE"
+                  modalAction.type === "APPROVE" ||
+                  modalAction.type === "REACTIVATE"
                     ? "bg-red-600 hover:bg-red-700"
                     : "bg-slate-900 hover:bg-black"
                 }`}

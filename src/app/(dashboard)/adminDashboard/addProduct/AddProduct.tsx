@@ -296,7 +296,7 @@ export const AddProductForm = () => {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded"
+        className="w-full bg-linear-to-b from-amber-500 to-orange-500 hover:bg-green-700 text-white font-bold py-3 rounded "
       >
         {loading ? "Processing & Uploading..." : "📦 Add Product"}
       </button>

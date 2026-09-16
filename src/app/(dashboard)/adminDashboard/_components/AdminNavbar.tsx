@@ -1,25 +1,36 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Bell, ExternalLink, Store } from 'lucide-react';
-import Link from 'next/link';
+import React from "react";
+import { Bell, ExternalLink, Menu, Store } from "lucide-react";
+import Link from "next/link";
 
-export default function AdminNavbar() {
+interface AdminNavbarProps {
+  onMenuClick?: () => void;
+}
+
+export default function AdminNavbar({ onMenuClick }: AdminNavbarProps) {
   return (
     <header className="sticky top-0 z-30 h-16 border-b border-slate-200 bg-white/95 backdrop-blur shadow-sm">
       <div className="flex h-full items-center justify-between px-6">
-
         {/* Left Side */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
+            {onMenuClick && (
+              <button
+                type="button"
+                onClick={onMenuClick}
+                aria-label="Open navigation menu"
+                className="flex h-9 w-9 items-center justify-center shadow shadow-gray-400 rounded-lg text-[#6B7268] transition-colors hover:bg-[#F4F2EC] hover:text-[#0E1B1B] md:hidden"
+              >
+                <Menu size={20} strokeWidth={2} />
+              </button>
+            )}
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-600 shadow-sm shadow-red-500/20">
               <Store size={18} className="text-white" />
             </div>
 
             <div>
-              <h2 className="text-sm font-bold text-slate-900">
-                Venraz Store
-              </h2>
+              <h2 className="text-sm font-bold text-slate-900">Venraz Store</h2>
               <p className="text-[11px] text-slate-400 font-medium">
                 Admin Dashboard
               </p>
@@ -31,7 +42,6 @@ export default function AdminNavbar() {
 
         {/* Right Side */}
         <div className="flex items-center gap-3">
-
           {/* View Store */}
           <Link
             href="/"
@@ -84,12 +94,9 @@ export default function AdminNavbar() {
                 System Admin
               </p>
 
-              <p className="text-[11px] text-slate-400">
-                admin@venraz.com
-              </p>
+              <p className="text-[11px] text-slate-400">admin@venraz.com</p>
             </div>
           </div>
-
         </div>
       </div>
     </header>

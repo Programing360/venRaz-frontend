@@ -74,7 +74,7 @@ export const SellerDashboardView: React.FC<SellerDashboardViewProps> = ({
     const numericValue =
       typeof val === "number" && Number.isFinite(val) ? val : 0;
 
-    console.log("Formatting currency:", numericValue);
+
 
     return `$${numericValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };

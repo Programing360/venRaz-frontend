@@ -71,7 +71,7 @@ export default function ShopPage() {
           }).finally(() => clearTimeout(timeoutId));
           if (res.ok) {
             const data = await res.json();
-            console.log(data);
+    
             const fetched = data?.data;
             if (Array.isArray(fetched) && !cancelled) {
               setProducts(fetched);

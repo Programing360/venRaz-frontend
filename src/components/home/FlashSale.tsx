@@ -342,7 +342,7 @@ export default function FlashSale() {
         }
         
         const data = result.data;
-        console.log(result);
+       
 
         // FIX: Extract dynamic array safely
         let flashSaleProducts: Product[] = [];

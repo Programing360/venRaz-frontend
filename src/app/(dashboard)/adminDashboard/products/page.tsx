@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Package,
   Search,
@@ -15,7 +15,7 @@ import {
   Store,
   Tag,
   Filter,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   getAdminProducts,
   approveProduct,
@@ -24,24 +24,33 @@ import {
   fetchAdminProductsAPI,
   approveProductAPI,
   rejectProductAPI,
-} from '@/services/adminService';
-import { AdminProduct } from '@/types/admin';
+} from "@/services/adminService";
+import { AdminProduct } from "@/types/admin";
+import Image from "next/image";
 
 export default function AdminProductsPage() {
-  const [products, setProducts] = useState<AdminProduct[]>(() => getAdminProducts());
-  const [activeTab, setActiveTab] = useState<string>('ALL');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [products, setProducts] = useState<AdminProduct[]>(() =>
+    getAdminProducts(),
+  );
+  const [activeTab, setActiveTab] = useState<string>("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
 
   // Modals
-  const [previewProduct, setPreviewProduct] = useState<AdminProduct | null>(null);
-  const [rejectModalProduct, setRejectModalProduct] = useState<AdminProduct | null>(null);
-  const [rejectionReason, setRejectionReason] = useState('');
+  const [previewProduct, setPreviewProduct] = useState<AdminProduct | null>(
+    null,
+  );
+  const [rejectModalProduct, setRejectModalProduct] =
+    useState<AdminProduct | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
 
   // Toast
-  const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [toastMessage, setToastMessage] = useState<{
+    text: string;
+    type: "success" | "error";
+  } | null>(null);
 
-  const showToast = (text: string, type: 'success' | 'error' = 'success') => {
+  const showToast = (text: string, type: "success" | "error" = "success") => {
     setToastMessage({ text, type });
     setTimeout(() => setToastMessage(null), 3500);
   };
@@ -64,60 +73,75 @@ export default function AdminProductsPage() {
 
   useEffect(() => {
     const handleUpdate = () => loadProducts();
-    window.addEventListener('venraz_admin_data_updated', handleUpdate);
-    return () => window.removeEventListener('venraz_admin_data_updated', handleUpdate);
+    window.addEventListener("venraz_admin_data_updated", handleUpdate);
+    return () =>
+      window.removeEventListener("venraz_admin_data_updated", handleUpdate);
   }, []);
 
   const handleApprove = async (product: AdminProduct) => {
     await approveProductAPI(product.id);
     setProducts((prev) =>
-      prev.map((p) => (p.id === product.id ? { ...p, status: 'Approved' } : p))
+      prev.map((p) => (p.id === product.id ? { ...p, status: "Approved" } : p)),
     );
     showToast(`Product "${product.name}" is now APPROVED & visible to buyers!`);
     if (previewProduct?.id === product.id) {
-      setPreviewProduct((prev) => (prev ? { ...prev, status: 'Approved' } : null));
+      setPreviewProduct((prev) =>
+        prev ? { ...prev, status: "Approved" } : null,
+      );
     }
   };
 
   const handleOpenReject = (product: AdminProduct) => {
     setRejectModalProduct(product);
-    setRejectionReason('');
+    setRejectionReason("");
   };
 
   const handleConfirmReject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!rejectModalProduct) return;
     if (!rejectionReason.trim()) {
-      showToast('Please specify a rejection reason.', 'error');
+      showToast("Please specify a rejection reason.", "error");
       return;
     }
     await rejectProductAPI(rejectModalProduct.id, rejectionReason.trim());
     setProducts((prev) =>
       prev.map((p) =>
         p.id === rejectModalProduct.id
-          ? { ...p, status: 'Rejected', rejectionReason: rejectionReason.trim() }
-          : p
-      )
+          ? {
+              ...p,
+              status: "Rejected",
+              rejectionReason: rejectionReason.trim(),
+            }
+          : p,
+      ),
     );
     showToast(`Product "${rejectModalProduct.name}" has been REJECTED.`);
     setRejectModalProduct(null);
-    setRejectionReason('');
+    setRejectionReason("");
     if (previewProduct?.id === rejectModalProduct.id) {
-      setPreviewProduct((prev) => (prev ? { ...prev, status: 'Rejected', rejectionReason: rejectionReason.trim() } : null));
+      setPreviewProduct((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: "Rejected",
+              rejectionReason: rejectionReason.trim(),
+            }
+          : null,
+      );
     }
   };
 
   const handleToggleHide = (product: AdminProduct) => {
     toggleProductVisibility(product.id);
-    const willBeHidden = product.status !== 'Hidden';
+    const willBeHidden = product.status !== "Hidden";
     showToast(
       willBeHidden
         ? `Product "${product.name}" is now HIDDEN from public catalog.`
-        : `Product "${product.name}" is now UNHIDDEN and live.`
+        : `Product "${product.name}" is now UNHIDDEN and live.`,
     );
     if (previewProduct?.id === product.id) {
       setPreviewProduct((prev) =>
-        prev ? { ...prev, status: willBeHidden ? 'Hidden' : 'Approved' } : null
+        prev ? { ...prev, status: willBeHidden ? "Hidden" : "Approved" } : null,
       );
     }
   };
@@ -125,11 +149,11 @@ export default function AdminProductsPage() {
   // Filtered Products
   const filteredProducts = products.filter((p) => {
     const matchesTab =
-      activeTab === 'ALL' ||
-      (activeTab === 'Pending' && p.status === 'Pending') ||
-      (activeTab === 'Approved' && p.status === 'Approved') ||
-      (activeTab === 'Rejected' && p.status === 'Rejected') ||
-      (activeTab === 'Hidden' && p.status === 'Hidden');
+      activeTab === "ALL" ||
+      (activeTab === "Pending" && p.status === "Pending") ||
+      (activeTab === "Approved" && p.status === "Approved") ||
+      (activeTab === "Rejected" && p.status === "Rejected") ||
+      (activeTab === "Hidden" && p.status === "Hidden");
 
     const matchesSearch =
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -140,9 +164,9 @@ export default function AdminProductsPage() {
     return matchesTab && matchesSearch;
   });
 
-  const pendingCount = products.filter((p) => p.status === 'Pending').length;
-  const approvedCount = products.filter((p) => p.status === 'Approved').length;
-  const hiddenCount = products.filter((p) => p.status === 'Hidden').length;
+  const pendingCount = products.filter((p) => p.status === "Pending").length;
+  const approvedCount = products.filter((p) => p.status === "Approved").length;
+  const hiddenCount = products.filter((p) => p.status === "Hidden").length;
 
   return (
     <div className="space-y-6">
@@ -164,7 +188,8 @@ export default function AdminProductsPage() {
             </h1>
           </div>
           <p className="mt-1 text-xs text-slate-500">
-            Audit newly submitted vendor merchandise, verify pricing & descriptions, approve compliant goods, and hide flagged listings.
+            Audit newly submitted vendor merchandise, verify pricing &
+            descriptions, approve compliant goods, and hide flagged listings.
           </p>
         </div>
 
@@ -180,25 +205,31 @@ export default function AdminProductsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-200 pb-4">
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
           {[
-            { id: 'ALL', label: 'All Products', count: products.length },
-            { id: 'Pending', label: 'Pending Approval', count: pendingCount },
-            { id: 'Approved', label: 'Approved', count: approvedCount },
-            { id: 'Hidden', label: 'Hidden / Delisted', count: hiddenCount },
-            { id: 'Rejected', label: 'Rejected', count: products.filter((p) => p.status === 'Rejected').length },
+            { id: "ALL", label: "All Products", count: products.length },
+            { id: "Pending", label: "Pending Approval", count: pendingCount },
+            { id: "Approved", label: "Approved", count: approvedCount },
+            { id: "Hidden", label: "Hidden / Delisted", count: hiddenCount },
+            {
+              id: "Rejected",
+              label: "Rejected",
+              count: products.filter((p) => p.status === "Rejected").length,
+            },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
                 activeTab === tab.id
-                  ? 'bg-red-600 text-white shadow-md shadow-red-500/20'
-                  : 'bg-white border border-slate-200 text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600'
+                  ? "bg-red-600 text-white shadow-md shadow-red-500/20"
+                  : "bg-white border border-slate-200 text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
               }`}
             >
               <span>{tab.label}</span>
               <span
                 className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                  activeTab === tab.id ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-600'
+                  activeTab === tab.id
+                    ? "bg-white/25 text-white"
+                    : "bg-slate-100 text-slate-600"
                 }`}
               >
                 {tab.count}
@@ -224,8 +255,12 @@ export default function AdminProductsPage() {
         {filteredProducts.length === 0 ? (
           <div className="col-span-full rounded-2xl border border-slate-200 bg-white py-16 text-center shadow-sm">
             <Package className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-            <p className="text-sm font-bold text-slate-700">No products found</p>
-            <p className="text-xs text-slate-400 mt-1">There are no products matching your selected filter tab.</p>
+            <p className="text-sm font-bold text-slate-700">
+              No products found
+            </p>
+            <p className="text-xs text-slate-400 mt-1">
+              There are no products matching your selected filter tab.
+            </p>
           </div>
         ) : (
           filteredProducts.map((product) => (
@@ -235,9 +270,11 @@ export default function AdminProductsPage() {
             >
               {/* Product Thumbnail Banner */}
               <div className="relative h-44 w-full bg-slate-100 overflow-hidden">
-                <img
+                <Image
                   src={product.imageUrl}
                   alt={product.name}
+                  width={400}
+                  height={400}
                   className="h-full w-full object-cover"
                 />
 
@@ -245,19 +282,27 @@ export default function AdminProductsPage() {
                 <div className="absolute top-3 left-3">
                   <span
                     className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase shadow-sm ${
-                      product.status === 'Approved'
-                        ? 'bg-red-500 text-white'
-                        : product.status === 'Pending'
-                        ? 'bg-amber-500 text-white'
-                        : product.status === 'Hidden'
-                        ? 'bg-slate-700 text-white'
-                        : 'bg-rose-600 text-white'
+                      product.status === "Approved"
+                        ? "bg-red-500 text-white"
+                        : product.status === "Pending"
+                          ? "bg-amber-500 text-white"
+                          : product.status === "Hidden"
+                            ? "bg-slate-700 text-white"
+                            : "bg-rose-600 text-white"
                     }`}
                   >
-                    {product.status === 'Approved' && <CheckCircle2 className="h-3 w-3" />}
-                    {product.status === 'Pending' && <Clock className="h-3 w-3" />}
-                    {product.status === 'Hidden' && <EyeOff className="h-3 w-3" />}
-                    {product.status === 'Rejected' && <XCircle className="h-3 w-3" />}
+                    {product.status === "Approved" && (
+                      <CheckCircle2 className="h-3 w-3" />
+                    )}
+                    {product.status === "Pending" && (
+                      <Clock className="h-3 w-3" />
+                    )}
+                    {product.status === "Hidden" && (
+                      <EyeOff className="h-3 w-3" />
+                    )}
+                    {product.status === "Rejected" && (
+                      <XCircle className="h-3 w-3" />
+                    )}
                     <span>{product.status}</span>
                   </span>
                 </div>
@@ -281,14 +326,22 @@ export default function AdminProductsPage() {
                   <div className="mt-2.5 flex items-center justify-between text-xs text-slate-500">
                     <span className="flex items-center gap-1">
                       <Store className="h-3.5 w-3.5 text-slate-400" />
-                      <span className="font-medium text-slate-700">{product.shopName}</span>
+                      <span className="font-medium text-slate-700">
+                        {product.shopName}
+                      </span>
                     </span>
-                    <span>Stock: <strong className="text-slate-800">{product.stock}</strong></span>
+                    <span>
+                      Stock:{" "}
+                      <strong className="text-slate-800">
+                        {product.stock}
+                      </strong>
+                    </span>
                   </div>
 
                   {product.rejectionReason && (
                     <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-2.5 text-[11px] text-red-700">
-                      <span className="font-bold">Rejection Note:</span> {product.rejectionReason}
+                      <span className="font-bold">Rejection Note:</span>{" "}
+                      {product.rejectionReason}
                     </div>
                   )}
                 </div>
@@ -308,13 +361,17 @@ export default function AdminProductsPage() {
                     <button
                       onClick={() => handleToggleHide(product)}
                       className={`p-1.5 rounded-lg border transition-all ${
-                        product.status === 'Hidden'
-                          ? 'border-red-200 bg-red-50 text-red-600 hover:bg-red-100'
-                          : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                        product.status === "Hidden"
+                          ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                          : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
                       }`}
-                      title={product.status === 'Hidden' ? 'Unhide listing' : 'Hide listing'}
+                      title={
+                        product.status === "Hidden"
+                          ? "Unhide listing"
+                          : "Hide listing"
+                      }
                     >
-                      {product.status === 'Hidden' ? (
+                      {product.status === "Hidden" ? (
                         <Eye className="h-4 w-4" />
                       ) : (
                         <EyeOff className="h-4 w-4" />
@@ -334,9 +391,9 @@ export default function AdminProductsPage() {
                     <button
                       onClick={() => handleApprove(product)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
-                        product.status === 'Approved'
-                          ? 'border border-red-200 bg-red-50 text-red-600'
-                          : 'bg-red-600 text-white hover:bg-red-700'
+                        product.status === "Approved"
+                          ? "border border-red-200 bg-red-50 text-red-600"
+                          : "bg-red-600 text-white hover:bg-red-700"
                       }`}
                     >
                       Approve
@@ -358,7 +415,9 @@ export default function AdminProductsPage() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-red-600">
                   {previewProduct.category}
                 </span>
-                <h2 className="text-lg font-black text-slate-900 mt-0.5">{previewProduct.name}</h2>
+                <h2 className="text-lg font-black text-slate-900 mt-0.5">
+                  {previewProduct.name}
+                </h2>
               </div>
               <button
                 onClick={() => setPreviewProduct(null)}
@@ -369,28 +428,53 @@ export default function AdminProductsPage() {
             </div>
 
             <div className="h-56 w-full rounded-xl overflow-hidden bg-slate-100">
-              <img
+              <Image
                 src={previewProduct.imageUrl}
                 alt={previewProduct.name}
+                width={400}
+                height={400}
                 className="h-full w-full object-cover"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <span className="text-slate-400 font-medium">Selling Price:</span>
-                <p className="text-base font-black text-slate-900 mt-0.5">৳{previewProduct.price.toLocaleString()}</p>
+                <span className="text-slate-400 font-medium">
+                  Selling Price:
+                </span>
+                <p className="text-base font-black text-slate-900 mt-0.5">
+                  ৳{previewProduct.price.toLocaleString()}
+                </p>
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <span className="text-slate-400 font-medium">Current Stock:</span>
-                <p className="text-base font-black text-slate-900 mt-0.5">{previewProduct.stock} Units</p>
+                <span className="text-slate-400 font-medium">
+                  Current Stock:
+                </span>
+                <p className="text-base font-black text-slate-900 mt-0.5">
+                  {previewProduct.stock} Units
+                </p>
               </div>
             </div>
 
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs space-y-1">
-              <p><span className="text-slate-400">Vendor Store:</span> <strong className="text-slate-800">{previewProduct.shopName}</strong></p>
-              <p><span className="text-slate-400">Seller Name:</span> <strong className="text-slate-800">{previewProduct.sellerName}</strong></p>
-              <p><span className="text-slate-400">Created At:</span> <strong className="text-slate-800">{previewProduct.createdAt}</strong></p>
+              <p>
+                <span className="text-slate-400">Vendor Store:</span>{" "}
+                <strong className="text-slate-800">
+                  {previewProduct.shopName}
+                </strong>
+              </p>
+              <p>
+                <span className="text-slate-400">Seller Name:</span>{" "}
+                <strong className="text-slate-800">
+                  {previewProduct.sellerName}
+                </strong>
+              </p>
+              <p>
+                <span className="text-slate-400">Created At:</span>{" "}
+                <strong className="text-slate-800">
+                  {previewProduct.createdAt}
+                </strong>
+              </p>
             </div>
 
             <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
@@ -433,8 +517,12 @@ export default function AdminProductsPage() {
                 <AlertCircle className="h-6 w-6" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900">Reject Product Listing</h3>
-                <p className="text-xs text-slate-500">Target: {rejectModalProduct.name}</p>
+                <h3 className="text-base font-bold text-slate-900">
+                  Reject Product Listing
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Target: {rejectModalProduct.name}
+                </p>
               </div>
             </div>
 

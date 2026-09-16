@@ -1,11 +1,14 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   User,
   ShoppingBag,
+  Heart,
+  Store,
   Settings,
   LogOut,
   X,
@@ -27,6 +30,30 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
 
+  // Mobile drawer open thakle body scroll prevent hobe
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
+
+  // Escape key press korle mobile drawer close hobe
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen && onClose) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
   const links = [
     {
       name: "Overview",
@@ -46,12 +73,12 @@ export default function Sidebar({
     {
       name: "My WishList",
       href: "/userDashboard/wishList",
-      icon: ShoppingBag,
+      icon: Heart,
     },
     {
       name: "Create Shop",
       href: "/userDashboard/createShop",
-      icon: ShoppingBag,
+      icon: Store,
     },
   ];
 
@@ -74,29 +101,29 @@ export default function Sidebar({
 
   return (
     <>
-      {/* Mobile overlay */}
+      {/* Mobile Backdrop Overlay */}
       {isOpen && (
-        <button
-          type="button"
-          aria-label="Close navigation"
+        <div
+          aria-hidden="true"
           onClick={onClose}
-          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px] lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm transition-opacity lg:hidden"
         />
       )}
 
+      {/* Sidebar Container */}
       <aside
         className={`
           fixed inset-y-0 left-0 z-50 flex w-72 flex-col
           border-r border-[#DEDACE] bg-white
           transition-transform duration-300 ease-in-out
-          lg:static lg:z-auto lg:w-64 lg:translate-x-0
+          lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-64 lg:translate-x-0
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
         `}
       >
         {/* Header */}
         <div className="flex h-16 items-center justify-between border-b border-[#DEDACE] px-5">
           <Link href="/" onClick={onClose} className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0E1B1B] text-sm font-bold text-white">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0E1B1B] text-sm font-bold text-white shadow-sm">
               D
             </div>
 
@@ -105,13 +132,13 @@ export default function Sidebar({
                 Dashboard
               </p>
 
-              <p className="text-[11px] text-[#6B7268]">
+              <p className="text-[11px] font-medium text-[#6B7268]">
                 {role === "admin" ? "Administrator" : "Customer"}
               </p>
             </div>
           </Link>
 
-          {/* Mobile close button */}
+          {/* Mobile Close Button */}
           <button
             type="button"
             onClick={onClose}
@@ -122,7 +149,7 @@ export default function Sidebar({
           </button>
         </div>
 
-        {/* Navigation */}
+        {/* Navigation Section */}
         <div className="flex-1 overflow-y-auto px-4 py-6">
           <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-[#9A9E96]">
             Menu
@@ -133,9 +160,9 @@ export default function Sidebar({
               const Icon = link.icon;
 
               const isActive =
-                pathname === link.href ||
-                (link.href !== "/userDashboard" &&
-                  pathname.startsWith(`${link.href}/`));
+                link.href === "/userDashboard"
+                  ? pathname === "/userDashboard"
+                  : pathname.startsWith(link.href);
 
               return (
                 <Link
@@ -144,18 +171,18 @@ export default function Sidebar({
                   onClick={onClose}
                   className={`
                     group relative flex items-center gap-3 rounded-xl
-                    px-3 py-3 text-sm font-medium
+                    px-3 py-2.5 text-sm font-medium
                     transition-all duration-200
                     ${
                       isActive
-                        ? "bg-[#0E1B1B] text-white shadow-sm"
+                        ? "bg-[#0E1B1B] text-white shadow-sm font-semibold"
                         : "text-[#6B7268] hover:bg-[#F4F2EC] hover:text-[#0E1B1B]"
                     }
                   `}
                 >
-                  {/* Active indicator */}
+                  {/* Left Active Indicator Bar */}
                   {isActive && (
-                    <span className="absolute left-0 h-6 w-1 rounded-r-full bg-[#C08A3E]" />
+                    <span className="absolute left-0 h-5 w-1 rounded-r-full bg-[#C08A3E]" />
                   )}
 
                   <Icon
@@ -179,37 +206,35 @@ export default function Sidebar({
           </nav>
         </div>
 
-        {/* Bottom section */}
-        <div className="border-t border-[#DEDACE] p-4">
-          {/* Account label */}
-          <div className="mb-3 rounded-xl bg-[#F8F7F3] p-3">
-            <p className="text-xs font-medium text-[#6B7268]">Signed in as</p>
-
-            <p className="mt-1 truncate text-sm font-semibold text-[#0E1B1B]">
-              {role === "admin" ? "Administrator" : "Customer"}
+        {/* Bottom Section / User Controls */}
+        <div className="border-t border-[#DEDACE] p-4 space-y-3">
+          {/* Account Details Widget */}
+          <div className="rounded-xl bg-[#F8F7F3] p-3 border border-[#EBE8DF]">
+            <p className="text-[11px] font-medium text-[#6B7268]">
+              Signed in as
+            </p>
+            <p className="mt-0.5 truncate text-xs font-semibold text-[#0E1B1B]">
+              {role === "admin" ? "Administrator Account" : "Customer Account"}
             </p>
           </div>
 
-          {/* Sign out */}
+          {/* Sign Out Button */}
           <button
             type="button"
             onClick={handleSignOut}
             className="
               group flex w-full items-center gap-3 rounded-xl
-              px-3 py-3 text-sm font-medium
-              text-rose-600
+              px-3 py-2.5 text-sm font-semibold
+              text-rose-600 border border-transparent
               transition-all duration-200
-              hover:bg-rose-50
-              focus:outline-none
-              focus:ring-2
-              focus:ring-rose-500/20
+              hover:border-rose-200 hover:bg-rose-50
+              focus:outline-none focus:ring-2 focus:ring-rose-500/20
             "
           >
             <LogOut
               size={18}
               className="transition-transform duration-200 group-hover:-translate-x-0.5"
             />
-
             <span>Sign out</span>
           </button>
         </div>

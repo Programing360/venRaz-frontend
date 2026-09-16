@@ -118,7 +118,7 @@ export default function DashboardPage() {
         if (overviewRes.ok) {
           const overviewJson = await overviewRes.json();
           const overview = overviewJson?.data;
-          console.log(overviewJson);
+    
           if (overview) {
             setStats({
               totalOrders: Number(overview.totalOrders ?? 0),

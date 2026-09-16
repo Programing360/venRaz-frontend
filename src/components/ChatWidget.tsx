@@ -39,7 +39,7 @@ export default function ChatWidget() {
 
   // 🎯 ফাইনাল User ID (লগইন থাকলে আসল ID, না থাকলে Guest ID)
   const activeUserId = currentUser?.id || guestId;
-  console.log(currentUser);
+
 
   const [messages, setMessages] = useState<IMessage[]>([
     {
@@ -74,7 +74,7 @@ export default function ChatWidget() {
           process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
         const response = await fetch(`${baseUrl}/chat/history/${activeUserId}`);
         const resData = await response.json();
-        console.log(resData);
+      
         if (
           resData.success &&
           Array.isArray(resData.data) &&

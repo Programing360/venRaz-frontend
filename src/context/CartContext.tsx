@@ -185,7 +185,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             credentials: "include",
             body: JSON.stringify({ productId, quantity }),
           });
-          console.log(res, productId, quantity);
+
           if (res.ok) {
             await loadCart(); // Refetch database items
             success(`Added "${name}" to your shopping cart!`, "Added to Cart");

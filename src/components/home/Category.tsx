@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import bannerImg from "../../../public/assets/download (4).jpg";
 
 /* =========================================================
    TYPES
@@ -44,7 +45,6 @@ const getCategoryImage = (image?: string) => {
     return FALLBACK_IMAGE;
   }
 
-  // Dummy image হলে fallback
   if (image.includes("example.com")) {
     return FALLBACK_IMAGE;
   }
@@ -58,9 +58,7 @@ const getCategoryImage = (image?: string) => {
 
 export default function Category() {
   const [categories, setCategories] = useState<CategoryItem[]>([]);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
 
   /* =======================================================
@@ -79,13 +77,6 @@ export default function Category() {
           throw new Error("NEXT_PUBLIC_API_URL is not configured");
         }
 
-        /*
-         * IMPORTANT:
-         *
-         * Home-sections API তে categories নেই।
-         * তাই আলাদা categories endpoint ব্যবহার করছি।
-         */
-
         const response = await fetch(`${apiUrl}/categories`, {
           method: "GET",
           headers: {
@@ -100,8 +91,6 @@ export default function Category() {
 
         const result: CategoryApiResponse = await response.json();
 
-        console.log("Categories API Response:", result);
-
         if (!result.success) {
           throw new Error(result.message || "Failed to load categories");
         }
@@ -112,71 +101,27 @@ export default function Category() {
 
         let categoryData: CategoryItem[] = [];
 
-        /*
-         * Case 1:
-         *
-         * {
-         *   success: true,
-         *   data: [...]
-         * }
-         */
-
         if (Array.isArray(result.data)) {
           categoryData = result.data;
         } else if (
-
-        /*
-         * Case 2:
-         *
-         * {
-         *   success: true,
-         *   data: {
-         *     categories: [...]
-         *   }
-         * }
-         */
           result.data &&
           "categories" in result.data &&
           Array.isArray(result.data.categories)
         ) {
           categoryData = result.data.categories;
         } else if (
-
-        /*
-         * Case 3:
-         *
-         * {
-         *   success: true,
-         *   data: {
-         *     category: [...]
-         *   }
-         * }
-         */
           result.data &&
           "category" in result.data &&
           Array.isArray(result.data.category)
         ) {
           categoryData = result.data.category;
         } else if (
-
-        /*
-         * Case 4:
-         *
-         * {
-         *   success: true,
-         *   data: {
-         *     data: [...]
-         *   }
-         * }
-         */
           result.data &&
           "data" in result.data &&
           Array.isArray(result.data.data)
         ) {
           categoryData = result.data.data;
         }
-
-        console.log("Final Categories:", categoryData);
 
         setCategories(categoryData);
       } catch (error) {
@@ -216,14 +161,11 @@ export default function Category() {
     return (
       <section className="w-full bg-[#f6f9fd] py-12">
         <div className="mx-auto max-w-[1800px] px-5">
-          {/* Header */}
-
           <div className="flex items-center justify-between border-b border-[#d7e0ea]">
             <div className="relative">
               <h2 className="pb-4 text-[32px] font-bold leading-none text-black">
                 Shop by Categories
               </h2>
-
               <span className="absolute bottom-[-1px] left-0 h-[2px] w-[174px] bg-[#ff4b4b]" />
             </div>
 
@@ -234,8 +176,6 @@ export default function Category() {
               Explore All
             </Link>
           </div>
-
-          {/* Loading */}
 
           <div className="flex min-h-[300px] items-center justify-center">
             <p className="text-gray-500">Loading categories...</p>
@@ -257,17 +197,12 @@ export default function Category() {
         ================================================= */}
 
         <div className="flex items-center justify-between border-b border-[#d7e0ea]">
-          {/* TITLE */}
-
           <div className="relative">
             <h2 className="pb-4 text-[32px] font-bold leading-none text-black">
               Shop by Categories
             </h2>
-
             <span className="absolute bottom-[-1px] left-0 h-[2px] w-[174px] bg-[#ff4b4b]" />
           </div>
-
-          {/* EXPLORE */}
 
           <Link
             href="/shop"
@@ -285,7 +220,6 @@ export default function Category() {
           <div className="flex min-h-[300px] items-center justify-center">
             <div className="text-center">
               <p className="text-lg text-red-500">{error}</p>
-
               <p className="mt-2 text-sm text-gray-400">
                 Please check the categories API.
               </p>
@@ -309,7 +243,6 @@ export default function Category() {
           <div className="flex min-h-[300px] items-center justify-center">
             <div className="text-center">
               <p className="text-lg text-gray-500">No categories found.</p>
-
               <p className="mt-2 text-sm text-gray-400">
                 Please check the categories API response.
               </p>
@@ -318,57 +251,81 @@ export default function Category() {
         )}
 
         {/* =================================================
-            CATEGORY GRID
+            LAYOUT: LEFT BANNER + RIGHT CATEGORY GRID
         ================================================= */}
 
         {!error && categories.length > 0 && (
-          <div className="mt-8 grid grid-cols-1 border-l border-t border-[#d7e0ea] sm:grid-cols-2 lg:grid-cols-5">
-            {categories.map((category, index) => {
-              /* Product Count */
-
-              const productCount =
-                category.productsCount ??
-                category.productCount ??
-                (Array.isArray(category.products)
-                  ? category.products.length
-                  : 0);
-
-              /* Category ID */
-
-              const categoryId = category._id || String(index);
-
-              return (
+          <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-4">
+            {/* LEFT SIDE BANNER */}
+            <div className="relative overflow-hidden rounded-xl bg-black min-h-[320px] lg:min-h-[auto] flex flex-col justify-end p-8 text-white group">
+              <Image
+                src={bannerImg} // আপনার ব্যানারের সঠিক ইমেজের পাথ দিন
+                alt="Special Offer Banner"
+                width={600}
+                height={600}
+                className="object-cover opacity-75 transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="relative z-10">
+                <span className="inline-block rounded-full bg-[#ff4b4b] px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white">
+                  Special Offer
+                </span>
+                <h3 className="mt-3 text-2xl font-bold leading-tight">
+                  Upgrade Your Tech Setup
+                </h3>
+                <p className="mt-2 text-sm text-gray-200">
+                  Get up to 30% off on top tech electronics categories.
+                </p>
                 <Link
-                  key={categoryId}
-                  href={`/shop?category=${categoryId}`}
-                  className="group flex min-h-[160px] items-center gap-4 border-b border-r border-[#d7e0ea] bg-white px-6 transition-all duration-300 hover:bg-gray-50 sm:px-8"
+                  href="/shop"
+                  className="mt-5 inline-block rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-black transition hover:bg-[#ff4b4b] hover:text-white"
                 >
-                  {/* IMAGE */}
-
-                  <div className="flex h-[84px] w-[84px] shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#e7edf4]">
-                    <Image
-                      src={getCategoryImage(category.image)}
-                      alt={category.name || "Category"}
-                      width={84}
-                      height={84}
-                      className="h-[84px] w-[84px] object-contain transition duration-300 group-hover:scale-105"
-                    />
-                  </div>
-
-                  {/* CONTENT */}
-
-                  <div className="min-w-0">
-                    <h3 className="text-[16px] font-semibold leading-6 text-black transition-colors group-hover:text-[#ff4b4b]">
-                      {category.name}
-                    </h3>
-
-                    <p className="mt-1 text-[14px] text-[#536273]">
-                      {productCount} Products
-                    </p>
-                  </div>
+                  Shop Now
                 </Link>
-              );
-            })}
+              </div>
+            </div>
+
+            {/* RIGHT SIDE CATEGORY GRID */}
+            <div className="grid grid-cols-1 border-l border-t border-[#d7e0ea] sm:grid-cols-2 lg:col-span-3 lg:grid-cols-3">
+              {categories.slice(0, 6).map((category, index) => {
+                const productCount =
+                  category.productsCount ??
+                  category.productCount ??
+                  (Array.isArray(category.products)
+                    ? category.products.length
+                    : 0);
+
+                const categoryId = category._id || String(index);
+
+                return (
+                  <Link
+                    key={categoryId}
+                    href={`/shop?category=${categoryId}`}
+                    className="group flex min-h-[160px] items-center gap-4 border-b border-r border-[#d7e0ea] bg-white px-6 transition-all duration-300 hover:bg-gray-50 sm:px-8"
+                  >
+                    {/* IMAGE */}
+                    <div className="flex h-[84px] w-[84px] shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#e7edf4]">
+                      <Image
+                        src={getCategoryImage(category.image)}
+                        alt={category.name || "Category"}
+                        width={400}
+                        height={400}
+                        className="h-[84px] w-full object-cover transition duration-300 group-hover:scale-105"
+                      />
+                    </div>
+
+                    {/* CONTENT */}
+                    <div className="min-w-0">
+                      <h3 className="text-[16px] font-semibold leading-6 text-black transition-colors group-hover:text-[#ff4b4b]">
+                        {category.name}
+                      </h3>
+                      <p className="mt-1 text-[14px] text-[#536273]">
+                        {productCount} Products
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>

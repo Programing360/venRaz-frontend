@@ -109,7 +109,7 @@ function ProductCard({ product }: { product: Product }) {
           width={300}
           height={300}
           sizes="(max-width: 575px) 90vw, (max-width: 767px) 45vw, (max-width: 1023px) 30vw, (max-width: 1279px) 23vw, 16vw)"
-          className="h-full w-full object-contain p-6 transition duration-500 group-hover:scale-105"
+          className="h-full w-full object-cover  transition duration-500 group-hover:scale-105"
         />
 
         {/* =================================================
@@ -278,7 +278,7 @@ export default function TrendingProducts() {
 
         const result: ApiResponse = await response.json();
 
-        console.log("Trending Products API:", result);
+  
 
         if (!result.success) {
           throw new Error(result.message || "Failed to load products");

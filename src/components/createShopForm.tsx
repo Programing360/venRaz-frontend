@@ -48,6 +48,10 @@ export const CreateShopForm: React.FC<CreateShopFormProps> = ({
   const validate = () => {
     const newErrors: Record<string, string> = {};
 
+    if (!session?.user) {
+      newErrors.api = "You must be logged in to create a shop.";
+    }
+
     if (!formData.name.trim()) {
       newErrors.name = "Shop name is required";
     }
@@ -92,7 +96,11 @@ export const CreateShopForm: React.FC<CreateShopFormProps> = ({
         status: "pending",
       };
 
-      const token = (session as any)?.session?.token;
+      // Handle token resolution across common auth client patterns
+      const token =
+        (session as any)?.token ||
+        (session as any)?.session?.token ||
+        (session as any)?.accessToken;
 
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
@@ -111,6 +119,7 @@ export const CreateShopForm: React.FC<CreateShopFormProps> = ({
           body: JSON.stringify(payload),
         },
       );
+   
 
       if (!response.ok) {
         const text = await response.text();
@@ -149,10 +158,7 @@ export const CreateShopForm: React.FC<CreateShopFormProps> = ({
     }
   };
 
-  const updateField = (
-    field: keyof typeof formData,
-    value: string,
-  ) => {
+  const updateField = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -271,9 +277,7 @@ export const CreateShopForm: React.FC<CreateShopFormProps> = ({
 
                 <div>
                   <p className="font-semibold">Something went wrong</p>
-                  <p className="mt-0.5 text-xs text-red-600">
-                    {errors.api}
-                  </p>
+                  <p className="mt-0.5 text-xs text-red-600">{errors.api}</p>
                 </div>
               </motion.div>
             )}
@@ -282,9 +286,7 @@ export const CreateShopForm: React.FC<CreateShopFormProps> = ({
             <section className="border border-slate-200 bg-white">
               <div className="border-b border-slate-200 px-5 py-5 sm:px-7">
                 <div className="flex items-start gap-4">
-                  <span className="text-xs font-bold text-amber-600">
-                    01
-                  </span>
+                  <span className="text-xs font-bold text-amber-600">01</span>
 
                   <div>
                     <h2 className="text-base font-bold text-slate-950">
@@ -329,9 +331,7 @@ export const CreateShopForm: React.FC<CreateShopFormProps> = ({
                     type="text"
                     placeholder="e.g. Apex Supplies"
                     value={formData.name}
-                    onChange={(e) =>
-                      updateField("name", e.target.value)
-                    }
+                    onChange={(e) => updateField("name", e.target.value)}
                     className={`w-full border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 ${
                       errors.name
                         ? "border-red-400 focus:ring-2 focus:ring-red-100"
@@ -357,10 +357,7 @@ export const CreateShopForm: React.FC<CreateShopFormProps> = ({
                   <select
                     value={formData.category}
                     onChange={(e) =>
-                      updateField(
-                        "category",
-                        e.target.value as ShopCategory,
-                      )
+                      updateField("category", e.target.value as ShopCategory)
                     }
                     className="w-full border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-slate-950 focus:ring-2 focus:ring-slate-100"
                   >
@@ -383,9 +380,7 @@ export const CreateShopForm: React.FC<CreateShopFormProps> = ({
                     rows={5}
                     placeholder="What do you sell? What makes your shop different?"
                     value={formData.description}
-                    onChange={(e) =>
-                      updateField("description", e.target.value)
-                    }
+                    onChange={(e) => updateField("description", e.target.value)}
                     className={`w-full resize-none border bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition-all placeholder:text-slate-400 ${
                       errors.description
                         ? "border-red-400 focus:ring-2 focus:ring-red-100"
@@ -407,9 +402,7 @@ export const CreateShopForm: React.FC<CreateShopFormProps> = ({
             <section className="border border-slate-200 bg-white">
               <div className="border-b border-slate-200 px-5 py-5 sm:px-7">
                 <div className="flex items-start gap-4">
-                  <span className="text-xs font-bold text-amber-600">
-                    02
-                  </span>
+                  <span className="text-xs font-bold text-amber-600">02</span>
 
                   <div>
                     <h2 className="text-base font-bold text-slate-950">
@@ -438,9 +431,7 @@ export const CreateShopForm: React.FC<CreateShopFormProps> = ({
                       type="text"
                       placeholder="Store address"
                       value={formData.address}
-                      onChange={(e) =>
-                        updateField("address", e.target.value)
-                      }
+                      onChange={(e) => updateField("address", e.target.value)}
                       className={`w-full border bg-white py-3 pl-10 pr-4 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 ${
                         errors.address
                           ? "border-red-400 focus:ring-2 focus:ring-red-100"
@@ -471,9 +462,7 @@ export const CreateShopForm: React.FC<CreateShopFormProps> = ({
                       type="tel"
                       placeholder="Phone number"
                       value={formData.phone}
-                      onChange={(e) =>
-                        updateField("phone", e.target.value)
-                      }
+                      onChange={(e) => updateField("phone", e.target.value)}
                       className={`w-full border bg-white py-3 pl-10 pr-4 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 ${
                         errors.phone
                           ? "border-red-400 focus:ring-2 focus:ring-red-100"
