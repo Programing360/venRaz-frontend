@@ -212,11 +212,41 @@ export default function VerifyShopsPage() {
     setActionLoading(shopId);
     try {
       if (API_URL) {
-        await fetch(`${API_URL}/shops/update/my-shop/${shopId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: newStatus, rejectionReason: reason || "" }),
-        });
+        const token =
+          typeof window !== "undefined"
+            ? localStorage.getItem("token") || localStorage.getItem("accessToken")
+            : null;
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+
+        if (newStatus === "approved") {
+          await fetch(`${API_URL}/admin/shops/${shopId}/approve`, {
+            method: "PATCH",
+            headers,
+            credentials: "include",
+          });
+        } else if (newStatus === "rejected") {
+          await fetch(`${API_URL}/admin/shops/${shopId}/reject`, {
+            method: "PATCH",
+            headers,
+            credentials: "include",
+            body: JSON.stringify({
+              reason: reason || "Rejected by administrator.",
+            }),
+          });
+        } else {
+          await fetch(`${API_URL}/shops/update/my-shop/${shopId}`, {
+            method: "PATCH",
+            headers,
+            credentials: "include",
+            body: JSON.stringify({
+              status: newStatus,
+              rejectionReason: reason || "",
+            }),
+          });
+        }
       }
     } catch (err) {
       console.warn("Backend update error:", err);

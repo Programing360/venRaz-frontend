@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { fetchAdminDashboardStatsAPI } from '@/services/adminService';
 import {
   DollarSign,
   Package,
@@ -125,38 +126,62 @@ const chartData = [
 ];
 
 export default function DashboardOverview() {
+  const [dataStats, setDataStats] = React.useState({
+    totalRevenue: 30450,
+    totalUsers: 8,
+    totalShops: 6,
+    totalOrders: 5,
+    totalProducts: 7,
+    isLiveFromBackend: false,
+  });
+
+  React.useEffect(() => {
+    async function loadLiveStats() {
+      const live = await fetchAdminDashboardStatsAPI();
+      setDataStats({
+        totalRevenue: live.totalRevenue ?? 30450,
+        totalUsers: live.totalUsers ?? 8,
+        totalShops: live.totalShops ?? 6,
+        totalOrders: live.totalOrders ?? 5,
+        totalProducts: live.totalProducts ?? 7,
+        isLiveFromBackend: Boolean(live.isLiveFromBackend),
+      });
+    }
+    loadLiveStats();
+  }, []);
+
   const stats: StatCardProps[] = [
     {
       title: 'Total Revenue',
-      value: '$124,592',
+      value: `$${dataStats.totalRevenue.toLocaleString()}`,
       change: '+14.2%',
       isPositive: true,
       icon: DollarSign,
-      description: 'vs. last month',
+      description: 'from confirmed orders',
     },
     {
       title: 'Active Products',
-      value: '1,420',
+      value: dataStats.totalProducts.toLocaleString(),
       change: '+5.4%',
       isPositive: true,
       icon: Package,
-      description: 'products listed',
+      description: 'products in catalog',
     },
     {
       title: 'Total Orders',
-      value: '3,842',
+      value: dataStats.totalOrders.toLocaleString(),
       change: '+8.1%',
       isPositive: true,
       icon: ShoppingCart,
-      description: 'orders this month',
+      description: 'all marketplace orders',
     },
     {
-      title: 'Registered Sellers',
-      value: '284',
-      change: '-1.2%',
-      isPositive: false,
+      title: 'Registered Users & Sellers',
+      value: dataStats.totalUsers.toLocaleString(),
+      change: '+12.5%',
+      isPositive: true,
       icon: Users,
-      description: 'active sellers',
+      description: 'active platform accounts',
     },
   ];
 
@@ -217,7 +242,7 @@ export default function DashboardOverview() {
 
             <div className="mt-6 flex items-baseline gap-3">
               <span className="text-3xl font-extrabold tracking-tight text-slate-900">
-                $124,592
+                ${dataStats.totalRevenue.toLocaleString()}
               </span>
               <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-bold text-red-600">
                 <ArrowUpRight className="h-3.5 w-3.5" />

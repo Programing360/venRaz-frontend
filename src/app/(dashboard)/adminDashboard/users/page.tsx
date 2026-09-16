@@ -21,6 +21,9 @@ import {
   getAdminUsers,
   switchUserRole,
   toggleUserStatus,
+  fetchAdminUsersAPI,
+  updateUserRoleAPI,
+  updateUserStatusAPI,
 } from '@/services/adminService';
 import { AdminUser, UserRole } from '@/types/admin';
 
@@ -29,6 +32,7 @@ export default function AdminUsersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [loading, setLoading] = useState(false);
 
   // Confirmation modal state for Block/Unblock
   const [selectedUserForAction, setSelectedUserForAction] = useState<{
@@ -45,13 +49,37 @@ export default function AdminUsersPage() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  const handleRefresh = () => {
-    setUsers(getAdminUsers());
+  const loadUsers = async () => {
+    setLoading(true);
+    try {
+      const res = await fetchAdminUsersAPI({
+        search: searchQuery,
+        role: roleFilter,
+        status: statusFilter,
+      });
+      setUsers(res.users);
+    } catch {
+      setUsers(getAdminUsers());
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    window.addEventListener('venraz_admin_data_updated', handleRefresh);
-    return () => window.removeEventListener('venraz_admin_data_updated', handleRefresh);
+    loadUsers();
+  }, [roleFilter, statusFilter]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadUsers();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const handleUpdate = () => loadUsers();
+    window.addEventListener('venraz_admin_data_updated', handleUpdate);
+    return () => window.removeEventListener('venraz_admin_data_updated', handleUpdate);
   }, []);
 
   const handleRoleToggle = (user: AdminUser) => {
@@ -80,19 +108,24 @@ export default function AdminUsersPage() {
     });
   };
 
-  const confirmAction = () => {
+  const confirmAction = async () => {
     if (!selectedUserForAction) return;
     const { user, type, targetRole } = selectedUserForAction;
 
     if (type === 'ROLE' && targetRole) {
-      switchUserRole(user.id, targetRole);
+      await updateUserRoleAPI(user.id, targetRole);
+      setUsers((prev) =>
+        prev.map((u) => (u.id === user.id ? { ...u, role: targetRole } : u))
+      );
       showToast(`Updated role for ${user.name} to ${targetRole}.`);
     } else if (type === 'STATUS') {
-      const updatedList = toggleUserStatus(user.id);
-      const updatedUser = updatedList.find((u) => u.id === user.id);
-      const isBlocked = updatedUser?.status === 'BLOCKED';
+      const targetStatus = user.status === 'ACTIVE' ? 'BLOCKED' : 'ACTIVE';
+      await updateUserStatusAPI(user.id, targetStatus);
+      setUsers((prev) =>
+        prev.map((u) => (u.id === user.id ? { ...u, status: targetStatus } : u))
+      );
       showToast(
-        isBlocked
+        targetStatus === 'BLOCKED'
           ? `User ${user.name} has been BLOCKED.`
           : `User ${user.name} has been UNBLOCKED & Activated.`
       );
@@ -142,10 +175,10 @@ export default function AdminUsersPage() {
         </div>
 
         <button
-          onClick={handleRefresh}
+          onClick={loadUsers}
           className="inline-flex items-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-all shadow-sm"
         >
-          <RefreshCw className="h-3.5 w-3.5" />
+          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin text-red-600" : ""}`} />
           <span>Refresh List</span>
         </button>
       </div>
