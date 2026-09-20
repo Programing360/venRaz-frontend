@@ -2,7 +2,16 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ShoppingBag, Clock, CheckCircle2, Heart, Store, Phone, PlusCircle, ExternalLink } from "lucide-react";
+import {
+  ShoppingBag,
+  Clock,
+  CheckCircle2,
+  Heart,
+  Store,
+  Phone,
+  PlusCircle,
+  ExternalLink,
+} from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 
 interface OverviewStats {
@@ -79,7 +88,7 @@ const statusBadge = (status: string): string => {
       return "bg-rose-100 text-rose-700";
     case "confirmed":
     case "processing":
-      return "bg-amber-100 text-amber-800";
+      return "bg-purple-100 text-purple-800";
     default:
       return "bg-slate-100 text-slate-700";
   }
@@ -118,7 +127,7 @@ export default function DashboardPage() {
         if (overviewRes.ok) {
           const overviewJson = await overviewRes.json();
           const overview = overviewJson?.data;
-    
+
           if (overview) {
             setStats({
               totalOrders: Number(overview.totalOrders ?? 0),
@@ -211,25 +220,25 @@ export default function DashboardPage() {
       title: "Total Orders",
       value: stats.totalOrders,
       icon: ShoppingBag,
-      color: "bg-blue-50 text-blue-600",
+      color: "bg-purple-50 text-purple-600 border border-purple-100",
     },
     {
       title: "Pending Delivery",
       value: stats.pendingOrders,
       icon: Clock,
-      color: "bg-amber-50 text-amber-600",
+      color: "bg-amber-50 text-amber-600 border border-amber-100",
     },
     {
       title: "Completed Orders",
       value: stats.completedOrders,
       icon: CheckCircle2,
-      color: "bg-emerald-50 text-emerald-600",
+      color: "bg-emerald-50 text-emerald-600 border border-emerald-100",
     },
     {
       title: "Saved Wishlist",
       value: stats.wishlistCount,
       icon: Heart,
-      color: "bg-rose-50 text-rose-600",
+      color: "bg-rose-50 text-rose-600 border border-rose-100",
     },
   ];
 
@@ -237,25 +246,25 @@ export default function DashboardPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-[#0E1B1B]">
+        <h2 className="text-2xl font-bold text-gray-900">
           Welcome back, {session?.user?.name || "Customer"} 👋
         </h2>
 
-        <p className="mt-1 text-sm text-[#6B7268]">
+        <p className="mt-1 text-sm text-gray-500">
           Here is an overview of your recent account activity and orders.
         </p>
       </div>
 
       {/* My Shop Panel */}
-      <div className="overflow-hidden rounded-xl border border-[#DEDACE] bg-white shadow-sm">
-        <div className="flex flex-col gap-3 border-b border-[#DEDACE] p-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="overflow-hidden rounded-2xl border border-purple-100 bg-white shadow-sm">
+        <div className="flex flex-col gap-3 border-b border-purple-100 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#0E1B1B] text-[#C08A3E]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-600 text-white shadow-sm shadow-purple-600/30">
               <Store size={20} />
             </div>
             <div>
-              <h3 className="font-semibold text-[#0E1B1B]">My Shop</h3>
-              <p className="text-xs text-[#6B7268]">
+              <h3 className="font-semibold text-gray-900">My Shop</h3>
+              <p className="text-xs text-gray-500">
                 Your vendor storefront and its current status
               </p>
             </div>
@@ -263,7 +272,7 @@ export default function DashboardPage() {
 
           <Link
             href="/userDashboard/createShop"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[#C08A3E] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#A8762F] transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-purple-700 shadow-sm shadow-purple-600/20"
           >
             <PlusCircle size={14} />
             <span>Create Shop</span>
@@ -272,7 +281,7 @@ export default function DashboardPage() {
 
         <div className="p-5">
           {shopLoading ? (
-            <p className="py-4 text-center text-sm text-[#6B7268]">
+            <p className="py-4 text-center text-sm text-gray-500">
               Loading your shop...
             </p>
           ) : shop ? (
@@ -282,26 +291,25 @@ export default function DashboardPage() {
                 <img
                   src={shop.images[0]}
                   alt={shop.name}
-                  className="h-20 w-20 shrink-0 rounded-xl border border-[#DEDACE] object-cover"
+                  className="h-20 w-20 shrink-0 rounded-xl border border-purple-100 object-cover"
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-[#F4F2EC] text-[#C08A3E]">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-600 border border-purple-100">
                   <Store size={28} />
                 </div>
               )}
 
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h4 className="text-base font-bold text-[#0E1B1B]">
+                  <h4 className="text-base font-bold text-gray-900">
                     {shop.name}
                   </h4>
                   <span
                     className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-medium capitalize ${
                       shop.status === "pending"
                         ? "bg-amber-100 text-amber-800"
-                        : shop.status === "approved" ||
-                            shop.status === "active"
+                        : shop.status === "approved" || shop.status === "active"
                           ? "bg-emerald-100 text-emerald-800"
                           : shop.status === "rejected" ||
                               shop.status === "suspended"
@@ -313,13 +321,14 @@ export default function DashboardPage() {
                   </span>
                 </div>
 
-                <p className="mt-1 truncate text-sm text-[#6B7268]">
+                <p className="mt-1 truncate text-sm text-gray-500">
                   {shop.description}
                 </p>
 
-                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#6B7268]">
+                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
                   <span>
-                    Category: <strong className="text-[#0E1B1B]">{shop.category}</strong>
+                    Category:{" "}
+                    <strong className="text-gray-900">{shop.category}</strong>
                   </span>
                   <span>•</span>
                   {shop.phone && (
@@ -330,7 +339,10 @@ export default function DashboardPage() {
                   {shop.rating != null && shop.rating > 0 && (
                     <>
                       <span>•</span>
-                      <span>Rating: <strong className="text-[#0E1B1B]">{shop.rating}</strong></span>
+                      <span>
+                        Rating:{" "}
+                        <strong className="text-gray-900">{shop.rating}</strong>
+                      </span>
                     </>
                   )}
                 </div>
@@ -338,23 +350,24 @@ export default function DashboardPage() {
 
               <Link
                 href="/userDashboard"
-                className="inline-flex shrink-0 items-center gap-1.5 text-xs font-semibold text-[#C08A3E] hover:underline"
+                className="inline-flex shrink-0 items-center gap-1.5 text-xs font-semibold text-purple-600 hover:text-purple-700 hover:underline"
               >
                 View dashboard <ExternalLink size={13} />
               </Link>
             </div>
           ) : (
             <div className="py-6 text-center">
-              <Store className="mx-auto text-[#C08A3E]" size={32} />
-              <p className="mt-2 text-sm font-medium text-[#0E1B1B]">
+              <Store className="mx-auto text-purple-600" size={32} />
+              <p className="mt-2 text-sm font-medium text-gray-900">
                 You don&apos;t have a shop yet
               </p>
-              <p className="mt-1 text-xs text-[#6B7268]">
-                Create your vendor storefront and start selling on the marketplace.
+              <p className="mt-1 text-xs text-gray-500">
+                Create your vendor storefront and start selling on the
+                marketplace.
               </p>
               <Link
                 href="/userDashboard/createShop"
-                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-[#C08A3E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#A8762F] transition-colors"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-purple-700 shadow-sm shadow-purple-600/20"
               >
                 <PlusCircle size={14} />
                 Create My Shop
@@ -372,19 +385,19 @@ export default function DashboardPage() {
           return (
             <div
               key={stat.title}
-              className="flex items-center justify-between rounded-xl border border-[#DEDACE] bg-white p-5 shadow-sm"
+              className="flex items-center justify-between rounded-2xl border border-purple-100 bg-white p-5 shadow-sm"
             >
               <div>
-                <p className="text-xs font-medium text-[#6B7268]">
+                <p className="text-xs font-medium text-gray-500">
                   {stat.title}
                 </p>
 
-                <p className="mt-1 text-2xl font-bold text-[#0E1B1B]">
+                <p className="mt-1 text-2xl font-bold text-gray-900">
                   {loading ? "..." : stat.value}
                 </p>
               </div>
 
-              <div className={`rounded-lg p-3 ${stat.color}`}>
+              <div className={`rounded-xl p-3 ${stat.color}`}>
                 <Icon size={20} />
               </div>
             </div>
@@ -393,30 +406,30 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent Orders */}
-      <div className="overflow-hidden rounded-xl border border-[#DEDACE] bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-[#DEDACE] p-5">
-          <h3 className="font-semibold text-[#0E1B1B]">Recent Purchases</h3>
+      <div className="overflow-hidden rounded-2xl border border-purple-100 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-purple-100 p-5">
+          <h3 className="font-semibold text-gray-900">Recent Purchases</h3>
 
           <Link
             href="/userDashboard/orders"
-            className="text-sm font-medium text-[#C08A3E] hover:underline"
+            className="text-sm font-medium text-purple-600 hover:text-purple-700 hover:underline"
           >
             View all
           </Link>
         </div>
 
         {loading ? (
-          <p className="p-6 text-sm text-[#6B7268]">
+          <p className="p-6 text-sm text-gray-500">
             Loading your recent orders...
           </p>
         ) : recentOrders.length === 0 ? (
           <div className="p-6 text-center">
-            <p className="text-sm text-[#6B7268]">
+            <p className="text-sm text-gray-500">
               You haven&apos;t placed any orders yet.
             </p>
             <Link
               href="/shop"
-              className="mt-3 inline-block rounded-lg bg-[#C08A3E] px-4 py-2 text-xs font-semibold text-white"
+              className="mt-3 inline-block rounded-xl bg-purple-600 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-purple-700 shadow-sm shadow-purple-600/20"
             >
               Start Shopping →
             </Link>
@@ -425,34 +438,34 @@ export default function DashboardPage() {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left text-sm">
               <thead>
-                <tr className="bg-[#F4F2EC] text-[#6B7268]">
-                  <th className="p-4 font-medium">Order ID</th>
-                  <th className="p-4 font-medium">Date</th>
-                  <th className="p-4 font-medium">Total</th>
-                  <th className="p-4 font-medium">Status</th>
+                <tr className="bg-purple-50/60 text-purple-900">
+                  <th className="p-4 font-semibold">Order ID</th>
+                  <th className="p-4 font-semibold">Date</th>
+                  <th className="p-4 font-semibold">Total</th>
+                  <th className="p-4 font-semibold">Status</th>
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-[#DEDACE]">
+              <tbody className="divide-y divide-purple-100">
                 {recentOrders.map((order) => (
                   <tr
                     key={order._id}
-                    className="transition-colors hover:bg-[#FAF9F6]"
+                    className="transition-colors hover:bg-purple-50/30"
                   >
-                    <td className="p-4 font-medium text-[#0E1B1B]">
+                    <td className="p-4 font-medium text-gray-900">
                       <Link
                         href={`/userDashboard/orders/${order._id}`}
-                        className="font-mono hover:text-[#C08A3E]"
+                        className="font-mono hover:text-purple-600"
                       >
                         {order.trackingId}
                       </Link>
                     </td>
 
-                    <td className="p-4 text-[#6B7268]">
+                    <td className="p-4 text-gray-500">
                       {formatDate(order.createdAt)}
                     </td>
 
-                    <td className="p-4 font-semibold text-[#0E1B1B]">
+                    <td className="p-4 font-semibold text-gray-900">
                       ${Number(order.totalAmount ?? 0).toFixed(2)}
                     </td>
 

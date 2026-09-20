@@ -621,18 +621,19 @@ export function getAdminDashboardStats() {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
 
-function getAuthHeaders(): HeadersInit {
+function getAuthHeaders(token?: string): HeadersInit {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
-  if (typeof window !== 'undefined') {
-    const token =
-      localStorage.getItem('token') ||
-      localStorage.getItem('accessToken') ||
-      localStorage.getItem('adminToken');
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
+  const resolvedToken =
+    token ||
+    (typeof window !== 'undefined'
+      ? localStorage.getItem('token') ||
+        localStorage.getItem('accessToken') ||
+        localStorage.getItem('adminToken')
+      : null);
+  if (resolvedToken) {
+    headers['Authorization'] = `Bearer ${resolvedToken}`;
   }
   return headers;
 }
@@ -680,7 +681,7 @@ export async function fetchAdminUsersAPI(filters?: {
   status?: string;
   page?: number;
   limit?: number;
-}): Promise<{ users: AdminUser[]; isLive: boolean; total: number }> {
+}, token?: string): Promise<{ users: AdminUser[]; isLive: boolean; total: number }> {
   try {
     const params = new URLSearchParams();
     if (filters?.search) params.append('search', filters.search);
@@ -688,29 +689,34 @@ export async function fetchAdminUsersAPI(filters?: {
     if (filters?.status && filters.status !== 'ALL') params.append('status', filters.status.toLowerCase());
     if (filters?.page) params.append('page', String(filters.page));
     if (filters?.limit) params.append('limit', String(filters.limit));
+    else params.append('limit', '200');
 
     const res = await fetch(`${API_BASE_URL}/admin/users?${params.toString()}`, {
       method: 'GET',
-      headers: getAuthHeaders(),
+      headers: getAuthHeaders(token),
       credentials: 'include',
     });
 
     if (res.ok) {
       const json = await res.json();
-      if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-        const liveUsers: AdminUser[] = json.data.map((u: any) => ({
-          id: u._id || u.id,
-          name: u.name || 'User',
-          email: u.email || 'user@venraz.com',
-          phone: u.phone || '+880 1700-000000',
-          role: (u.role ? u.role.toUpperCase() : 'USER') as UserRole,
-          status: (u.status ? u.status.toUpperCase() : 'ACTIVE') as UserStatus,
-          avatar: u.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-          joinedDate: u.createdAt ? new Date(u.createdAt).toISOString().split('T')[0] : '2026-01-01',
-          ordersCount: u.ordersCount ?? 0,
-          shopsCount: u.shopsCount,
+      if (json.success && Array.isArray(json.data)) {
+        const liveUsers: AdminUser[] = (
+          json.data as Array<Record<string, unknown>>
+        ).map((rawUser) => ({
+          id: String(rawUser._id ?? rawUser.id ?? ""),
+          name: String(rawUser.name || "User"),
+          email: String(rawUser.email || "user@venraz.com"),
+          phone: String(rawUser.phone || ""),
+          role: String(rawUser.role || "user").toUpperCase() as UserRole,
+          status: String(rawUser.status || "active").toUpperCase() as UserStatus,
+          avatar: String(rawUser.avatar || ""),
+          joinedDate: rawUser.createdAt
+            ? new Date(String(rawUser.createdAt)).toISOString().split("T")[0]
+            : "",
+          ordersCount: Number(rawUser.ordersCount ?? 0),
+          shopsCount: Number(rawUser.shopsCount ?? 0),
         }));
-        return { users: liveUsers, isLive: true, total: json.meta?.total || liveUsers.length };
+        return { users: liveUsers, isLive: true, total: json.meta?.total ?? liveUsers.length };
       }
     }
   } catch (err) {
@@ -726,47 +732,47 @@ export async function fetchAdminUsersAPI(filters?: {
  * Update User Role via Backend
  * PATCH /api/v1/admin/users/:userId/role
  */
-export async function updateUserRoleAPI(userId: string, newRole: UserRole): Promise<boolean> {
-  try {
-    const res = await fetch(`${API_BASE_URL}/admin/users/${userId}/role`, {
-      method: 'PATCH',
-      headers: getAuthHeaders(),
-      credentials: 'include',
-      body: JSON.stringify({ role: newRole.toLowerCase() }),
-    });
-    if (res.ok) {
-      // also keep local state synced
-      switchUserRole(userId, newRole);
-      return true;
-    }
-  } catch (err) {
-    console.warn('Live backend updateUserRole failed:', err);
+export async function updateUserRoleAPI(userId: string, newRole: UserRole, token?: string): Promise<boolean> {
+  const res = await fetch(`${API_BASE_URL}/admin/users/${userId}/role`, {
+    method: 'PATCH',
+    headers: getAuthHeaders(token),
+    credentials: 'include',
+    body: JSON.stringify({ role: newRole.toLowerCase() }),
+  });
+
+  if (res.ok) {
+    // also keep local state synced
+    switchUserRole(userId, newRole);
+    return true;
   }
-  switchUserRole(userId, newRole);
-  return true;
+
+  const json = await res.json().catch(() => null);
+  throw new Error(
+    (json && json.message) || `Failed to update role (HTTP ${res.status})`,
+  );
 }
 
 /**
  * Update User Status (Block/Unblock) via Backend
  * PATCH /api/v1/admin/users/:userId/status
  */
-export async function updateUserStatusAPI(userId: string, newStatus: 'ACTIVE' | 'BLOCKED'): Promise<boolean> {
-  try {
-    const res = await fetch(`${API_BASE_URL}/admin/users/${userId}/status`, {
-      method: 'PATCH',
-      headers: getAuthHeaders(),
-      credentials: 'include',
-      body: JSON.stringify({ status: newStatus.toLowerCase() }),
-    });
-    if (res.ok) {
-      toggleUserStatus(userId);
-      return true;
-    }
-  } catch (err) {
-    console.warn('Live backend updateUserStatus failed:', err);
+export async function updateUserStatusAPI(userId: string, newStatus: 'ACTIVE' | 'BLOCKED', token?: string): Promise<boolean> {
+  const res = await fetch(`${API_BASE_URL}/admin/users/${userId}/status`, {
+    method: 'PATCH',
+    headers: getAuthHeaders(token),
+    credentials: 'include',
+    body: JSON.stringify({ status: newStatus.toLowerCase() }),
+  });
+
+  if (res.ok) {
+    toggleUserStatus(userId);
+    return true;
   }
-  toggleUserStatus(userId);
-  return true;
+
+  const json = await res.json().catch(() => null);
+  throw new Error(
+    (json && json.message) || `Failed to update status (HTTP ${res.status})`,
+  );
 }
 
 /**

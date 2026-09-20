@@ -24,11 +24,10 @@ export default function ChatWidget() {
   const { data: session } = useSession();
   const currentUser = session?.user;
 
-  // 🚀 Guest User-এর জন্য Unique Session ID তৈরি (যদি লগইন না থাকে)
+  // 🚀 Guest User-এর জন্য Unique Session ID তৈরি
   const [guestId, setGuestId] = useState<string>("");
 
   useEffect(() => {
-    // LocalStorage থেকে পুরনো guest_id খোঁজা, না থাকলে নতুন বানানো
     let existingGuestId = localStorage.getItem("venraz_chat_guest_id");
     if (!existingGuestId) {
       existingGuestId = `guest_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
@@ -37,9 +36,7 @@ export default function ChatWidget() {
     setGuestId(existingGuestId);
   }, []);
 
-  // 🎯 ফাইনাল User ID (লগইন থাকলে আসল ID, না থাকলে Guest ID)
   const activeUserId = currentUser?.id || guestId;
-
 
   const [messages, setMessages] = useState<IMessage[]>([
     {
@@ -54,7 +51,6 @@ export default function ChatWidget() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // অটো স্ক্রোল ডাউন
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -63,7 +59,7 @@ export default function ChatWidget() {
     if (isOpen) scrollToBottom();
   }, [messages, isOpen, isLoading]);
 
-  // 🚀 ১. ইউজার চ্যাটবট ওপেন করলে ব্যাকএন্ড থেকে পুরনো Chat History নিয়ে আসা
+  // 🚀 ১. চ্যাট হিস্ট্রি ফেচ
   useEffect(() => {
     const fetchChatHistory = async () => {
       if (!isOpen || !activeUserId) return;
@@ -74,13 +70,12 @@ export default function ChatWidget() {
           process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
         const response = await fetch(`${baseUrl}/chat/history/${activeUserId}`);
         const resData = await response.json();
-      
+
         if (
           resData.success &&
           Array.isArray(resData.data) &&
           resData.data.length > 0
         ) {
-          // MongoDB formatting response matching frontend schema
           const formattedMessages: IMessage[] = resData.data.map(
             (item: any) => ({
               id: item._id || item.id || Date.now().toString(),
@@ -103,7 +98,7 @@ export default function ChatWidget() {
     fetchChatHistory();
   }, [isOpen, activeUserId]);
 
-  // 🚀 ২. মেসেজ পাঠানোর হ্যান্ডলার
+  // 🚀 ২. মেসেজ সেন্ড
   const handleSendMessage = async (customText?: string) => {
     const textToSend = customText || inputMessage;
     if (!textToSend.trim() || isLoading) return;
@@ -169,20 +164,49 @@ export default function ChatWidget() {
 
   return (
     <div className="fixed bottom-5 right-5 z-50 font-sans">
-      {/* 🎯 ১. চ্যাট ফ্লোটিং বাটন */}
+      {/* 🎯 ৩ টি থ্রি-ডি ট্রিপল মোশন অ্যানিমেশন সমৃদ্ধ বাটন */}
       {!isOpen && (
-        <button
+        <div
+          className="flex items-center gap-3 cursor-pointer group"
           onClick={() => setIsOpen(true)}
-          className="bg-[#ff594d] hover:bg-[#ab75fa] text-white p-4 rounded-full shadow-2xl transition-all duration-300 transform hover:scale-110 flex items-center gap-2"
         >
-          <MessageSquare className="w-6 h-6" />
-          <span className="hidden md:inline font-medium text-sm">Ask AI</span>
-        </button>
+          {/* বাবল: হালকা বাউন্স মোশন */}
+          <div className="relative animate-bounce duration-1000 bg-white text-gray-800 text-sm font-semibold px-4 py-2.5 rounded-2xl shadow-xl border border-gray-100 flex items-center gap-1.5 transition-transform group-hover:scale-105">
+            <span>Chat With Us</span>
+            <span className="text-base">👋</span>
+            <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-0 h-0 border-y-8 border-y-transparent border-l-8 border-l-white"></div>
+          </div>
+
+          {/* চ্যাট বাটন উইথ ৩টি অ্যানিমেশন মোশন */}
+          <div className="relative flex items-center justify-center">
+            {/* Motion 1: Soft Continuous Glowing Breathing Effect */}
+            <div className="absolute -inset-3 bg-sky-400/30 rounded-full blur-md animate-pulse"></div>
+
+            {/* Motion 2: Expanding Wave Ripple Ping Motion */}
+            <div className="absolute -inset-2 bg-blue-500/40 rounded-full animate-ping opacity-75"></div>
+
+            {/* Motion 3: Subtle Rotating Glow Background */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-sky-400 to-cyan-300 rounded-full animate-spin opacity-50 blur-[2px]"></div>
+
+            {/* মেইন বাটন */}
+            <button
+              aria-label="Open Chat"
+              className="relative bg-gradient-to-tr from-blue-600 to-sky-400 text-white p-4 rounded-full shadow-2xl transition-all duration-300 group-hover:scale-110 flex items-center justify-center z-10"
+            >
+              <MessageSquare className="w-6 h-6 fill-white stroke-none" />
+
+              {/* নোটিফিকেশন ব্যাজ */}
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[11px] font-bold w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-white">
+                1
+              </span>
+            </button>
+          </div>
+        </div>
       )}
 
-      {/* 🎯 ২. চ্যাট উইন্ডো */}
+      {/* 🎯 চ্যাট উইন্ডো */}
       {isOpen && (
-        <div className="w-[360px] sm:w-[400px] h-[520px] bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden transition-all duration-300">
+        <div className="w-[360px] sm:w-[400px] h-[520px] bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-5">
           {/* চ্যাট হেডার */}
           <div className="bg-[#ff594d] p-4 text-white flex justify-between items-center shadow-md">
             <div className="flex items-center gap-3">
@@ -207,7 +231,7 @@ export default function ChatWidget() {
             </button>
           </div>
 
-          {/* মেসেজ লিস্ট এলাকা */}
+          {/* মেসেজ লিস্ট */}
           <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50/50">
             {isHistoryLoading ? (
               <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
@@ -227,7 +251,6 @@ export default function ChatWidget() {
                   )}
 
                   <div className={`max-w-[80%] space-y-2`}>
-                    {/* টেক্সট বাবল */}
                     <div
                       className={`p-3 rounded-2xl text-sm leading-relaxed ${
                         msg.sender === "user"
@@ -238,7 +261,6 @@ export default function ChatWidget() {
                       {msg.reply}
                     </div>
 
-                    {/* 🛍️ প্রোডাক্ট লিস্ট রেন্ডারিং */}
                     {msg.type === "PRODUCT_LIST" && Array.isArray(msg.data) && (
                       <div className="grid grid-cols-2 gap-2 pt-1">
                         {(msg.data as IProduct[]).map((product) => (
@@ -266,7 +288,6 @@ export default function ChatWidget() {
                       </div>
                     )}
 
-                    {/* 📦 অর্ডার স্ট্যাটাস কার্ড */}
                     {msg.type === "ORDER_STATUS" && msg.data && (
                       <div className="bg-indigo-50 border border-indigo-100 p-3 rounded-xl flex items-center gap-3">
                         <Truck className="w-8 h-8 text-indigo-600 shrink-0" />
@@ -292,7 +313,6 @@ export default function ChatWidget() {
               ))
             )}
 
-            {/* লোডিং এনিমেশন */}
             {isLoading && (
               <div className="flex gap-2 items-center text-gray-400 text-xs pl-2">
                 <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
@@ -302,7 +322,7 @@ export default function ChatWidget() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* 🎯 ৩. Quick Suggestion Chips */}
+          {/* Quick Suggestions */}
           <div className="px-3 py-2 bg-white border-t border-gray-100 flex gap-2 overflow-x-auto no-scrollbar">
             <button
               onClick={() => handleSendMessage("টি শার্ট দেখাও")}
@@ -318,7 +338,7 @@ export default function ChatWidget() {
             </button>
           </div>
 
-          {/* 🎯 ৪. মেসেজ ইনপুট বক্স */}
+          {/* Input Box */}
           <div className="p-3 bg-white border-t border-gray-100 flex gap-2 items-center">
             <input
               type="text"

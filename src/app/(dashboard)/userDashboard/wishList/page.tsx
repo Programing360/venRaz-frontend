@@ -10,6 +10,7 @@ import {
   Loader2,
   ArrowUpRight,
   PackageX,
+  Trash2,
 } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
 import { useCart } from "@/context/CartContext";
@@ -163,10 +164,7 @@ export default function WishlistPage() {
   };
 
   const finalPrice = (product: WishlistProduct): number => {
-    if (
-      product.isFlashSale &&
-      typeof product.flashSalePrice === "number"
-    ) {
+    if (product.isFlashSale && typeof product.flashSalePrice === "number") {
       return product.flashSalePrice;
     }
 
@@ -177,50 +175,52 @@ export default function WishlistPage() {
     typeof product.stock === "number" ? product.stock > 0 : true;
 
   return (
-    <main className="min-h-screen bg-white px-4 py-6 text-slate-900 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-slate-50/50 px-4 py-8 text-gray-900 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
-        <div className="mb-8 flex flex-col gap-5 border-b border-slate-200 pb-7 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
-              <Heart className="h-4 w-4" />
-              Saved Products
+        <div className="mb-8 flex flex-col gap-4 rounded-2xl border border-purple-100 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-50 text-purple-600 border border-purple-100">
+              <Heart className="h-6 w-6 fill-purple-600/10" />
             </div>
 
-            <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
-              My Wishlist
-            </h1>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
+                My Wishlist
+              </h1>
 
-            <p className="mt-2 text-sm text-slate-500">
-              Products you&apos;ve saved for later.
-            </p>
+              <p className="mt-0.5 text-xs text-gray-500">
+                Products you&apos;ve saved to purchase later.
+              </p>
+            </div>
           </div>
 
-          <div className="flex w-fit items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-medium text-slate-600">
-            <Heart className="h-4 w-4 text-slate-500" />
-
-            {loading
-              ? "Loading..."
-              : `${wishlist.length} ${
-                  wishlist.length === 1 ? "saved item" : "saved items"
-                }`}
+          <div className="inline-flex items-center gap-2 self-start rounded-xl border border-purple-100 bg-purple-50/60 px-4 py-2 text-xs font-semibold text-purple-700 sm:self-center">
+            <Heart className="h-4 w-4 fill-purple-600 text-purple-600" />
+            <span>
+              {loading
+                ? "Loading..."
+                : `${wishlist.length} ${
+                    wishlist.length === 1 ? "saved item" : "saved items"
+                  }`}
+            </span>
           </div>
         </div>
 
         {/* Loading State */}
         {loading && (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white px-6 py-20 shadow-sm">
-            <Loader2 className="h-7 w-7 animate-spin text-slate-400" />
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-purple-100 bg-white px-6 py-20 shadow-sm">
+            <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
 
-            <p className="mt-3 text-sm text-slate-500">
-              Loading your wishlist...
+            <p className="mt-3 text-sm font-medium text-gray-500">
+              Loading your saved items...
             </p>
           </div>
         )}
 
-        {/* Products */}
+        {/* Products Grid */}
         {!loading && wishlist.length > 0 && (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {wishlist.map((item) => {
               const price = finalPrice(item);
               const available = inStock(item);
@@ -229,124 +229,136 @@ export default function WishlistPage() {
                 typeof item.discount === "number" && item.discount > 0;
 
               const hasFlashSale =
-                item.isFlashSale &&
-                typeof item.flashSalePrice === "number";
+                item.isFlashSale && typeof item.flashSalePrice === "number";
 
               return (
                 <article
                   key={item._id}
-                  className="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-200 hover:border-slate-300 hover:shadow-md"
+                  className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-purple-100 bg-white shadow-sm transition-all duration-300 hover:border-purple-200 hover:shadow-md"
                 >
-                  {/* Product Image */}
-                  <div className="relative">
-                    <Link
-                      href={`/products/${item._id}`}
-                      className="relative block h-64 overflow-hidden bg-slate-50"
-                    >
-                      {item.images?.[0] ? (
-                        <Image
-                          src={item.images[0]}
-                          alt={item.name}
-                          fill
-                          className="object-contain p-6 transition-transform duration-300 group-hover:scale-105"
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center">
-                          <PackageX className="h-10 w-10 text-slate-300" />
-                        </div>
-                      )}
-
-                      {/* Stock */}
-                      <div className="absolute left-3 top-3">
-                        {available ? (
-                          <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-200 bg-white px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 shadow-sm">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                            In Stock
-                          </span>
+                  <div>
+                    {/* Image Area */}
+                    <div className="relative">
+                      <Link
+                        href={`/products/${item._id}`}
+                        className="relative block h-60 overflow-hidden bg-purple-50/30"
+                      >
+                        {item.images?.[0] ? (
+                          <Image
+                            src={item.images[0]}
+                            alt={item.name}
+                            fill
+                            className="object-contain p-6 transition-transform duration-300 group-hover:scale-105"
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                          />
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500 shadow-sm">
-                            <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
-                            Sold Out
+                          <div className="flex h-full items-center justify-center">
+                            <PackageX className="h-10 w-10 text-purple-200" />
+                          </div>
+                        )}
+
+                        {/* Badges */}
+                        <div className="absolute left-3 top-3 flex flex-col gap-1.5">
+                          {available ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-white/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 backdrop-blur-sm shadow-sm">
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                              In Stock
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-rose-700 backdrop-blur-sm shadow-sm">
+                              <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                              Out of Stock
+                            </span>
+                          )}
+
+                          {hasDiscount && (
+                            <span className="inline-flex items-center rounded-lg bg-purple-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm shadow-purple-600/30">
+                              -{item.discount}% OFF
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Flash Sale Badge */}
+                        {hasFlashSale && (
+                          <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-amber-800 backdrop-blur-sm shadow-sm">
+                            <Zap className="h-3 w-3 fill-amber-500 text-amber-500" />
+                            Flash Sale
                           </span>
                         )}
-                      </div>
+                      </Link>
 
-                      {/* Discount */}
-                      {hasDiscount && (
-                        <span className="absolute bottom-3 left-3 rounded-md bg-slate-900 px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-white">
-                          -{item.discount}% OFF
-                        </span>
-                      )}
+                      {/* Quick Delete Button */}
+                      <button
+                        type="button"
+                        aria-label="Remove from wishlist"
+                        onClick={() => void handleRemove(item._id)}
+                        disabled={removingId === item._id}
+                        className="absolute right-3 bottom-3 z-10 flex h-9 w-9 items-center justify-center rounded-xl border border-purple-100 bg-white/90 text-rose-500 backdrop-blur-sm shadow-sm transition-all hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {removingId === item._id ? (
+                          <Loader2 className="h-4 w-4 animate-spin text-purple-600" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
 
-                      {/* Flash Sale */}
-                      {hasFlashSale && (
-                        <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-md border border-amber-200 bg-white px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 shadow-sm">
-                          <Zap className="h-3 w-3 fill-current" />
-                          Flash Sale
-                        </span>
-                      )}
-                    </Link>
-
-                    {/* Remove Button */}
-                    <button
-                      type="button"
-                      aria-label="Remove from wishlist"
-                      onClick={() => void handleRemove(item._id)}
-                      disabled={removingId === item._id}
-                      className="absolute right-3 bottom-3 z-10 flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm transition-all hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {removingId === item._id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Heart className="h-4 w-4 fill-red-500 text-red-500" />
-                      )}
-                    </button>
-                  </div>
-
-                  {/* Product Information */}
-                  <div className="p-4">
-                    <div className="mb-2">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-400">
+                    {/* Information */}
+                    <div className="p-5">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-purple-600">
                         {item.brand || "VenRaz"}
                       </p>
-                    </div>
 
-                    <Link href={`/products/${item._id}`}>
-                      <h2 className="line-clamp-2 min-h-[42px] text-sm font-semibold leading-5 text-slate-900 transition-colors hover:text-slate-600">
-                        {item.name}
-                      </h2>
-                    </Link>
+                      <Link href={`/products/${item._id}`}>
+                        <h2 className="mt-1 line-clamp-2 min-h-[40px] text-sm font-bold leading-5 text-gray-900 transition-colors hover:text-purple-600">
+                          {item.name}
+                        </h2>
+                      </Link>
 
-                    {/* Price */}
-                    <div className="mt-4 flex items-end justify-between gap-3">
-                      <div>
-                        <p className="text-xl font-bold tracking-tight text-slate-950">
-                          ${price.toFixed(2)}
-                        </p>
-
-                        {(hasDiscount || hasFlashSale) && (
-                          <p className="mt-0.5 text-xs text-slate-400 line-through">
-                            ${item.price.toFixed(2)}
+                      {/* Price Section */}
+                      <div className="mt-4 flex items-baseline justify-between gap-2 border-t border-purple-100/60 pt-3">
+                        <div>
+                          <p className="text-xl font-extrabold tracking-tight text-gray-900">
+                            ${price.toFixed(2)}
                           </p>
-                        )}
+
+                          {(hasDiscount || hasFlashSale) && (
+                            <p className="text-xs text-gray-400 line-through">
+                              ${item.price.toFixed(2)}
+                            </p>
+                          )}
+                        </div>
+
+                        <span className="text-[11px] font-medium text-emerald-600">
+                          Free Shipping
+                        </span>
                       </div>
-
-                      <span className="text-[10px] font-medium text-slate-400">
-                        Free shipping
-                      </span>
                     </div>
+                  </div>
 
-                    {/* Action */}
+                  {/* Action Button */}
+                  <div className="p-5 pt-0">
                     <button
                       type="button"
                       disabled={!available}
                       onClick={() => handleAddToCart(item)}
-                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+                      className="group/btn relative flex w-full items-center justify-center overflow-hidden rounded-xl bg-purple-600 px-4 py-2.5 text-xs font-semibold text-white transition-all duration-150 hover:bg-purple-700 shadow-sm shadow-purple-600/20 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 disabled:shadow-none"
                     >
-                      <ShoppingCart className="h-4 w-4" />
+                      {available ? (
+                        <>
+                          {/* Standard Text */}
+                          <span className="transition-transform duration-150 group-hover/btn:-translate-y-8">
+                            Add to Cart
+                          </span>
 
-                      {available ? "Add to Cart" : "Out of Stock"}
+                          {/* Hover Cart Icon Animation (Bottom to Top) */}
+                          <span className="absolute flex items-center justify-center translate-y-8 transition-transform duration-150 ease-out group-hover/btn:translate-y-0">
+                            <ShoppingCart className="h-4 w-4" />
+                          </span>
+                        </>
+                      ) : (
+                        "Out of Stock"
+                      )}
                     </button>
                   </div>
                 </article>
@@ -357,25 +369,25 @@ export default function WishlistPage() {
 
         {/* Empty State */}
         {!loading && wishlist.length === 0 && (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white px-6 py-20 text-center shadow-sm">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
-              <Heart className="h-7 w-7 text-slate-400" />
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-purple-100 bg-white px-6 py-20 text-center shadow-sm">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-purple-50 text-purple-600 border border-purple-100">
+              <Heart className="h-8 w-8 stroke-1 fill-purple-600/10" />
             </div>
 
-            <h2 className="mt-5 text-lg font-semibold text-slate-950">
+            <h2 className="mt-5 text-xl font-bold text-gray-900">
               Your wishlist is empty
             </h2>
 
-            <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">
-              Save products you love and come back to them whenever you&apos;re
-              ready.
+            <p className="mt-2 max-w-sm text-xs leading-5 text-gray-500">
+              Explore our catalogue to save your favorite products and purchase
+              them later.
             </p>
 
             <Link
               href="/products"
-              className="mt-6 inline-flex items-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-purple-600 px-5 py-2.5 text-xs font-semibold text-white transition-all hover:bg-purple-700 shadow-sm shadow-purple-600/20"
             >
-              Browse Products
+              Explore Products
               <ArrowUpRight className="h-4 w-4" />
             </Link>
           </div>

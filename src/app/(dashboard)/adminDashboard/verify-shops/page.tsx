@@ -353,11 +353,11 @@ export default function VerifyShopsPage() {
           className={`fixed top-4 right-4 z-50 flex items-center gap-2 rounded-xl px-4 py-3 text-xs font-semibold shadow-lg transition-all ${
             toastMessage.type === "success"
               ? "bg-slate-900 text-white border border-slate-700"
-              : "bg-red-600 text-white border border-red-700"
+              : "bg-purple-500 text-white border border-purple-700"
           }`}
         >
           {toastMessage.type === "success" ? (
-            <CheckCircle2 size={16} className="text-red-400" />
+            <CheckCircle2 size={16} className="text-purple-400" />
           ) : (
             <AlertTriangle size={16} className="text-white" />
           )}
@@ -369,7 +369,7 @@ export default function VerifyShopsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <ShieldCheck className="h-6 w-6 text-red-600" />
+            <ShieldCheck className="h-6 w-6 text-purple-500" />
             Shop Moderation & Verification
           </h1>
           <p className="text-xs text-slate-500 mt-1">
@@ -385,7 +385,7 @@ export default function VerifyShopsPage() {
         >
           <RefreshCw
             size={14}
-            className={loading ? "animate-spin text-red-600" : ""}
+            className={loading ? "animate-spin text-purple-500" : ""}
           />
           Refresh
         </button>
@@ -413,14 +413,14 @@ export default function VerifyShopsPage() {
           onClick={() => setActiveTab("active")}
           className={`rounded-2xl border p-5 shadow-sm cursor-pointer transition-all ${
             activeTab === "active"
-              ? "border-red-500 bg-red-50/40 ring-1 ring-red-500/30"
+              ? "border-purple-500 bg-red-50/40 ring-1 ring-red-500/30"
               : "border-slate-200/80 bg-white hover:border-red-200"
           }`}
         >
           <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
             Active Shops
           </p>
-          <p className="text-2xl font-extrabold text-red-600 mt-1">
+          <p className="text-2xl font-extrabold text-purple-500 mt-1">
             {activeShops.length}
           </p>
         </div>
@@ -473,7 +473,7 @@ export default function VerifyShopsPage() {
             onClick={() => setActiveTab(tab.key)}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
               activeTab === tab.key
-                ? "bg-red-600 text-white shadow-sm"
+                ? "bg-purple-500 text-white shadow-sm"
                 : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 hover:text-slate-900"
             }`}
           >
@@ -512,7 +512,7 @@ export default function VerifyShopsPage() {
                     onClick={() => runVerification(shop)}
                     className={`w-full text-left rounded-xl border p-3.5 transition-all shadow-sm ${
                       isSelected
-                        ? "border-red-500 bg-red-50/40 ring-1 ring-red-500/20"
+                        ? "border-purple-500 bg-red-50/40 ring-1 ring-red-500/20"
                         : "border-slate-200 bg-white hover:border-red-200 hover:bg-slate-50"
                     }`}
                   >
@@ -534,14 +534,14 @@ export default function VerifyShopsPage() {
                     </div>
 
                     {shop.status === "pending" && (
-                      <div className="mt-2 flex items-center gap-1 text-[11px] text-red-600 font-semibold">
+                      <div className="mt-2 flex items-center gap-1 text-[11px] text-purple-500 font-semibold">
                         <Eye size={12} />
                         Click to review & verify
                       </div>
                     )}
 
                     {shop.status === "suspended" && (
-                      <div className="mt-2 flex items-center gap-1 text-[11px] text-red-700 font-semibold">
+                      <div className="mt-2 flex items-center gap-1 text-[11px] text-purple-700 font-semibold">
                         <Ban size={12} />
                         Suspended Store
                       </div>
@@ -603,7 +603,7 @@ export default function VerifyShopsPage() {
                 >
                   <AlertTriangle
                     size={15}
-                    className="shrink-0 mt-0.5 text-red-600"
+                    className="shrink-0 mt-0.5 text-purple-500"
                   />
                   <div>
                     <span className="font-bold">
@@ -651,7 +651,7 @@ export default function VerifyShopsPage() {
               {verifying && (
                 <div className="flex items-center justify-center py-8">
                   <div className="flex items-center gap-3 text-slate-600">
-                    <Loader2 className="h-5 w-5 animate-spin text-red-600" />
+                    <Loader2 className="h-5 w-5 animate-spin text-purple-500" />
                     <span className="text-xs font-semibold">
                       Running AI verification & compliance check...
                     </span>
@@ -671,10 +671,10 @@ export default function VerifyShopsPage() {
                       <span
                         className={`text-lg font-extrabold ${
                           verification.trustScore >= 80
-                            ? "text-red-600"
+                            ? "text-purple-500"
                             : verification.trustScore >= 50
                               ? "text-amber-600"
-                              : "text-rose-600"
+                              : "text-purple-500"
                         }`}
                       >
                         {verification.trustScore}/100
@@ -684,10 +684,10 @@ export default function VerifyShopsPage() {
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${
                           verification.trustScore >= 80
-                            ? "bg-red-600"
+                            ? "bg-purple-500"
                             : verification.trustScore >= 50
                               ? "bg-amber-500"
-                              : "bg-rose-500"
+                              : "bg-purple-500"
                         }`}
                         style={{ width: `${verification.trustScore}%` }}
                       />
@@ -700,16 +700,16 @@ export default function VerifyShopsPage() {
                   {/* Issues */}
                   {verification.feedback.issuesFound.length > 0 && (
                     <div className="rounded-xl bg-rose-50 border border-rose-200 p-4">
-                      <p className="text-xs font-bold text-rose-700 uppercase tracking-wider mb-2">
+                      <p className="text-xs font-bold text-purple-500 uppercase tracking-wider mb-2">
                         Issues Found
                       </p>
                       <ul className="space-y-1.5">
                         {verification.feedback.issuesFound.map((issue, i) => (
                           <li
                             key={i}
-                            className="text-xs text-rose-800 flex items-start gap-2"
+                            className="text-xs text-purple-500 flex items-start gap-2"
                           >
-                            <span className="mt-1 h-1.5 w-1.5 rounded-full bg-rose-500 shrink-0" />
+                            <span className="mt-1 h-1.5 w-1.5 rounded-full bg-purple-500 shrink-0" />
                             {issue}
                           </li>
                         ))}
@@ -764,7 +764,7 @@ export default function VerifyShopsPage() {
                       type="button"
                       disabled={actionLoading === selectedShop._id}
                       onClick={() => handleOpenModal("APPROVE", selectedShop)}
-                      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white shadow-sm transition-all disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-purple-500 hover:bg-purple-500 text-white shadow-sm transition-all disabled:opacity-50"
                     >
                       <CheckCircle2 size={14} />
                       Approve Shop
@@ -788,7 +788,7 @@ export default function VerifyShopsPage() {
                     type="button"
                     disabled={actionLoading === selectedShop._id}
                     onClick={() => handleOpenModal("SUSPEND", selectedShop)}
-                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 shadow-sm transition-all disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-rose-50 hover:bg-rose-100 text-purple-500 border border-rose-200 shadow-sm transition-all disabled:opacity-50"
                   >
                     <Ban size={14} />
                     Suspend Store
@@ -801,7 +801,7 @@ export default function VerifyShopsPage() {
                     type="button"
                     disabled={actionLoading === selectedShop._id}
                     onClick={() => handleOpenModal("REACTIVATE", selectedShop)}
-                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white shadow-sm transition-all disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-purple-500 hover:purple-500 text-white shadow-sm transition-all disabled:opacity-50"
                   >
                     <CheckCircle2 size={14} />
                     Reactivate Store
@@ -835,8 +835,8 @@ export default function VerifyShopsPage() {
                 className={`flex h-10 w-10 items-center justify-center rounded-xl ${
                   modalAction.type === "APPROVE" ||
                   modalAction.type === "REACTIVATE"
-                    ? "bg-red-50 text-red-600 border border-red-200"
-                    : "bg-rose-50 text-rose-600 border border-rose-200"
+                    ? "bg-red-50 text-purple-500 border border-red-200"
+                    : "bg-rose-50 text-purple-500 border border-rose-200"
                 }`}
               >
                 {modalAction.type === "APPROVE" ||
@@ -881,14 +881,14 @@ export default function VerifyShopsPage() {
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
                   Reason for{" "}
                   {modalAction.type === "REJECT" ? "Rejection" : "Suspension"}{" "}
-                  <span className="text-red-500">*</span>
+                  <span className="text-purple-500">*</span>
                 </label>
                 <textarea
                   rows={3}
                   value={reasonInput}
                   onChange={(e) => setReasonInput(e.target.value)}
                   placeholder="Enter specific policy violation or document issue..."
-                  className="w-full rounded-xl border border-slate-300 p-3 text-xs text-slate-900 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  className="w-full rounded-xl border border-slate-300 p-3 text-xs text-slate-900 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
                 />
               </div>
             )}
@@ -910,7 +910,7 @@ export default function VerifyShopsPage() {
                 className={`px-4 py-2 rounded-xl text-xs font-bold text-white shadow-sm transition-colors ${
                   modalAction.type === "APPROVE" ||
                   modalAction.type === "REACTIVATE"
-                    ? "bg-red-600 hover:bg-red-700"
+                    ? "bg-purple-500 hover:purple-500"
                     : "bg-slate-900 hover:bg-black"
                 }`}
               >

@@ -2,6 +2,7 @@ export interface CatalogProduct {
   _id: string;
   name: string;
   slug: string;
+  ownerId?: string;
   description: string;
   images?: string[];
   price: number;
@@ -10,6 +11,7 @@ export interface CatalogProduct {
   brand?: string;
   category?: string | { _id?: string; name?: string };
   categoryId?: string;
+  shop?: string;
   rating: number;
   totalReviews: number;
   soldCount: number;
@@ -32,6 +34,7 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     stock: 45,
     brand: "Samsung",
     category: "Smart Watches",
+    shop: "shop-1",
     rating: 4.8,
     totalReviews: 128,
     soldCount: 340,
@@ -52,6 +55,7 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     stock: 60,
     brand: "Beats",
     category: "Audio & Headphones",
+    shop: "shop-2",
     rating: 4.7,
     totalReviews: 95,
     soldCount: 512,
@@ -72,6 +76,7 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     stock: 25,
     brand: "GoCam",
     category: "Cameras & Drones",
+    shop: "shop-1",
     rating: 4.5,
     totalReviews: 64,
     soldCount: 180,
@@ -91,6 +96,7 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     stock: 80,
     brand: "LogiTech",
     category: "Computer Accessories",
+    shop: "shop-3",
     rating: 4.9,
     totalReviews: 210,
     soldCount: 890,
@@ -110,6 +116,7 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     stock: 50,
     brand: "Razer",
     category: "Computer Accessories",
+    shop: "shop-3",
     rating: 4.6,
     totalReviews: 88,
     soldCount: 420,
@@ -130,6 +137,7 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     stock: 35,
     brand: "JBL",
     category: "Audio & Headphones",
+    shop: "shop-2",
     rating: 4.8,
     totalReviews: 174,
     soldCount: 650,
@@ -150,6 +158,7 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     stock: 120,
     brand: "Anker",
     category: "Gadgets & Accessories",
+    shop: "shop-1",
     rating: 4.9,
     totalReviews: 320,
     soldCount: 1400,
@@ -169,6 +178,7 @@ export const MOCK_PRODUCTS: CatalogProduct[] = [
     stock: 90,
     brand: "Xiaomi",
     category: "Smart Watches",
+    shop: "shop-1",
     rating: 4.4,
     totalReviews: 82,
     soldCount: 760,

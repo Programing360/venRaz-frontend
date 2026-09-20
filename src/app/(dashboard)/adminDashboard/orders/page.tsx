@@ -1,40 +1,32 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   ShoppingCart,
   Search,
   Truck,
   CheckCircle2,
-  Clock,
   XCircle,
-  Package,
   Calendar,
   Phone,
-  Mail,
-  MapPin,
-  ExternalLink,
-  ChevronRight,
-  Filter,
-  ArrowRight,
   Sparkles,
-} from 'lucide-react';
+  X,
+} from "lucide-react";
 import {
   getAdminOrders,
-  updateOrderStatus,
   assignOrderTracking,
   fetchAdminOrdersAPI,
   updateOrderStatusAPI,
-} from '@/services/adminService';
-import { AdminOrder, AdminOrderStatus } from '@/types/admin';
+} from "@/services/adminService";
+import { AdminOrder, AdminOrderStatus } from "@/types/admin";
 
 const COURIER_PROVIDERS = [
-  'Pathao Courier',
-  'Steadfast Courier',
-  'RedX Logistics',
-  'Paperfly Delivery',
-  'eCourier Express',
-  'SA Paribahan',
+  "Pathao Courier",
+  "Steadfast Courier",
+  "RedX Logistics",
+  "Paperfly Delivery",
+  "eCourier Express",
+  "SA Paribahan",
 ];
 
 function generateTrackingId(): string {
@@ -42,28 +34,35 @@ function generateTrackingId(): string {
 }
 
 function getDefaultDeliveryDate(): string {
-  return new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  return new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0];
 }
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<AdminOrder[]>(() => getAdminOrders());
-  const [activeTab, setActiveTab] = useState<string>('ALL');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<string>("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
 
   // Selected Order for Details View
-  const [selectedOrderDetails, setSelectedOrderDetails] = useState<AdminOrder | null>(null);
+  const [selectedOrderDetails, setSelectedOrderDetails] =
+    useState<AdminOrder | null>(null);
 
   // Tracking Assignment Modal
-  const [trackingModalOrder, setTrackingModalOrder] = useState<AdminOrder | null>(null);
+  const [trackingModalOrder, setTrackingModalOrder] =
+    useState<AdminOrder | null>(null);
   const [selectedCourier, setSelectedCourier] = useState(COURIER_PROVIDERS[0]);
-  const [trackingIdInput, setTrackingIdInput] = useState('');
-  const [estimatedDeliveryInput, setEstimatedDeliveryInput] = useState('');
+  const [trackingIdInput, setTrackingIdInput] = useState("");
+  const [estimatedDeliveryInput, setEstimatedDeliveryInput] = useState("");
 
   // Toast
-  const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [toastMessage, setToastMessage] = useState<{
+    text: string;
+    type: "success" | "error";
+  } | null>(null);
 
-  const showToast = (text: string, type: 'success' | 'error' = 'success') => {
+  const showToast = (text: string, type: "success" | "error" = "success") => {
     setToastMessage({ text, type });
     setTimeout(() => setToastMessage(null), 3500);
   };
@@ -86,76 +85,119 @@ export default function AdminOrdersPage() {
 
   useEffect(() => {
     const handleUpdate = () => loadOrders();
-    window.addEventListener('venraz_admin_data_updated', handleUpdate);
-    return () => window.removeEventListener('venraz_admin_data_updated', handleUpdate);
+    window.addEventListener("venraz_admin_data_updated", handleUpdate);
+    return () =>
+      window.removeEventListener("venraz_admin_data_updated", handleUpdate);
   }, []);
 
   // Quick Status Transition
-  const handleQuickStatusChange = async (orderId: string, status: AdminOrderStatus) => {
-    await updateOrderStatusAPI(orderId, status);
-    setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, orderStatus: status } : o))
-    );
-    showToast(`Order ${orderId} updated to ${status}.`);
+  const handleQuickStatusChange = async (
+    orderId: string,
+    status: AdminOrderStatus,
+  ) => {
+    try {
+      await updateOrderStatusAPI(orderId, status);
+      setOrders((prev) =>
+        prev.map((o) => (o.id === orderId ? { ...o, orderStatus: status } : o)),
+      );
+      showToast(`Order ${orderId} updated to ${status}.`, "success");
+    } catch (err) {
+      showToast("Failed to update order status.", "error");
+    }
   };
 
   const handleOpenTrackingModal = (order: AdminOrder) => {
     setTrackingModalOrder(order);
     setSelectedCourier(order.courier || COURIER_PROVIDERS[0]);
     setTrackingIdInput(order.trackingId || generateTrackingId());
-    setEstimatedDeliveryInput(order.estimatedDelivery || getDefaultDeliveryDate());
+    setEstimatedDeliveryInput(
+      order.estimatedDelivery || getDefaultDeliveryDate(),
+    );
   };
 
-  const handleSaveTracking = (e: React.FormEvent) => {
+  const handleSaveTracking = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!trackingModalOrder) return;
     if (!trackingIdInput.trim()) {
-      showToast('Please enter a valid tracking number.', 'error');
+      showToast("Please enter a valid tracking number.", "error");
       return;
     }
 
-    assignOrderTracking(
-      trackingModalOrder.id,
-      selectedCourier,
-      trackingIdInput.trim(),
-      estimatedDeliveryInput
-    );
+    try {
+      await assignOrderTracking(
+        trackingModalOrder.id,
+        selectedCourier,
+        trackingIdInput.trim(),
+        estimatedDeliveryInput,
+      );
 
-    showToast(
-      `Assigned ${selectedCourier} tracking ID ${trackingIdInput.trim()} to order ${trackingModalOrder.orderNumber}!`
-    );
-    setTrackingModalOrder(null);
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === trackingModalOrder.id
+            ? {
+                ...o,
+                courier: selectedCourier,
+                trackingId: trackingIdInput.trim(),
+                estimatedDelivery: estimatedDeliveryInput,
+              }
+            : o,
+        ),
+      );
+
+      showToast(
+        `Assigned ${selectedCourier} tracking ID ${trackingIdInput.trim()} to order ${trackingModalOrder.orderNumber}!`,
+        "success",
+      );
+      setTrackingModalOrder(null);
+    } catch {
+      showToast("Failed to assign tracking information.", "error");
+    }
   };
 
   // Filtered Orders
   const filteredOrders = orders.filter((order) => {
     const matchesTab =
-      activeTab === 'ALL' ||
-      (activeTab === 'Processing' && order.orderStatus === 'Processing') ||
-      (activeTab === 'Shipped' && order.orderStatus === 'Shipped') ||
-      (activeTab === 'Delivered' && order.orderStatus === 'Delivered') ||
-      (activeTab === 'Cancelled' && order.orderStatus === 'Cancelled');
+      activeTab === "ALL" ||
+      (activeTab === "Processing" && order.orderStatus === "Processing") ||
+      (activeTab === "Shipped" && order.orderStatus === "Shipped") ||
+      (activeTab === "Delivered" && order.orderStatus === "Delivered") ||
+      (activeTab === "Cancelled" && order.orderStatus === "Cancelled");
 
     const matchesSearch =
       order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.customerPhone.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.shopName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (order.trackingId && order.trackingId.toLowerCase().includes(searchQuery.toLowerCase()));
+      (order.trackingId &&
+        order.trackingId.toLowerCase().includes(searchQuery.toLowerCase()));
 
     return matchesTab && matchesSearch;
   });
 
-  const processingCount = orders.filter((o) => o.orderStatus === 'Processing').length;
-  const shippedCount = orders.filter((o) => o.orderStatus === 'Shipped').length;
-  const deliveredCount = orders.filter((o) => o.orderStatus === 'Delivered').length;
+  const processingCount = orders.filter(
+    (o) => o.orderStatus === "Processing",
+  ).length;
+  const shippedCount = orders.filter((o) => o.orderStatus === "Shipped").length;
+  const deliveredCount = orders.filter(
+    (o) => o.orderStatus === "Delivered",
+  ).length;
 
   return (
     <div className="space-y-6">
       {/* Toast Alert */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-2xl border border-red-500/30 bg-white px-5 py-3.5 text-sm font-semibold text-slate-900 shadow-2xl shadow-red-500/10 animate-in fade-in slide-in-from-bottom-5">
-          <CheckCircle2 className="h-5 w-5 text-red-600" />
+        <div
+          className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-2xl border px-5 py-3.5 text-sm font-semibold shadow-2xl animate-in fade-in slide-in-from-bottom-5 bg-white ${
+            toastMessage.type === "success"
+              ? "border-emerald-500/30 text-slate-900 shadow-emerald-500/10"
+              : "border-red-500/30 text-slate-900 shadow-red-500/10"
+          }`}
+        >
+          {toastMessage.type === "success" ? (
+            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+          ) : (
+            <XCircle className="h-5 w-5 text-purple-500" />
+          )}
           <span>{toastMessage.text}</span>
         </div>
       )}
@@ -164,19 +206,21 @@ export default function AdminOrdersPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <ShoppingCart className="h-5 w-5 text-red-600" />
+            <ShoppingCart className="h-5 w-5 text-purple-500" />
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">
               Global Order Logistics & Fulfillment
             </h1>
           </div>
           <p className="mt-1 text-xs text-slate-500">
-            Monitor central platform orders across all vendor storefronts, update delivery stages, and attach third-party courier tracking.
+            Monitor central platform orders across all vendor storefronts,
+            update delivery stages, and attach third-party courier tracking.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="px-3 py-1.5 rounded-xl bg-red-50 border border-red-200 text-xs font-bold text-red-600 shadow-sm">
-            Total Volume: ৳{orders.reduce((acc, o) => acc + o.totalAmount, 0).toLocaleString()}
+          <span className="px-3 py-1.5 rounded-xl bg-red-50 border border-red-200 text-xs font-bold text-purple-500 shadow-sm">
+            Total Volume: ৳
+            {orders.reduce((acc, o) => acc + o.totalAmount, 0).toLocaleString()}
           </span>
         </div>
       </div>
@@ -185,25 +229,31 @@ export default function AdminOrdersPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-200 pb-4">
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
           {[
-            { id: 'ALL', label: 'All Orders', count: orders.length },
-            { id: 'Processing', label: 'Processing', count: processingCount },
-            { id: 'Shipped', label: 'In Transit', count: shippedCount },
-            { id: 'Delivered', label: 'Delivered', count: deliveredCount },
-            { id: 'Cancelled', label: 'Cancelled', count: orders.filter((o) => o.orderStatus === 'Cancelled').length },
+            { id: "ALL", label: "All Orders", count: orders.length },
+            { id: "Processing", label: "Processing", count: processingCount },
+            { id: "Shipped", label: "In Transit", count: shippedCount },
+            { id: "Delivered", label: "Delivered", count: deliveredCount },
+            {
+              id: "Cancelled",
+              label: "Cancelled",
+              count: orders.filter((o) => o.orderStatus === "Cancelled").length,
+            },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
                 activeTab === tab.id
-                  ? 'bg-red-600 text-white shadow-md shadow-red-500/20'
-                  : 'bg-white border border-slate-200 text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600'
+                  ? "bg-purple-500 text-white shadow-md shadow-red-500/20"
+                  : "bg-white border border-slate-200 text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-purple-500"
               }`}
             >
               <span>{tab.label}</span>
               <span
                 className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                  activeTab === tab.id ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-600'
+                  activeTab === tab.id
+                    ? "bg-white/25 text-white"
+                    : "bg-slate-100 text-slate-600"
                 }`}
               >
                 {tab.count}
@@ -240,7 +290,13 @@ export default function AdminOrdersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredOrders.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-slate-400">
+                    Loading orders...
+                  </td>
+                </tr>
+              ) : filteredOrders.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-slate-400">
                     No orders found matching your filters.
@@ -248,10 +304,15 @@ export default function AdminOrdersPage() {
                 </tr>
               ) : (
                 filteredOrders.map((order) => (
-                  <tr key={order.id} className="hover:bg-slate-50/80 transition-colors">
+                  <tr
+                    key={order.id}
+                    className="hover:bg-slate-50/80 transition-colors"
+                  >
                     {/* Order ID & Date */}
                     <td className="py-3.5 px-4 font-mono">
-                      <span className="font-extrabold text-slate-900 text-xs">{order.orderNumber}</span>
+                      <span className="font-extrabold text-slate-900 text-xs">
+                        {order.orderNumber}
+                      </span>
                       <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-0.5">
                         <Calendar className="h-3 w-3" />
                         <span>{order.orderDate}</span>
@@ -260,12 +321,17 @@ export default function AdminOrdersPage() {
 
                     {/* Customer */}
                     <td className="py-3.5 px-4">
-                      <p className="font-bold text-slate-900">{order.customerName}</p>
+                      <p className="font-bold text-slate-900">
+                        {order.customerName}
+                      </p>
                       <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
                         <Phone className="h-3 w-3 text-slate-400" />
                         {order.customerPhone}
                       </p>
-                      <p className="text-[10px] text-slate-400 truncate max-w-[200px] mt-0.5" title={order.shippingAddress}>
+                      <p
+                        className="text-[10px] text-slate-400 truncate max-w-[200px] mt-0.5"
+                        title={order.shippingAddress}
+                      >
                         {order.shippingAddress}
                       </p>
                     </td>
@@ -285,14 +351,16 @@ export default function AdminOrdersPage() {
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span
                           className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded ${
-                            order.paymentStatus === 'PAID'
-                              ? 'bg-red-50 text-red-700 border border-red-200'
-                              : 'bg-amber-50 text-amber-700 border border-amber-200'
+                            order.paymentStatus === "PAID"
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : "bg-amber-50 text-amber-700 border border-amber-200"
                           }`}
                         >
                           {order.paymentStatus}
                         </span>
-                        <span className="text-[10px] text-slate-400">{order.paymentMethod}</span>
+                        <span className="text-[10px] text-slate-400">
+                          {order.paymentMethod}
+                        </span>
                       </div>
                     </td>
 
@@ -300,15 +368,20 @@ export default function AdminOrdersPage() {
                     <td className="py-3.5 px-4">
                       <select
                         value={order.orderStatus}
-                        onChange={(e) => handleQuickStatusChange(order.id, e.target.value as AdminOrderStatus)}
+                        onChange={(e) =>
+                          handleQuickStatusChange(
+                            order.id,
+                            e.target.value as AdminOrderStatus,
+                          )
+                        }
                         className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border focus:outline-none cursor-pointer ${
-                          order.orderStatus === 'Delivered'
-                            ? 'bg-red-50 border-red-200 text-red-700'
-                            : order.orderStatus === 'Shipped'
-                            ? 'bg-blue-50 border-blue-200 text-blue-700'
-                            : order.orderStatus === 'Processing'
-                            ? 'bg-amber-50 border-amber-200 text-amber-700'
-                            : 'bg-slate-100 border-slate-200 text-slate-600'
+                          order.orderStatus === "Delivered"
+                            ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                            : order.orderStatus === "Shipped"
+                              ? "bg-blue-50 border-blue-200 text-blue-700"
+                              : order.orderStatus === "Processing"
+                                ? "bg-amber-50 border-amber-200 text-amber-700"
+                                : "bg-slate-100 border-slate-200 text-slate-600"
                         }`}
                       >
                         <option value="Processing">Processing</option>
@@ -323,10 +396,10 @@ export default function AdminOrdersPage() {
                       {order.trackingId ? (
                         <div>
                           <p className="font-bold text-slate-900 text-[11px] flex items-center gap-1">
-                            <Truck className="h-3 w-3 text-red-600" />
+                            <Truck className="h-3 w-3 text-purple-500" />
                             <span>{order.courier}</span>
                           </p>
-                          <p className="font-mono text-[10px] text-red-600 mt-0.5 font-bold">
+                          <p className="font-mono text-[10px] text-purple-500 mt-0.5 font-bold">
                             {order.trackingId}
                           </p>
                           {order.estimatedDelivery && (
@@ -338,7 +411,7 @@ export default function AdminOrdersPage() {
                       ) : (
                         <button
                           onClick={() => handleOpenTrackingModal(order)}
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-dashed border-red-300 bg-red-50/50 text-red-600 text-[10px] font-bold hover:bg-red-50 transition-all"
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-dashed border-red-300 bg-red-50/50 text-purple-500 text-[10px] font-bold hover:bg-red-50 transition-all"
                         >
                           <Truck className="h-3 w-3" />
                           <span>+ Assign Courier</span>
@@ -351,15 +424,16 @@ export default function AdminOrdersPage() {
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => handleOpenTrackingModal(order)}
-                          className="p-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-all"
+                          className="p-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-purple-500 transition-all"
                           title="Edit Courier Tracking"
+                          aria-label="Edit Courier Tracking"
                         >
                           <Truck className="h-3.5 w-3.5" />
                         </button>
 
                         <button
                           onClick={() => setSelectedOrderDetails(order)}
-                          className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:border-red-200 hover:bg-red-50 hover:text-red-600 text-slate-700 text-[11px] font-semibold transition-all"
+                          className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:border-red-200 hover:bg-red-50 hover:text-purple-500 text-slate-700 text-[11px] font-semibold transition-all"
                         >
                           Details
                         </button>
@@ -380,14 +454,29 @@ export default function AdminOrdersPage() {
             onSubmit={handleSaveTracking}
             className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl space-y-4"
           >
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-red-600">
-                <Truck className="h-6 w-6" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-purple-500">
+                  <Truck className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">
+                    Courier Tracking Assignment
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Order: {trackingModalOrder.orderNumber} (
+                    {trackingModalOrder.customerName})
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-900">Courier Tracking Assignment</h3>
-                <p className="text-xs text-slate-500">Order: {trackingModalOrder.orderNumber} ({trackingModalOrder.customerName})</p>
-              </div>
+              <button
+                type="button"
+                onClick={() => setTrackingModalOrder(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                aria-label="Close modal"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
 
             {/* Courier Selection */}
@@ -417,7 +506,7 @@ export default function AdminOrdersPage() {
                 <button
                   type="button"
                   onClick={() => setTrackingIdInput(generateTrackingId())}
-                  className="text-[10px] text-red-600 font-bold flex items-center gap-1 hover:underline"
+                  className="text-[10px] text-purple-500 font-bold flex items-center gap-1 hover:underline"
                 >
                   <Sparkles className="h-3 w-3" /> Auto-Generate
                 </button>
@@ -455,7 +544,7 @@ export default function AdminOrdersPage() {
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 shadow-md shadow-red-500/20"
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-purple-500 hover:bg-red-700 shadow-md shadow-red-500/20"
               >
                 Save & Dispatch
               </button>
@@ -470,50 +559,75 @@ export default function AdminOrdersPage() {
           <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl space-y-4">
             <div className="flex items-start justify-between">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-red-600">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-purple-500">
                   Order Manifest Details
                 </span>
-                <h2 className="text-lg font-black text-slate-900 mt-0.5">{selectedOrderDetails.orderNumber}</h2>
+                <h2 className="text-lg font-black text-slate-900 mt-0.5">
+                  {selectedOrderDetails.orderNumber}
+                </h2>
               </div>
               <button
                 onClick={() => setSelectedOrderDetails(null)}
                 className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                aria-label="Close modal"
               >
-                ✕
+                <X className="h-4 w-4" />
               </button>
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                 <span className="text-slate-400 font-medium">Customer:</span>
-                <p className="font-bold text-slate-900 mt-0.5">{selectedOrderDetails.customerName}</p>
-                <p className="text-[11px] text-slate-500">{selectedOrderDetails.customerPhone}</p>
-                <p className="text-[11px] text-slate-500">{selectedOrderDetails.customerEmail}</p>
+                <p className="font-bold text-slate-900 mt-0.5">
+                  {selectedOrderDetails.customerName}
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  {selectedOrderDetails.customerPhone}
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  {selectedOrderDetails.customerEmail}
+                </p>
               </div>
 
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <span className="text-slate-400 font-medium">Fulfillment Status:</span>
-                <p className="font-extrabold text-slate-900 mt-0.5">{selectedOrderDetails.orderStatus}</p>
-                <p className="text-[11px] text-slate-500">Shop: {selectedOrderDetails.shopName}</p>
-                <p className="text-[11px] text-slate-500">Items: {selectedOrderDetails.itemsCount} Qty</p>
+                <span className="text-slate-400 font-medium">
+                  Fulfillment Status:
+                </span>
+                <p className="font-extrabold text-slate-900 mt-0.5">
+                  {selectedOrderDetails.orderStatus}
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  Shop: {selectedOrderDetails.shopName}
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  Items: {selectedOrderDetails.itemsCount} Qty
+                </p>
               </div>
             </div>
 
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs space-y-1">
-              <span className="text-slate-400 font-medium">Delivery Destination:</span>
-              <p className="font-medium text-slate-800">{selectedOrderDetails.shippingAddress}</p>
+              <span className="text-slate-400 font-medium">
+                Delivery Destination:
+              </span>
+              <p className="font-medium text-slate-800">
+                {selectedOrderDetails.shippingAddress}
+              </p>
             </div>
 
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs flex items-center justify-between">
               <div>
                 <span className="text-slate-400 font-medium">Total Bill:</span>
-                <p className="text-lg font-black text-slate-900">৳{selectedOrderDetails.totalAmount.toLocaleString()}</p>
+                <p className="text-lg font-black text-slate-900">
+                  ৳{selectedOrderDetails.totalAmount.toLocaleString()}
+                </p>
               </div>
               <div className="text-right">
                 <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-red-50 text-red-700 border border-red-200">
                   {selectedOrderDetails.paymentStatus}
                 </span>
-                <p className="text-[11px] text-slate-400 mt-1">{selectedOrderDetails.paymentMethod}</p>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  {selectedOrderDetails.paymentMethod}
+                </p>
               </div>
             </div>
 
@@ -530,7 +644,7 @@ export default function AdminOrdersPage() {
                   setSelectedOrderDetails(null);
                   handleOpenTrackingModal(target);
                 }}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 shadow-md shadow-red-500/20"
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-purple-500 hover:bg-red-700 shadow-md shadow-red-500/20"
               >
                 Manage Logistics
               </button>

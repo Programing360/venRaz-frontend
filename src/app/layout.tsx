@@ -5,6 +5,8 @@ import Navbar from "@/components/navbar/Navbar";
 import Footer from "@/components/footer/Footer";
 import { ToastProvider } from "@/context/ToastContext";
 import { CartProvider } from "@/context/CartContext";
+import { WishlistProvider } from "@/context/WishlistContext";
+import ThemeProvider from "./theme-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,15 +33,19 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-white text-slate-900">
-        <ToastProvider>
-          <CartProvider>
-            {/* <Navbar /> */}
-            <main className="flex-grow">{children}</main>
+      <body className="min-h-full flex flex-col bg-background text-foreground dark:bg-[#0b1325]">
+        <ThemeProvider>
+          <ToastProvider>
+            <CartProvider>
+              <WishlistProvider>
+                {/* <Navbar /> */}
+                <main className="flex-grow">{children}</main>
 
-            {/* <Footer /> */}
-          </CartProvider>
-        </ToastProvider>
+                {/* <Footer /> */}
+              </WishlistProvider>
+            </CartProvider>
+          </ToastProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

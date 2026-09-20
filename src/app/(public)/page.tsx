@@ -8,12 +8,13 @@ import ShopBySmartWatchest from "@/components/home/ShopBySmartWatches";
 import ShopByBrand from "@/components/home/ShopByBrand";
 import LatestNews from "@/components/home/LatestNew";
 import CustomerReviews from "@/components/home/CustomersLatestReviews";
+import DeliveryProcess from "@/components/DeliveryProcess";
 
 export default function Home() {
   return (
     <>
       <Hero />
-      <div className="bg-[#f7faff]">
+      <div className="bg-[#f7faff] dark:bg-[#0b1325]">
         <div className="container mx-auto ">
           <FlashSale></FlashSale>
           <Category />
@@ -22,11 +23,11 @@ export default function Home() {
           <BestSellers></BestSellers>
           <ShopBySmartWatchest></ShopBySmartWatchest>
           <ShopByBrand></ShopByBrand>
+          <DeliveryProcess></DeliveryProcess>
         </div>
+        <CustomerReviews></CustomerReviews>
+        <LatestNews></LatestNews>
       </div>
-
-      <CustomerReviews></CustomerReviews>
-      <LatestNews></LatestNews>
     </>
   );
 }

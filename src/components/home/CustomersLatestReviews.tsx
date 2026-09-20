@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from "next/image";
@@ -61,130 +60,145 @@ const testimonials: Testimonial[] = [
 
 export default function CustomerReviews() {
   return (
-    <section
-      id="testi-sec"
-      className="relative overflow-hidden bg-white py-16 lg:py-20"
-    >
-      {/* Background Shape */}
-      <div className="pointer-events-none absolute left-0 top-0 hidden xl:block">
-        <Image
-          src="/assets/img/shape/shape-19.png"
-          alt="shape"
-          width={250}
-          height={250}
-          className="animate-bounce"
-        />
-      </div>
+    <div className="bg-[#FAF5FF] dark:text-white dark:bg-[#0b1325]">
+      <section
+        id="testi-sec"
+        className="relative overflow-hidden  py-16 lg:py-20 px-4 container mx-auto"
+      >
+        {/* Background Shape */}
+        {/* <div className="pointer-events-none absolute left-0 top-0 hidden xl:block ">
+          <Image
+            src="/assets/img/shape/shape-19.png"
+            alt="shape"
+            width={250}
+            height={250}
+            className="animate-bounce opacity-80"
+          />
+        </div> */}
 
-      {/* Heading */}
-      <div className="mx-auto w-full max-w-[1320px] px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col items-center justify-between gap-4 lg:flex-row">
-          {/* Title */}
-          <div className="w-full lg:w-auto">
-            <h2 className="text-center text-2xl font-bold text-gray-900 sm:text-3xl lg:text-left">
-              Customers Latest Reviews
-            </h2>
+        {/* Heading Container */}
+        <div className="mx-auto max-w-[1860px] px-5 lg:px-8">
+          <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
+            {/* Title */}
+            <div>
+              <h2 className="text-center text-[26px] font-bold leading-tight text-purple-950 dark:text-white sm:text-left sm:text-[30px]">
+                Customers Latest Reviews
+              </h2>
+            </div>
+
+            {/* Explore */}
+            <div className="text-center sm:text-right">
+              <a
+                href="/contact"
+                className="inline-block border-b-2 border-purple-700 pb-1 text-[15px] font-semibold text-[#7E22CE] transition hover:border-purple-950 hover:text-purple-950"
+              >
+                Explore All
+              </a>
+            </div>
           </div>
 
-          {/* Explore */}
-          <div className="w-full text-center lg:w-auto lg:text-right">
-            <a
-              href="/contact"
-              className="inline-block border-b border-gray-900 pb-1 text-sm font-medium text-gray-900 transition hover:text-gray-500"
-            >
-              Explore All
-            </a>
-          </div>
+          {/* Bottom Line */}
+          <div className="mt-5 h-px w-full bg-purple-200/80" />
         </div>
-      </div>
 
-      {/* Slider */}
-      <div className="mx-auto mt-6 w-full max-w-[1320px] px-4 sm:px-6 lg:px-8">
-        {/* Line */}
-        <div className="mb-8 h-px w-full bg-gray-200" />
-
-        <Swiper
-          modules={[Pagination]}
-          spaceBetween={14}
-          slidesPerView={1}
-          pagination={{
-            clickable: true,
-            el: ".testimonial-pagination",
-          }}
-          breakpoints={{
-            767: {
-              slidesPerView: 2,
-            },
-            992: {
-              slidesPerView: 2,
-            },
-            1200: {
-              slidesPerView: 2,
-            },
-            1400: {
-              slidesPerView: 3,
-            },
-          }}
-          className="pb-12"
-        >
-          {testimonials.map((testimonial) => (
-            <SwiperSlide key={testimonial.id}>
-              <div className="h-full rounded-xl bg-white p-6 mt-6 mb-6 ml-3 mr-3 shadow-[0_5px_20px_rgba(0,0,0,0.08)] sm:p-8">
-                {/* Quote + Rating */}
-                <div className="mb-5 flex items-center justify-between">
+        {/* Slider Container */}
+        <div className="mx-auto mt-10 max-w-[1860px] px-5 lg:px-8">
+          <Swiper
+            modules={[Pagination]}
+            spaceBetween={20}
+            slidesPerView={1}
+            pagination={{
+              clickable: true,
+              el: ".testimonial-pagination",
+            }}
+            breakpoints={{
+              640: {
+                slidesPerView: 1,
+                spaceBetween: 18,
+              },
+              768: {
+                slidesPerView: 2,
+                spaceBetween: 20,
+              },
+              992: {
+                slidesPerView: 3,
+                spaceBetween: 20,
+              },
+              1300: {
+                slidesPerView: 4,
+                spaceBetween: 22,
+              },
+              1500: {
+                slidesPerView: 4,
+                spaceBetween: 24,
+              },
+            }}
+            className="!py-3"
+          >
+            {testimonials.map((testimonial) => (
+              <SwiperSlide key={testimonial.id} className="h-auto">
+                <div className="flex h-full flex-col justify-between rounded-xl border border-purple-100 bg-white p-6 shadow-sm shadow-purple-900/5 transition-shadow hover:shadow-md hover:shadow-purple-950/10 sm:p-8">
                   <div>
-                    <Image
-                      src="/assets/icon/quote2.svg"
-                      alt="Quote"
-                      width={40}
-                      height={40}
-                    />
-                  </div>
+                    {/* Quote + Rating */}
+                    <div className="mb-5 flex items-center justify-between">
+                      <div>
+                        <Image
+                          src="/assets/icon/quote2.svg"
+                          alt="Quote"
+                          width={36}
+                          height={36}
+                        />
+                      </div>
 
-                  <div className="flex gap-1 text-sm">
-                    <span>★</span>
-                    <span>★</span>
-                    <span>★</span>
-                    <span>★</span>
-                    <span>★</span>
-                  </div>
-                </div>
+                      <div
+                        className="flex gap-[1px] text-[16px] leading-none text-amber-500"
+                        aria-label="Rated 5 out of 5"
+                      >
+                        <span>★</span>
+                        <span>★</span>
+                        <span>★</span>
+                        <span>★</span>
+                        <span>★</span>
+                      </div>
+                    </div>
 
-                {/* Review */}
-                <p className="mb-6 text-[15px] leading-7 text-gray-600">
-                  {testimonial.review}
-                </p>
-
-                {/* Profile */}
-                <div className="flex items-center gap-4">
-                  <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full">
-                    <Image
-                      src={testimonial.avatar}
-                      alt={testimonial.name}
-                      width={56}
-                      height={56}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-
-                  <div>
-                    <h3 className="text-base font-semibold text-gray-900">
-                      {testimonial.name}
-                    </h3>
-
-                    <p className="mt-1 text-sm text-gray-500">
-                      {testimonial.designation}
+                    {/* Review Text */}
+                    <p className="mb-6 text-[15px] leading-7 text-purple-900/80">
+                      {testimonial.review}
                     </p>
                   </div>
-                </div>
-              </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
 
-        {/* Pagination */}
-        <div className="testimonial-pagination mt-4 flex justify-center gap-2" />
-      </div>
-    </section>
+                  {/* Profile Details */}
+                  <div className="flex items-center gap-4 border-t border-purple-50 pt-4">
+                    <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full ring-2 ring-purple-100">
+                      <Image
+                        src={testimonial.avatar}
+                        alt={testimonial.name}
+                        width={56}
+                        height={56}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+
+                    <div>
+                      <h3 className="text-[16px] font-semibold text-purple-950">
+                        {testimonial.name}
+                      </h3>
+
+                      <p className="mt-0.5 text-[13px] text-purple-400">
+                        {testimonial.designation}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+
+          {/* Custom Pagination Container */}
+          <div className="testimonial-pagination mt-8 flex justify-center gap-2" />
+        </div>
+      </section>
+    </div>
   );
 }

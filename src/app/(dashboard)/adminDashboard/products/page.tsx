@@ -173,7 +173,7 @@ export default function AdminProductsPage() {
       {/* Toast */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-2xl border border-red-500/30 bg-white px-5 py-3.5 text-sm font-semibold text-slate-900 shadow-2xl shadow-red-500/10 animate-in fade-in slide-in-from-bottom-5">
-          <CheckCircle2 className="h-5 w-5 text-red-600" />
+          <CheckCircle2 className="h-5 w-5 text-purple-500" />
           <span>{toastMessage.text}</span>
         </div>
       )}
@@ -182,7 +182,7 @@ export default function AdminProductsPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <Package className="h-5 w-5 text-red-600" />
+            <Package className="h-5 w-5 text-purple-500" />
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">
               Product Moderation & Approvals
             </h1>
@@ -194,8 +194,8 @@ export default function AdminProductsPage() {
         </div>
 
         {pendingCount > 0 && (
-          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-50 border border-red-200 text-xs font-bold text-red-600 self-start shadow-sm">
-            <Clock className="h-4 w-4 text-red-600" />
+          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-50 border border-red-200 text-xs font-bold text-purple-500 self-start shadow-sm">
+            <Clock className="h-4 w-4 text-purple-500" />
             <span>{pendingCount} Awaiting Moderation</span>
           </span>
         )}
@@ -220,8 +220,8 @@ export default function AdminProductsPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
                 activeTab === tab.id
-                  ? "bg-red-600 text-white shadow-md shadow-red-500/20"
-                  : "bg-white border border-slate-200 text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                  ? "bg-purple-500 text-white shadow-md shadow-red-500/20"
+                  : "bg-white border border-slate-200 text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-purple-500"
               }`}
             >
               <span>{tab.label}</span>
@@ -251,7 +251,7 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Product List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {filteredProducts.length === 0 ? (
           <div className="col-span-full rounded-2xl border border-slate-200 bg-white py-16 text-center shadow-sm">
             <Package className="h-10 w-10 text-slate-300 mx-auto mb-3" />
@@ -316,7 +316,7 @@ export default function AdminProductsPage() {
               {/* Card Body */}
               <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
                 <div>
-                  <span className="text-[10px] font-bold text-red-600 uppercase tracking-wider">
+                  <span className="text-[10px] font-bold text-purple-500 uppercase tracking-wider">
                     {product.category}
                   </span>
                   <h3 className="font-bold text-slate-900 text-sm line-clamp-1 mt-0.5">
@@ -331,7 +331,7 @@ export default function AdminProductsPage() {
                       </span>
                     </span>
                     <span>
-                      Stock:{" "}
+                      Stock:
                       <strong className="text-slate-800">
                         {product.stock}
                       </strong>
@@ -362,7 +362,7 @@ export default function AdminProductsPage() {
                       onClick={() => handleToggleHide(product)}
                       className={`p-1.5 rounded-lg border transition-all ${
                         product.status === "Hidden"
-                          ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                          ? "border-red-200 bg-red-50 text-purple-500 hover:bg-red-100"
                           : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
                       }`}
                       title={
@@ -392,8 +392,8 @@ export default function AdminProductsPage() {
                       onClick={() => handleApprove(product)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
                         product.status === "Approved"
-                          ? "border border-red-200 bg-red-50 text-red-600"
-                          : "bg-red-600 text-white hover:bg-red-700"
+                          ? "border border-red-200 bg-red-50 text-purple-500"
+                          : "bg-purple-500 text-white hover:bg-red-700"
                       }`}
                     >
                       Approve
@@ -412,7 +412,7 @@ export default function AdminProductsPage() {
           <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-start justify-between">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-red-600">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-purple-500">
                   {previewProduct.category}
                 </span>
                 <h2 className="text-lg font-black text-slate-900 mt-0.5">
@@ -496,7 +496,7 @@ export default function AdminProductsPage() {
                 onClick={() => {
                   handleApprove(previewProduct);
                 }}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 shadow-md shadow-red-500/20"
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-purple-500 hover:bg-red-700 shadow-md shadow-red-500/20"
               >
                 Approve Product
               </button>

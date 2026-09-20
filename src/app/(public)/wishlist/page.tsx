@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -13,112 +13,17 @@ import {
 } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
 import { useCart } from "@/context/CartContext";
-import { useToast } from "@/context/ToastContext";
-
-interface WishlistProduct {
-  _id: string;
-  name: string;
-  images?: string[];
-  price: number;
-  discount?: number;
-  flashSalePrice?: number;
-  isFlashSale?: boolean;
-  stock?: number;
-  brand?: string;
-}
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+import { useWishlist, WishlistProduct } from "@/context/WishlistContext";
 
 export default function WishlistPage() {
   const { data: session } = useSession();
   const token = session?.session?.token;
   const { addToCart } = useCart();
-  const { success, error } = useToast();
+  const { items: wishlist, loading, pendingId, removeFromWishlist } =
+    useWishlist();
 
-  const [wishlist, setWishlist] = useState<WishlistProduct[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [removingId, setRemovingId] = useState<string | null>(null);
-
-  const loadWishlist = useCallback(async () => {
-    if (!token || !API_URL) return;
-
-    const res = await fetch(`${API_URL}/wishlist`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      credentials: "include",
-    });
-
-    if (!res.ok) {
-      throw new Error(`Failed to load wishlist: ${res.status}`);
-    }
-
-    const json = await res.json();
-    return Array.isArray(json?.data?.productIds)
-      ? json.data.productIds
-      : [];
-  }, [token]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const run = async () => {
-      if (!token) {
-        if (!cancelled) setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const products = await loadWishlist();
-        if (!cancelled) setWishlist(products);
-      } catch (err) {
-        console.error("Wishlist loading failed:", err);
-        if (!cancelled) {
-          error("Could not load your wishlist. Please try again.", "Error");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    run();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [token, loadWishlist, error]);
-
-  const handleRemove = async (productId: string) => {
-    if (!token || !API_URL || removingId) return;
-
-    const previous = wishlist;
-    setRemovingId(productId);
-    setWishlist((prev) => prev.filter((item) => item._id !== productId));
-
-    try {
-      const res = await fetch(`${API_URL}/wishlist/${productId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        credentials: "include",
-      });
-
-      if (!res.ok) {
-        throw new Error(`Failed to remove item: ${res.status}`);
-      }
-
-      success("Item removed from your wishlist.", "Wishlist Updated");
-    } catch (err) {
-      console.error("Wishlist remove failed:", err);
-      setWishlist(previous);
-      error("Could not remove the item. Please try again.", "Error");
-    } finally {
-      setRemovingId(null);
-    }
+  const handleRemove = (productId: string) => {
+    void removeFromWishlist(productId);
   };
 
   const handleAddToCart = (product: WishlistProduct) => {
@@ -223,6 +128,7 @@ export default function WishlistPage() {
                 typeof item.discount === "number" && item.discount > 0;
               const available = inStock(item);
               const image = item.images?.[0];
+              const isRemoving = pendingId === item._id;
 
               return (
                 <div
@@ -260,12 +166,12 @@ export default function WishlistPage() {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          void handleRemove(item._id);
+                          handleRemove(item._id);
                         }}
-                        disabled={removingId === item._id}
+                        disabled={isRemoving}
                         className="absolute right-3 top-3 z-10 rounded-full border border-slate-100 bg-white/90 p-2 shadow-sm backdrop-blur transition-all hover:scale-110 hover:bg-rose-500 hover:text-white disabled:opacity-50"
                       >
-                        {removingId === item._id ? (
+                        {isRemoving ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
                           <Trash2 className="h-4 w-4" />

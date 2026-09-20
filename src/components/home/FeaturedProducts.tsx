@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from "next/image";
@@ -38,12 +37,10 @@ type ApiResponse = {
 const getProductImage = (images?: string[]) => {
   const image = images?.[0];
 
-  // No image
   if (!image) {
     return "/placeholder.svg";
   }
 
-  // Dummy/example image
   if (image.includes("example.com")) {
     return "/placeholder.svg";
   }
@@ -59,7 +56,7 @@ const getRatingStars = (rating = 0) => {
   const roundedRating = Math.round(rating);
 
   return Array.from({ length: 5 }, (_, index) =>
-    index < roundedRating ? "★" : "☆"
+    index < roundedRating ? "★" : "☆",
   ).join("");
 };
 
@@ -88,24 +85,21 @@ export default function FeaturedProducts() {
 
         if (!apiUrl) {
           throw new Error(
-            "NEXT_PUBLIC_API_URL is not configured in .env.local"
+            "NEXT_PUBLIC_API_URL is not configured in .env.local",
           );
         }
 
-        const response = await fetch(
-          `${apiUrl}/products/home-sections`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            cache: "no-store",
-          }
-        );
+        const response = await fetch(`${apiUrl}/products/home-sections`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          cache: "no-store",
+        });
 
         if (!response.ok) {
           throw new Error(
-            `Failed to fetch products. Status: ${response.status}`
+            `Failed to fetch products. Status: ${response.status}`,
           );
         }
 
@@ -113,7 +107,7 @@ export default function FeaturedProducts() {
 
         if (!result.success) {
           throw new Error(
-            result.message || "Failed to load featured products."
+            result.message || "Failed to load featured products.",
           );
         }
 
@@ -139,30 +133,30 @@ export default function FeaturedProducts() {
     return (
       <section
         id="shop-sec"
-        className="w-full overflow-hidden bg-[#f8fbff] py-10 md:py-14"
+        className="w-full overflow-hidden bg-purple-50/40 py-10 md:py-14 dark:bg-slate-950"
       >
         <div className="mx-auto w-full max-w-[1800px] px-7 md:px-10">
           <div className="flex items-end justify-between">
             <div>
-              <h2 className="inline-block px-0.5 pt-1 text-[30px] font-bold leading-[1.15] text-[#292929] md:text-[40px]">
+              <h2 className="inline-block px-0.5 pt-1 text-[30px] font-bold leading-[1.15] text-purple-950 md:text-[40px] dark:text-purple-100">
                 Featured Products
               </h2>
 
-              <div className="h-[2px] w-[172px] bg-red-500" />
+              <div className="h-[2.5px] w-[172px] bg-purple-600" />
             </div>
 
             <Link
               href="/shop"
-              className="mb-3 hidden text-[18px] font-medium text-black transition-colors hover:text-red-500 md:block md:text-[23px]"
+              className="mb-3 hidden text-[18px] font-semibold text-purple-950 transition-colors hover:text-purple-600 md:block md:text-[23px] dark:text-purple-200 dark:hover:text-purple-400"
             >
               Explore All
             </Link>
           </div>
 
-          <div className="h-[2px] w-full bg-[#dce4eb]" />
+          <div className="h-[1px] w-full bg-purple-100 dark:bg-purple-900/40" />
 
           <div className="flex min-h-[500px] items-center justify-center">
-            <p className="text-lg text-gray-500">
+            <p className="text-lg text-purple-900/60 dark:text-purple-300/60">
               Loading products...
             </p>
           </div>
@@ -178,7 +172,7 @@ export default function FeaturedProducts() {
   return (
     <section
       id="shop-sec"
-      className="w-full overflow-hidden bg-[#f8fbff] py-10 md:py-14"
+      className="w-full overflow-hidden bg-purple-50/40 py-10 md:py-14 dark:bg-slate-950"
     >
       <div className="mx-auto w-full max-w-[1800px] px-7 md:px-10">
         {/* =================================================
@@ -187,24 +181,24 @@ export default function FeaturedProducts() {
 
         <div className="flex items-end justify-between">
           <div>
-            <h2 className="inline-block px-0.5 pt-1 text-[30px] font-bold leading-[1.15] text-[#292929] md:text-[40px]">
+            <h2 className="inline-block px-0.5 pt-1 text-[30px] font-bold leading-[1.15] text-purple-950 md:text-[40px] dark:text-purple-100">
               Featured Products
             </h2>
 
-            <div className="h-[2px] w-[172px] bg-red-500" />
+            <div className="h-[2.5px] w-[172px] bg-purple-600" />
           </div>
 
           <Link
             href="/shop"
-            className="mb-3 hidden text-[18px] font-medium text-black transition-colors hover:text-red-500 md:block md:text-[23px]"
+            className="mb-3 hidden text-[18px] font-semibold text-purple-950 transition-colors hover:text-purple-600 md:block md:text-[23px] dark:text-purple-200 dark:hover:text-purple-400"
           >
             Explore All
           </Link>
         </div>
 
-        {/* Gray Header Line */}
+        {/* Purple Header Line */}
 
-        <div className="h-[2px] w-full bg-[#dce4eb]" />
+        <div className="h-[1px] w-full bg-purple-100 dark:bg-purple-900/40" />
 
         {/* =================================================
             ERROR
@@ -213,12 +207,12 @@ export default function FeaturedProducts() {
         {error && (
           <div className="flex min-h-[500px] items-center justify-center">
             <div className="text-center">
-              <p className="text-lg text-red-500">{error}</p>
+              <p className="text-lg text-rose-500">{error}</p>
 
               <button
                 type="button"
                 onClick={() => window.location.reload()}
-                className="mt-4 rounded-md bg-black px-5 py-2 text-sm font-medium text-white transition hover:bg-red-500"
+                className="mt-4 rounded-xl bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-purple-500/20 transition hover:bg-purple-700"
               >
                 Try Again
               </button>
@@ -232,7 +226,7 @@ export default function FeaturedProducts() {
 
         {!error && products.length === 0 && (
           <div className="flex min-h-[500px] items-center justify-center">
-            <p className="text-lg text-gray-500">
+            <p className="text-lg text-purple-900/60 dark:text-purple-300/60">
               No featured products found.
             </p>
           </div>
@@ -251,17 +245,9 @@ export default function FeaturedProducts() {
               slidesPerView={1}
               spaceBetween={24}
               breakpoints={{
-                0: {
-                  slidesPerView: 1,
-                },
-
-                768: {
-                  slidesPerView: 1,
-                },
-
-                1200: {
-                  slidesPerView: 2,
-                },
+                0: { slidesPerView: 1 },
+                768: { slidesPerView: 1 },
+                1200: { slidesPerView: 2 },
               }}
             >
               {products.map((product) => {
@@ -274,18 +260,18 @@ export default function FeaturedProducts() {
                         PRODUCT CARD
                         ========================================= */}
 
-                    <div className="flex min-h-[500px] w-full items-center rounded-[7px] border border-[#dbe4ec] bg-[#f8fbff] p-6 md:p-[25px]">
+                    <div className="m-4 flex min-h-[500px] flex-col md:flex-row w-full items-center rounded-2xl border border-purple-100 bg-white p-6 shadow-md shadow-purple-900/5 sm:p-8 dark:border-purple-900/40 dark:bg-slate-900 md:p-[25px]">
                       {/* =====================================
                           IMAGE
                           ===================================== */}
 
-                      <div className="relative h-[380px] w-[53%] shrink-0 overflow-hidden rounded-[7px] bg-[#dce7f1] md:h-[450px]">
+                      <div className="relative h-full w-full md:w-[53%] shrink-0 overflow-hidden rounded-xl bg-purple-50/70 dark:bg-slate-800 md:h-[450px]">
                         <Image
                           src={imageUrl}
                           alt={product.name || "Product image"}
                           fill
-                          sizes="(max-width: 767px) 53vw, (max-width: 1199px) 53vw, 450px"
-                          className="object-contain transition-transform duration-500 hover:scale-105"
+                          sizes="(max-width: 767px) 100vw, (max-width: 1199px) 53vw, 450px"
+                          className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
                           priority={false}
                         />
                       </div>
@@ -297,10 +283,10 @@ export default function FeaturedProducts() {
                       <div className="flex flex-1 flex-col justify-center pl-7 md:pl-10">
                         {/* Product Name */}
 
-                        <h3 className="max-w-[350px] text-[19px] font-semibold leading-[1.45] text-[#171717] md:text-[23px]">
+                        <h3 className="max-w-[350px] text-[19px] font-bold leading-[1.45] text-purple-950 md:text-[23px] dark:text-purple-100">
                           <Link
                             href={`/shop-details/${product._id}`}
-                            className="transition-colors hover:text-red-500"
+                            className="transition-colors hover:text-purple-600 dark:hover:text-purple-400"
                           >
                             {product.name}
                           </Link>
@@ -312,13 +298,13 @@ export default function FeaturedProducts() {
 
                         <div className="mt-3 flex flex-wrap items-center gap-3 md:gap-4">
                           <span
-                            className="whitespace-nowrap text-[18px] tracking-[1px] text-[#ff5b4f] md:text-[20px]"
+                            className="whitespace-nowrap text-[18px] tracking-[1px] text-amber-400 md:text-[20px]"
                             aria-label={`Rated ${rating} out of 5`}
                           >
                             {getRatingStars(rating)}
                           </span>
 
-                          <span className="whitespace-nowrap text-[13px] text-gray-500 md:text-[14px]">
+                          <span className="whitespace-nowrap text-[13px] text-purple-900/60 md:text-[14px] dark:text-purple-300/60">
                             ({rating} rating)
                           </span>
                         </div>
@@ -328,20 +314,19 @@ export default function FeaturedProducts() {
                             ================================= */}
 
                         <div className="mt-2 flex items-center gap-2">
-                          <span className="text-[19px] font-bold text-[#17243a] md:text-[21px]">
+                          <span className="text-[19px] font-bold text-purple-950 md:text-[21px] dark:text-purple-100">
                             ${Number(product.price || 0).toFixed(2)}
                           </span>
 
-                          {product.discount &&
-                            product.discount > 0 && (
-                              <del className="text-[13px] text-[#999] md:text-[14px]">
-                                $
-                                {(
-                                  product.price /
-                                  (1 - product.discount / 100)
-                                ).toFixed(2)}
-                              </del>
-                            )}
+                          {product.discount && product.discount > 0 && (
+                            <del className="text-[13px] text-purple-900/40 md:text-[14px] dark:text-purple-300/40">
+                              $
+                              {(
+                                product.price /
+                                (1 - product.discount / 100)
+                              ).toFixed(2)}
+                            </del>
+                          )}
                         </div>
 
                         {/* =================================
@@ -350,7 +335,7 @@ export default function FeaturedProducts() {
 
                         <Link
                           href="/cart"
-                          className="mt-8 flex h-[51px] w-fit items-center justify-center rounded-[7px] bg-[#171717] px-6 text-[14px] font-bold text-white transition-all duration-300 hover:bg-red-500 md:px-7"
+                          className="mt-8 flex h-[51px] w-full items-center justify-center rounded-xl bg-purple-950 px-6 text-[14px] font-bold text-white shadow-lg shadow-gray-500 transition-all duration-300 hover:bg-purple-600 md:px-7 dark:bg-purple-600 dark:hover:bg-purple-500"
                         >
                           ADD TO CART
                         </Link>
@@ -369,12 +354,12 @@ export default function FeaturedProducts() {
               type="button"
               aria-label="Previous product"
               onClick={() => swiperRef.current?.slidePrev()}
-              className="group absolute left-[-20px] top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-[#dce4eb] bg-white shadow-md transition-all duration-300 hover:bg-black md:flex"
+              className="group absolute -left-5 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-purple-100 bg-white shadow-md shadow-purple-900/10 transition-all duration-300 hover:bg-purple-600 md:flex dark:border-purple-800 dark:bg-slate-800 dark:hover:bg-purple-600"
             >
               <ChevronLeft
-                size={28}
-                strokeWidth={2}
-                className="text-black transition-colors group-hover:text-white"
+                size={24}
+                strokeWidth={2.5}
+                className="text-purple-950 transition-colors group-hover:text-white dark:text-purple-100"
               />
             </button>
 
@@ -386,12 +371,12 @@ export default function FeaturedProducts() {
               type="button"
               aria-label="Next product"
               onClick={() => swiperRef.current?.slideNext()}
-              className="group absolute right-[-20px] top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-[#dce4eb] bg-white shadow-md transition-all duration-300 hover:bg-black md:flex"
+              className="group absolute -right-5 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-purple-100 bg-white shadow-md shadow-purple-900/10 transition-all duration-300 hover:bg-purple-600 md:flex dark:border-purple-800 dark:bg-slate-800 dark:hover:bg-purple-600"
             >
               <ChevronRight
-                size={28}
-                strokeWidth={2}
-                className="text-black transition-colors group-hover:text-white"
+                size={24}
+                strokeWidth={2.5}
+                className="text-purple-950 transition-colors group-hover:text-white dark:text-purple-100"
               />
             </button>
           </div>
@@ -404,7 +389,7 @@ export default function FeaturedProducts() {
         <div className="mt-6 text-center md:hidden">
           <Link
             href="/shop"
-            className="text-lg font-semibold text-black hover:text-red-500"
+            className="text-base font-semibold text-purple-950 hover:text-purple-600 dark:text-purple-200"
           >
             Explore All
           </Link>
@@ -413,4 +398,3 @@ export default function FeaturedProducts() {
     </section>
   );
 }
-

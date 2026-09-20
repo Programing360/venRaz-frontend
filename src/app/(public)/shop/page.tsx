@@ -8,13 +8,13 @@ import {
   Search,
   SlidersHorizontal,
   Star,
-  Check,
   X,
+  ArrowRight,
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { ProductGridSkeleton } from "@/components/common/Skeleton";
 import EmptyState from "@/components/common/EmptyState";
-import { MOCK_PRODUCTS, CatalogProduct } from "@/lib/products/mockCatalog";
+import { CatalogProduct } from "@/lib/products/mockCatalog";
 
 const PRODUCTS_PER_PAGE = 12;
 
@@ -40,7 +40,6 @@ export default function ShopPage() {
   const [maxPrice, setMaxPrice] = useState("");
   const [minRating, setMinRating] = useState("");
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
-  const [addedIds, setAddedIds] = useState<Record<string, boolean>>({});
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -71,7 +70,7 @@ export default function ShopPage() {
           }).finally(() => clearTimeout(timeoutId));
           if (res.ok) {
             const data = await res.json();
-    
+            console.log(data);
             const fetched = data?.data;
             if (Array.isArray(fetched) && !cancelled) {
               setProducts(fetched);
@@ -81,14 +80,14 @@ export default function ShopPage() {
         }
 
         // Resilient Fallback to rich Mock Catalog
-        if (!cancelled) {
-          setProducts(MOCK_PRODUCTS);
-        }
+        // if (!cancelled) {
+        //   setProducts(MOCK_PRODUCTS);
+        // }
       } catch (err) {
         console.warn("Shop backend API fallback triggered:", err);
-        if (!cancelled) {
-          setProducts(MOCK_PRODUCTS);
-        }
+        // if (!cancelled) {
+        //   setProducts(MOCK_PRODUCTS);
+        // }
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -174,41 +173,30 @@ export default function ShopPage() {
     setCurrentPage(1);
   };
 
-  const handleAddToCart = (e: React.MouseEvent, product: CatalogProduct) => {
-    e.preventDefault();
-    e.stopPropagation();
-    addToCart(product, 1);
-    setAddedIds((prev) => ({ ...prev, [product._id]: true }));
-    setTimeout(() => {
-      setAddedIds((prev) => ({ ...prev, [product._id]: false }));
-    }, 1500);
-  };
-
   const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
   const paginatedProducts = filteredProducts.slice(
     (currentPage - 1) * PRODUCTS_PER_PAGE,
     currentPage * PRODUCTS_PER_PAGE,
   );
-
+  console.log(paginatedProducts);
   return (
-    <main className="min-h-screen bg-[#fcfdfd] py-10 md:py-16 md:mt-10">
+    <main className="min-h-screen bg-gray-50 py-10 md:py-16 md:mt-10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header & Controls Bar */}
         <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
               All Products & Deals
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Explore our curated electronics catalog with instant price
-              filters.
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">
+              Explore our curated store catalog with instant price filters.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             {/* Search Input */}
             <div className="relative w-full sm:w-64">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="search"
                 value={search}
@@ -217,7 +205,7 @@ export default function ShopPage() {
                   setCurrentPage(1);
                 }}
                 placeholder="Search products..."
-                className="w-full text-xs sm:text-sm border border-slate-200 rounded-xl pl-9 pr-4 py-2.5 bg-white outline-none focus:border-[#ff594d] focus:ring-1 focus:ring-[#ff594d]"
+                className="w-full text-xs sm:text-sm border border-purple-100 rounded-xl pl-9 pr-4 py-2.5 bg-white outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-600 transition-all"
               />
             </div>
 
@@ -225,9 +213,9 @@ export default function ShopPage() {
             <button
               type="button"
               onClick={() => setMobileFilterOpen(true)}
-              className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 lg:hidden hover:bg-slate-50"
+              className="flex items-center gap-2 bg-white border border-purple-100 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-gray-700 lg:hidden hover:bg-purple-50/50 transition-colors"
             >
-              <SlidersHorizontal className="w-4 h-4 text-[#ff594d]" />
+              <SlidersHorizontal className="w-4 h-4 text-purple-600" />
               Filters
             </button>
 
@@ -239,7 +227,7 @@ export default function ShopPage() {
                 setCurrentPage(1);
               }}
               aria-label="Sort products"
-              className="bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 outline-none focus:border-[#ff594d]"
+              className="bg-white border border-purple-100 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-semibold text-gray-700 outline-none focus:border-purple-600 transition-colors"
             >
               <option value="latest">Sort by: Newest</option>
               <option value="popularity">Sort by: Most Popular</option>
@@ -253,13 +241,13 @@ export default function ShopPage() {
         {/* Content Layout */}
         <div className="flex gap-8 items-start">
           {/* Desktop Filter Sidebar */}
-          <aside className="hidden lg:block w-64 shrink-0 bg-white border border-slate-200 rounded-2xl p-5 sticky top-24 shadow-sm space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-slate-900 text-sm">Filters</h3>
+          <aside className="hidden lg:block w-64 shrink-0 bg-white border border-purple-100 rounded-2xl p-5 sticky top-24 shadow-xs space-y-6">
+            <div className="flex items-center justify-between border-b border-purple-50 pb-3">
+              <h3 className="font-bold text-gray-900 text-sm">Filters</h3>
               <button
                 type="button"
                 onClick={clearFilters}
-                className="text-xs font-semibold text-[#ff594d] hover:underline"
+                className="text-xs font-semibold text-purple-600 hover:text-purple-700 hover:underline transition-colors"
               >
                 Reset All
               </button>
@@ -267,7 +255,7 @@ export default function ShopPage() {
 
             {/* Categories */}
             <div>
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">
                 Category
               </h4>
               <div className="space-y-1">
@@ -279,10 +267,10 @@ export default function ShopPage() {
                       setSelectedCategory(cat);
                       setCurrentPage(1);
                     }}
-                    className={`w-full text-left text-xs font-semibold px-3 py-2 rounded-lg transition ${
+                    className={`w-full text-left text-xs font-semibold px-3 py-2 rounded-lg transition-colors ${
                       selectedCategory === cat
-                        ? "bg-[#ff594d] text-white"
-                        : "text-slate-600 hover:bg-slate-50"
+                        ? "bg-purple-600 text-white"
+                        : "text-gray-600 hover:bg-purple-50/50"
                     }`}
                   >
                     {cat}
@@ -292,8 +280,8 @@ export default function ShopPage() {
             </div>
 
             {/* Price Filter */}
-            <div className="border-t border-slate-100 pt-4">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+            <div className="border-t border-purple-50 pt-4">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">
                 Price Range ($)
               </h4>
               <div className="grid grid-cols-2 gap-2">
@@ -306,7 +294,7 @@ export default function ShopPage() {
                     setCurrentPage(1);
                   }}
                   placeholder="Min"
-                  className="w-full text-xs border border-slate-200 rounded-lg px-2.5 py-2 outline-none focus:border-[#ff594d]"
+                  className="w-full text-xs border border-purple-100 rounded-lg px-2.5 py-2 outline-none focus:border-purple-600 transition-colors"
                 />
                 <input
                   type="number"
@@ -317,21 +305,21 @@ export default function ShopPage() {
                     setCurrentPage(1);
                   }}
                   placeholder="Max"
-                  className="w-full text-xs border border-slate-200 rounded-lg px-2.5 py-2 outline-none focus:border-[#ff594d]"
+                  className="w-full text-xs border border-purple-100 rounded-lg px-2.5 py-2 outline-none focus:border-purple-600 transition-colors"
                 />
               </div>
             </div>
 
             {/* Rating Filter */}
-            <div className="border-t border-slate-100 pt-4">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+            <div className="border-t border-purple-50 pt-4">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">
                 Minimum Rating
               </h4>
               <div className="space-y-2">
                 {[4, 3, 2].map((rating) => (
                   <label
                     key={rating}
-                    className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer"
+                    className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer"
                   >
                     <input
                       type="radio"
@@ -341,11 +329,11 @@ export default function ShopPage() {
                         setMinRating(String(rating));
                         setCurrentPage(1);
                       }}
-                      className="accent-[#ff594d]"
+                      className="accent-purple-600"
                     />
                     <span className="flex items-center text-amber-500 font-bold">
                       {"★".repeat(rating)}
-                      <span className="text-slate-300 font-normal">
+                      <span className="text-gray-300 font-normal">
                         {"☆".repeat(5 - rating)}
                       </span>
                     </span>
@@ -372,36 +360,32 @@ export default function ShopPage() {
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                   {paginatedProducts.map((product) => {
-                    const isAdded = !!addedIds[product._id];
                     return (
                       <div
                         key={product._id}
-                        className="group bg-white rounded-2xl border border-slate-200 hover:border-slate-300 overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col"
+                        className="group bg-white rounded-2xl border border-purple-100 hover:border-purple-200 overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 flex flex-col"
                       >
-                        {/* Image */}
-                        <Link
-                          href={`/products/${product._id}`}
-                          className="relative h-56 bg-slate-50 flex items-center justify-center p-4 overflow-hidden"
-                        >
+                        {/* Image Container */}
+                        <div className="relative h-56 bg-purple-50/30 flex items-center justify-center p-4 overflow-hidden">
                           <Image
                             src={product.images?.[0] || "/placeholder.svg"}
                             alt={product.name}
                             fill
                             sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                            className="object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                           {product.discount && product.discount > 0 && (
-                            <span className="absolute top-3 left-3 bg-[#ff594d] text-white text-[11px] font-bold px-2 py-0.5 rounded-md">
+                            <span className="absolute top-3 left-3 bg-purple-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-md">
                               -{product.discount}%
                             </span>
                           )}
-                        </Link>
+                        </div>
 
                         {/* Card Info */}
                         <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                           <div className="space-y-1.5">
                             <div className="flex items-center justify-between text-xs">
-                              <span className="text-slate-400 font-medium">
+                              <span className="text-gray-400 font-medium">
                                 {product.brand || "VenRaz"}
                               </span>
                               <div className="flex items-center gap-1 text-amber-500 font-bold">
@@ -409,50 +393,36 @@ export default function ShopPage() {
                                 {product.rating}
                               </div>
                             </div>
-                            <Link href={`/products/${product._id}`}>
-                              <h3 className="text-sm font-bold text-slate-900 line-clamp-2 hover:text-[#ff594d] transition-colors">
+                            <Link href={`/product/${product._id}`}>
+                              <h3 className="text-sm font-bold text-gray-900 line-clamp-2 hover:text-purple-600 transition-colors">
                                 {product.name}
                               </h3>
                             </Link>
                           </div>
 
-                          {/* Price and Cart Button */}
-                          <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
+                          {/* Price and Visit Shop CTA */}
+                          <div className="pt-3 border-t border-purple-50 flex items-center justify-between gap-3">
                             <div>
-                              {/* <span className="text-lg font-black text-slate-900">
-                                $
-                                {(
-                                  product.flashSalePrice || product.price
-                                ).toFixed(2)}
-                              </span> */}
-                              {product.discount && (
-                                <span className="text-xs text-slate-400 line-through block">
+                              <span className="text-base font-black text-gray-900">
+                                ${product?.flashSalePrice || product.price}
+                              </span>
+                              {product.discount && product.discount > 0 && (
+                                <span className="text-xs text-gray-400 line-through block">
                                   ${product.price.toFixed(2)}
                                 </span>
                               )}
                             </div>
 
-                            <button
-                              type="button"
-                              onClick={(e) => handleAddToCart(e, product)}
-                              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition ${
-                                isAdded
-                                  ? "bg-emerald-600 text-white"
-                                  : "bg-slate-900 hover:bg-[#ff594d] text-white"
-                              }`}
+                            <Link
+                              href={`/shop/${product?.ownerId || ""}`}
+                              className="group/link inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-purple-600 hover:text-white bg-purple-50 hover:bg-purple-600 border border-purple-100 transition-all duration-200 cursor-pointer"
                             >
-                              {isAdded ? (
-                                <>
-                                  <Check className="w-3.5 h-3.5" />
-                                  <span>Added</span>
-                                </>
-                              ) : (
-                                <>
-                                  <ShoppingBag className="w-3.5 h-3.5" />
-                                  <span>Add</span>
-                                </>
-                              )}
-                            </button>
+                              <ShoppingBag className="w-3.5 h-3.5" />
+                              <span>Visit Shop</span>
+                              <div className="grid place-items-center h-3.5 w-0 group-hover/link:w-3.5 opacity-0 group-hover/link:opacity-100 translate-y-2 group-hover/link:translate-y-0 transition-all duration-150 ease-out">
+                                <ArrowRight className="w-3.5 h-3.5" />
+                              </div>
+                            </Link>
                           </div>
                         </div>
                       </div>
@@ -472,10 +442,10 @@ export default function ShopPage() {
                             setCurrentPage(pageNum);
                             window.scrollTo({ top: 0, behavior: "smooth" });
                           }}
-                          className={`w-9 h-9 rounded-xl text-xs font-bold transition ${
+                          className={`w-9 h-9 rounded-xl text-xs font-bold transition-all ${
                             currentPage === pageNum
-                              ? "bg-[#ff594d] text-white shadow-md"
-                              : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-100"
+                              ? "bg-purple-600 text-white shadow-sm"
+                              : "bg-white border border-purple-100 text-gray-700 hover:bg-purple-50/50"
                           }`}
                         >
                           {pageNum}
@@ -499,11 +469,12 @@ export default function ShopPage() {
           />
           <div className="relative ml-auto w-full max-w-xs bg-white h-full shadow-2xl p-6 flex flex-col justify-between overflow-y-auto z-10">
             <div className="space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                <h3 className="font-bold text-slate-900 text-base">Filters</h3>
+              <div className="flex items-center justify-between border-b border-purple-50 pb-4">
+                <h3 className="font-bold text-gray-900 text-base">Filters</h3>
                 <button
+                  type="button"
                   onClick={() => setMobileFilterOpen(false)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-slate-700"
+                  className="p-1 rounded-lg text-gray-400 hover:text-gray-700 transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -511,7 +482,7 @@ export default function ShopPage() {
 
               {/* Mobile Category List */}
               <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">
                   Category
                 </h4>
                 <div className="space-y-1">
@@ -523,10 +494,10 @@ export default function ShopPage() {
                         setSelectedCategory(cat);
                         setCurrentPage(1);
                       }}
-                      className={`w-full text-left text-xs font-semibold px-3 py-2 rounded-lg transition ${
+                      className={`w-full text-left text-xs font-semibold px-3 py-2 rounded-lg transition-colors ${
                         selectedCategory === cat
-                          ? "bg-[#ff594d] text-white"
-                          : "text-slate-600 hover:bg-slate-50"
+                          ? "bg-purple-600 text-white"
+                          : "text-gray-600 hover:bg-purple-50/50"
                       }`}
                     >
                       {cat}
@@ -536,8 +507,8 @@ export default function ShopPage() {
               </div>
 
               {/* Mobile Price */}
-              <div className="border-t border-slate-100 pt-4">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+              <div className="border-t border-purple-50 pt-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">
                   Price ($)
                 </h4>
                 <div className="grid grid-cols-2 gap-2">
@@ -550,7 +521,7 @@ export default function ShopPage() {
                       setCurrentPage(1);
                     }}
                     placeholder="Min"
-                    className="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 outline-none"
+                    className="w-full text-xs border border-purple-100 rounded-lg px-3 py-2 outline-none focus:border-purple-600 transition-colors"
                   />
                   <input
                     type="number"
@@ -561,17 +532,17 @@ export default function ShopPage() {
                       setCurrentPage(1);
                     }}
                     placeholder="Max"
-                    className="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 outline-none"
+                    className="w-full text-xs border border-purple-100 rounded-lg px-3 py-2 outline-none focus:border-purple-600 transition-colors"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="pt-6 border-t border-slate-100 space-y-2">
+            <div className="pt-6 border-t border-purple-50 space-y-2">
               <button
                 type="button"
                 onClick={() => setMobileFilterOpen(false)}
-                className="w-full bg-[#ff594d] text-white py-3 rounded-xl font-bold text-xs"
+                className="w-full bg-purple-600 text-white py-3 rounded-xl font-bold text-xs hover:bg-purple-700 transition-colors"
               >
                 Apply Filters ({filteredProducts.length} Products)
               </button>
@@ -581,7 +552,7 @@ export default function ShopPage() {
                   clearFilters();
                   setMobileFilterOpen(false);
                 }}
-                className="w-full bg-slate-100 text-slate-700 py-2.5 rounded-xl font-semibold text-xs"
+                className="w-full bg-purple-50 text-purple-700 py-2.5 rounded-xl font-semibold text-xs hover:bg-purple-100 transition-colors"
               >
                 Reset
               </button>
