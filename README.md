@@ -1,6 +1,6 @@
 # VenRaz - AI-Powered Multi-Vendor E-Commerce Platform
 
-VenRaz ekta modern, full-stack multi-vendor e-commerce platform, jar sathe advanced AI-powered features, smart inventory management, ebong automated CI/CD pipeline যুক্ত ache. Eta buyers, sellers, ebong admins der jonno ekta seamless digital marketplace experience create kore.
+VenRaz is a modern, full-stack, multi-vendor e-commerce platform featuring advanced AI-powered capabilities, smart inventory management, and an automated CI/CD pipeline. It creates a seamless digital marketplace experience for buyers, sellers, and administrators.
 
 ---
 
