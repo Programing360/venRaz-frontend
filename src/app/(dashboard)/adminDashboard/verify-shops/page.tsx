@@ -18,10 +18,10 @@ import {
   Clock,
 } from "lucide-react";
 import {
-  getAdminShops,
-  approveShop,
-  rejectShop,
-  toggleShopSuspension,
+  fetchAdminShopsAPI,
+  approveShopAPI,
+  rejectShopAPI,
+  updateShopStatusAPI,
 } from "@/services/adminService";
 import { useSession } from "@/lib/auth-client";
 
@@ -116,38 +116,14 @@ export default function VerifyShopsPage() {
   const fetchShops = async () => {
     setLoading(true);
     try {
-      if (API_URL) {
-        const res = await fetch(`${API_URL}/shops`);
-        if (res.ok) {
-          const json = await res.json();
-          const data = json.data;
-          if (Array.isArray(data) && data.length > 0) {
-            setShops(data);
-            return;
-          }
-        }
-      }
+      const { shops } = await fetchAdminShopsAPI();
+      setShops(shops);
     } catch (err) {
-      console.warn("Backend API not reachable, using local seed shops:", err);
+      console.warn("Failed to fetch shops from backend:", err);
+      setShops([]);
     } finally {
       setLoading(false);
     }
-
-    // Graceful fallback to adminService shops
-    const localShops = getAdminShops().map((s) => ({
-      _id: s.id,
-      ownerId: s.sellerName,
-      name: s.name,
-      description: s.description,
-      images: [s.logoUrl, s.bannerUrl],
-      category: s.category,
-      phone: s.phone,
-      status: s.status.toLowerCase(),
-      rejectionReason: s.statusReason,
-      rating: s.rating,
-      createdAt: s.appliedDate,
-    }));
-    setShops(localShops);
   };
 
   useEffect(() => {
@@ -171,43 +147,27 @@ export default function VerifyShopsPage() {
             ownerName: shop.ownerId,
           }),
         });
-        if (res.ok) {
-          const json = await res.json();
-          setVerification(json.data);
-          return;
+        const json = await res.json();
+        if (!res.ok || !json.data) {
+          throw new Error(json?.message || "Verification failed");
         }
+        setVerification(json.data);
+        return;
       }
+      throw new Error("Verification service unavailable");
     } catch (err) {
-      console.warn("API verification failed, generating AI simulation:", err);
+      console.warn("AI verification failed:", err);
+      showToast(
+        "Verification service unavailable. Please try again later.",
+        "error",
+      );
     } finally {
       setVerifying(false);
     }
-
-    // Fallback AI simulation for local demo
-    setVerification({
-      status: shop.status === "rejected" ? "rejected" : "approved",
-      trustScore:
-        shop.status === "rejected" ? 35 : shop.status === "suspended" ? 52 : 88,
-      enhancedData: {
-        shopName: shop.name,
-        description:
-          shop.description || "Authentic registered vendor store on VenRaz.",
-        tags: [shop.category, "Verified Vendor", "Fast Dispatch"],
-      },
-      feedback: {
-        reason:
-          shop.status === "rejected"
-            ? "Business documents missing or failed verification checks."
-            : "Shop registration profile meets platform marketplace compliance requirements.",
-        issuesFound:
-          shop.status === "rejected"
-            ? ["Invalid trade license number", "Phone verification required"]
-            : [],
-      },
-    });
   };
 
   const { data: session } = useSession();
+  const token = session?.session?.token;
 
   const updateShopStatus = async (
     shopId: string,
@@ -216,55 +176,25 @@ export default function VerifyShopsPage() {
   ) => {
     setActionLoading(shopId);
     try {
-      if (API_URL) {
-        const token =
-          (session as any)?.token ||
-          (session as any)?.session?.token ||
-          (session as any)?.accessToken;
-
-        const headers: Record<string, string> = {
-          "Content-Type": "application/json",
-        };
-        if (token) headers["Authorization"] = `Bearer ${token}`;
-
-        if (newStatus === "approved") {
-          await fetch(`${API_URL}/admin/shops/${shopId}/approve`, {
-            method: "PATCH",
-            headers,
-            credentials: "include",
-          });
-        } else if (newStatus === "rejected") {
-          await fetch(`${API_URL}/admin/shops/${shopId}/reject`, {
-            method: "PATCH",
-            headers,
-            credentials: "include",
-            body: JSON.stringify({
-              reason: reason || "Rejected by administrator.",
-            }),
-          });
-        } else {
-          await fetch(`${API_URL}/shops/update/my-shop/${shopId}`, {
-            method: "PATCH",
-            headers,
-            credentials: "include",
-            body: JSON.stringify({
-              status: newStatus,
-              rejectionReason: reason || "",
-            }),
-          });
-        }
+      if (newStatus === "approved" || newStatus === "active") {
+        await approveShopAPI(shopId, token);
+      } else if (newStatus === "rejected") {
+        await rejectShopAPI(
+          shopId,
+          reason || "Rejected by administrator.",
+          token,
+        );
+      } else {
+        await updateShopStatusAPI(
+          shopId,
+          newStatus,
+          reason || "",
+          token,
+        );
       }
     } catch (err) {
       console.warn("Backend update error:", err);
-    }
-
-    // Update in adminService for localStorage persistence
-    if (newStatus === "approved" || newStatus === "active") {
-      approveShop(shopId);
-    } else if (newStatus === "rejected") {
-      rejectShop(shopId, reason || "Rejected by administrator.");
-    } else if (newStatus === "suspended") {
-      toggleShopSuspension(shopId, reason || "Suspended by administrator.");
+      showToast("Failed to update shop status.", "error");
     }
 
     setShops((prev) =>

@@ -7,6 +7,7 @@ import { ToastProvider } from "@/context/ToastContext";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import ThemeProvider from "./theme-provider";
+import SmoothScroll from "@/components/SmoothScroll";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,18 +35,20 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground dark:bg-[#0b1325]">
-        <ThemeProvider>
-          <ToastProvider>
-            <CartProvider>
-              <WishlistProvider>
-                {/* <Navbar /> */}
-                <main className="flex-grow">{children}</main>
+        <SmoothScroll>
+          <ThemeProvider>
+            <ToastProvider>
+              <CartProvider>
+                <WishlistProvider>
+                  {/* <Navbar /> */}
+                  <main className="flex-grow">{children}</main>
 
-                {/* <Footer /> */}
-              </WishlistProvider>
-            </CartProvider>
-          </ToastProvider>
-        </ThemeProvider>
+                  {/* <Footer /> */}
+                </WishlistProvider>
+              </CartProvider>
+            </ToastProvider>
+          </ThemeProvider>
+        </SmoothScroll>
       </body>
     </html>
   );

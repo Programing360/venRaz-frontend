@@ -18,7 +18,6 @@ import {
   Calendar,
 } from "lucide-react";
 import {
-  getAdminUsers,
   fetchAdminUsersAPI,
   updateUserRoleAPI,
   updateUserStatusAPI,
@@ -30,9 +29,8 @@ import Image from "next/image";
 export default function AdminUsersPage() {
   const { data: session } = useSession();
   const token = session?.session?.token;
-
-  const [users, setUsers] = useState<AdminUser[]>(() => getAdminUsers());
-  const [isLive, setIsLive] = useState(false);
+  // console.log(token);
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [totalUsers, setTotalUsers] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
@@ -72,12 +70,9 @@ export default function AdminUsersPage() {
         token,
       );
       setUsers(res.users);
-      setIsLive(res.isLive);
       setTotalUsers(res.total);
     } catch {
-      const fallback = getAdminUsers();
-      setUsers(fallback);
-      setIsLive(false);
+      setUsers([]);
       setTotalUsers(null);
     } finally {
       setLoading(false);
@@ -97,13 +92,6 @@ export default function AdminUsersPage() {
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
-
-  useEffect(() => {
-    const handleUpdate = () => loadUsers();
-    window.addEventListener("venraz_admin_data_updated", handleUpdate);
-    return () =>
-      window.removeEventListener("venraz_admin_data_updated", handleUpdate);
-  }, []);
 
   const handleRoleToggle = (user: AdminUser) => {
     if (user.role === "ADMIN") {
@@ -215,22 +203,6 @@ export default function AdminUsersPage() {
             Control platform permissions, switch User ↔ Moderator roles, and
             enforce account suspensions.
           </p>
-          <span
-            className={`mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold ${
-              isLive
-                ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
-                : "bg-amber-50 text-amber-600 border border-amber-200"
-            }`}
-          >
-            <span
-              className={`h-1.5 w-1.5 rounded-full ${
-                isLive ? "bg-emerald-500" : "bg-amber-500"
-              } animate-pulse`}
-            />
-            {isLive
-              ? "Connected to backend API"
-              : "Backend unreachable — showing sample data"}
-          </span>
         </div>
 
         <button

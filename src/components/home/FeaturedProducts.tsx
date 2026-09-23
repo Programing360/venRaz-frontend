@@ -5,9 +5,17 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperType } from "swiper";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  ShoppingCart,
+  Check,
+} from "lucide-react";
 
 import "swiper/css";
+import { Button } from "@heroui/react";
+import { useCart } from "@/context/CartContext";
 
 type Product = {
   _id: string;
@@ -37,11 +45,7 @@ type ApiResponse = {
 const getProductImage = (images?: string[]) => {
   const image = images?.[0];
 
-  if (!image) {
-    return "/placeholder.svg";
-  }
-
-  if (image.includes("example.com")) {
+  if (!image || image.includes("example.com")) {
     return "/placeholder.svg";
   }
 
@@ -61,7 +65,120 @@ const getRatingStars = (rating = 0) => {
 };
 
 /* =========================================================
-   COMPONENT
+   INDIVIDUAL PRODUCT CARD COMPONENT
+   ========================================================= */
+
+function FeaturedProductCard({ product }: { product: Product }) {
+  const { addToCart } = useCart();
+  const [adding, setAdding] = useState(false);
+  const [added, setAdded] = useState(false);
+
+  const rating = product.rating ?? 0;
+  const imageUrl = getProductImage(product.images);
+
+  const handleAddToCart = async () => {
+    if (adding || added) return;
+    setAdding(true);
+    await addToCart(product, 1);
+    setAdding(false);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1500);
+  };
+
+  return (
+    <div className="m-4 flex min-h-[500px] flex-col items-center rounded-2xl border border-purple-100 bg-white p-6 shadow-md shadow-purple-900/5 sm:p-8 dark:border-purple-900/40 dark:bg-slate-900 md:flex-row md:p-[25px]">
+      {/* IMAGE */}
+      <div className="relative h-full w-full shrink-0 overflow-hidden rounded-xl bg-purple-50/70 dark:bg-slate-800 md:h-[450px] md:w-[53%]">
+        <Image
+          src={imageUrl}
+          alt={product.name || "Product image"}
+          fill
+          sizes="(max-width: 767px) 100vw, (max-width: 1199px) 53vw, 450px"
+          className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+          priority={false}
+        />
+      </div>
+
+      {/* CONTENT */}
+      <div className="flex flex-1 flex-col justify-center pl-7 md:pl-10">
+        {/* Product Name */}
+        <h3 className="max-w-[350px] text-[19px] font-bold leading-[1.45] text-purple-950 dark:text-purple-100 md:text-[23px]">
+          <Link
+            href={`/shop-details/${product._id}`}
+            className="transition-colors hover:text-purple-600 dark:hover:text-purple-400"
+          >
+            {product.name}
+          </Link>
+        </h3>
+
+        {/* RATING */}
+        <div className="mt-3 flex flex-wrap items-center gap-3 md:gap-4">
+          <span
+            className="whitespace-nowrap text-[18px] tracking-[1px] text-amber-400 md:text-[20px]"
+            aria-label={`Rated ${rating} out of 5`}
+          >
+            {getRatingStars(rating)}
+          </span>
+
+          <span className="whitespace-nowrap text-[13px] text-purple-900/60 dark:text-purple-300/60 md:text-[14px]">
+            ({rating} rating)
+          </span>
+        </div>
+
+        {/* PRICE */}
+        <div className="mt-2 flex items-center gap-2">
+          <span className="text-[19px] font-bold text-purple-950 dark:text-purple-100 md:text-[21px]">
+            ${Number(product.price || 0).toFixed(2)}
+          </span>
+
+          {product.discount && product.discount > 0 && (
+            <del className="text-[13px] text-purple-900/40 dark:text-purple-300/40 md:text-[14px]">
+              ${(product.price / (1 - product.discount / 100)).toFixed(2)}
+            </del>
+          )}
+        </div>
+
+        {/* ADD TO CART BUTTON (With Loading & Bottom-to-Top Hover Effect) */}
+        <Button
+          onClick={handleAddToCart}
+          isDisabled={adding}
+          className="group/btn relative mt-8 flex h-[51px] w-full items-center justify-center overflow-hidden rounded-xl bg-purple-950 px-6 text-[14px] font-bold uppercase tracking-wide text-white shadow-lg shadow-gray-500 transition-all duration-300 hover:bg-purple-600 disabled:opacity-70 md:px-7 dark:bg-purple-600 dark:hover:bg-purple-500"
+        >
+          {/* 1. Loading State */}
+          {adding ? (
+            <div className="flex items-center gap-2">
+              <Loader2 size={18} className="animate-spin" />
+              <span>ADDING...</span>
+            </div>
+          ) : added ? (
+            /* 2. Success State */
+            <div className="flex items-center gap-2 text-emerald-300">
+              <Check size={18} />
+              <span>ADDED!</span>
+            </div>
+          ) : (
+            /* 3. Normal State + Bottom to Top Animation */
+            <>
+              {/* Default Text (Slides Up) */}
+              <span className="transition-transform duration-300 ease-out group-hover/btn:-translate-y-12">
+                ADD TO CART
+              </span>
+
+              {/* Hover Icon + Text (Slides Up from Bottom) */}
+              <span className="absolute flex translate-y-12 items-center justify-center gap-2 transition-transform duration-300 ease-out group-hover/btn:translate-y-0">
+                <ShoppingCart size={18} />
+                <span>ADD TO CART</span>
+              </span>
+            </>
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   MAIN FEATURED PRODUCTS SECTION
    ========================================================= */
 
 export default function FeaturedProducts() {
@@ -71,10 +188,7 @@ export default function FeaturedProducts() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  /* =======================================================
-     FETCH FEATURED PRODUCTS
-     ======================================================= */
-
+  /* FETCH FEATURED PRODUCTS */
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
       try {
@@ -125,20 +239,17 @@ export default function FeaturedProducts() {
     fetchFeaturedProducts();
   }, []);
 
-  /* =======================================================
-     LOADING
-     ======================================================= */
-
+  /* LOADING STATE */
   if (loading) {
     return (
       <section
         id="shop-sec"
-        className="w-full overflow-hidden bg-purple-50/40 py-10 md:py-14 dark:bg-slate-950"
+        className="w-full overflow-hidden bg-purple-50/40 py-10 dark:bg-slate-950 md:py-14"
       >
         <div className="mx-auto w-full max-w-[1800px] px-7 md:px-10">
           <div className="flex items-end justify-between">
             <div>
-              <h2 className="inline-block px-0.5 pt-1 text-[30px] font-bold leading-[1.15] text-purple-950 md:text-[40px] dark:text-purple-100">
+              <h2 className="inline-block px-0.5 pt-1 text-[30px] font-bold leading-[1.15] text-purple-950 dark:text-purple-100 md:text-[40px]">
                 Featured Products
               </h2>
 
@@ -147,7 +258,7 @@ export default function FeaturedProducts() {
 
             <Link
               href="/shop"
-              className="mb-3 hidden text-[18px] font-semibold text-purple-950 transition-colors hover:text-purple-600 md:block md:text-[23px] dark:text-purple-200 dark:hover:text-purple-400"
+              className="mb-3 hidden text-[18px] font-semibold text-purple-950 transition-colors hover:text-purple-600 dark:text-purple-200 dark:hover:text-purple-400 md:block md:text-[23px]"
             >
               Explore All
             </Link>
@@ -165,23 +276,17 @@ export default function FeaturedProducts() {
     );
   }
 
-  /* =======================================================
-     MAIN RETURN
-     ======================================================= */
-
+  /* MAIN RENDER */
   return (
     <section
       id="shop-sec"
-      className="w-full overflow-hidden bg-purple-50/40 py-10 md:py-14 dark:bg-slate-950"
+      className="w-full overflow-hidden bg-purple-50/40 py-10 dark:bg-slate-950 md:py-14"
     >
       <div className="mx-auto w-full max-w-[1800px] px-7 md:px-10">
-        {/* =================================================
-            HEADER
-            ================================================= */}
-
+        {/* HEADER */}
         <div className="flex items-end justify-between">
           <div>
-            <h2 className="inline-block px-0.5 pt-1 text-[30px] font-bold leading-[1.15] text-purple-950 md:text-[40px] dark:text-purple-100">
+            <h2 className="inline-block px-0.5 pt-1 text-[30px] font-bold leading-[1.15] text-purple-950 dark:text-purple-100 md:text-[40px]">
               Featured Products
             </h2>
 
@@ -190,20 +295,16 @@ export default function FeaturedProducts() {
 
           <Link
             href="/shop"
-            className="mb-3 hidden text-[18px] font-semibold text-purple-950 transition-colors hover:text-purple-600 md:block md:text-[23px] dark:text-purple-200 dark:hover:text-purple-400"
+            className="mb-3 hidden text-[18px] font-semibold text-purple-950 transition-colors hover:text-purple-600 dark:text-purple-200 dark:hover:text-purple-400 md:block md:text-[23px]"
           >
             Explore All
           </Link>
         </div>
 
         {/* Purple Header Line */}
-
         <div className="h-[1px] w-full bg-purple-100 dark:bg-purple-900/40" />
 
-        {/* =================================================
-            ERROR
-            ================================================= */}
-
+        {/* ERROR STATE */}
         {error && (
           <div className="flex min-h-[500px] items-center justify-center">
             <div className="text-center">
@@ -220,10 +321,7 @@ export default function FeaturedProducts() {
           </div>
         )}
 
-        {/* =================================================
-            EMPTY
-            ================================================= */}
-
+        {/* EMPTY STATE */}
         {!error && products.length === 0 && (
           <div className="flex min-h-[500px] items-center justify-center">
             <p className="text-lg text-purple-900/60 dark:text-purple-300/60">
@@ -232,10 +330,7 @@ export default function FeaturedProducts() {
           </div>
         )}
 
-        {/* =================================================
-            SLIDER
-            ================================================= */}
-
+        {/* SLIDER */}
         {!error && products.length > 0 && (
           <div className="relative mt-8">
             <Swiper
@@ -250,111 +345,19 @@ export default function FeaturedProducts() {
                 1200: { slidesPerView: 2 },
               }}
             >
-              {products.map((product) => {
-                const rating = product.rating ?? 0;
-                const imageUrl = getProductImage(product.images);
-
-                return (
-                  <SwiperSlide key={product._id}>
-                    {/* =========================================
-                        PRODUCT CARD
-                        ========================================= */}
-
-                    <div className="m-4 flex min-h-[500px] flex-col md:flex-row w-full items-center rounded-2xl border border-purple-100 bg-white p-6 shadow-md shadow-purple-900/5 sm:p-8 dark:border-purple-900/40 dark:bg-slate-900 md:p-[25px]">
-                      {/* =====================================
-                          IMAGE
-                          ===================================== */}
-
-                      <div className="relative h-full w-full md:w-[53%] shrink-0 overflow-hidden rounded-xl bg-purple-50/70 dark:bg-slate-800 md:h-[450px]">
-                        <Image
-                          src={imageUrl}
-                          alt={product.name || "Product image"}
-                          fill
-                          sizes="(max-width: 767px) 100vw, (max-width: 1199px) 53vw, 450px"
-                          className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
-                          priority={false}
-                        />
-                      </div>
-
-                      {/* =====================================
-                          CONTENT
-                          ===================================== */}
-
-                      <div className="flex flex-1 flex-col justify-center pl-7 md:pl-10">
-                        {/* Product Name */}
-
-                        <h3 className="max-w-[350px] text-[19px] font-bold leading-[1.45] text-purple-950 md:text-[23px] dark:text-purple-100">
-                          <Link
-                            href={`/shop-details/${product._id}`}
-                            className="transition-colors hover:text-purple-600 dark:hover:text-purple-400"
-                          >
-                            {product.name}
-                          </Link>
-                        </h3>
-
-                        {/* =================================
-                            RATING
-                            ================================= */}
-
-                        <div className="mt-3 flex flex-wrap items-center gap-3 md:gap-4">
-                          <span
-                            className="whitespace-nowrap text-[18px] tracking-[1px] text-amber-400 md:text-[20px]"
-                            aria-label={`Rated ${rating} out of 5`}
-                          >
-                            {getRatingStars(rating)}
-                          </span>
-
-                          <span className="whitespace-nowrap text-[13px] text-purple-900/60 md:text-[14px] dark:text-purple-300/60">
-                            ({rating} rating)
-                          </span>
-                        </div>
-
-                        {/* =================================
-                            PRICE
-                            ================================= */}
-
-                        <div className="mt-2 flex items-center gap-2">
-                          <span className="text-[19px] font-bold text-purple-950 md:text-[21px] dark:text-purple-100">
-                            ${Number(product.price || 0).toFixed(2)}
-                          </span>
-
-                          {product.discount && product.discount > 0 && (
-                            <del className="text-[13px] text-purple-900/40 md:text-[14px] dark:text-purple-300/40">
-                              $
-                              {(
-                                product.price /
-                                (1 - product.discount / 100)
-                              ).toFixed(2)}
-                            </del>
-                          )}
-                        </div>
-
-                        {/* =================================
-                            ADD TO CART
-                            ================================= */}
-
-                        <Link
-                          href="/cart"
-                          className="mt-8 flex h-[51px] w-full items-center justify-center rounded-xl bg-purple-950 px-6 text-[14px] font-bold text-white shadow-lg shadow-gray-500 transition-all duration-300 hover:bg-purple-600 md:px-7 dark:bg-purple-600 dark:hover:bg-purple-500"
-                        >
-                          ADD TO CART
-                        </Link>
-                      </div>
-                    </div>
-                  </SwiperSlide>
-                );
-              })}
+              {products.map((product) => (
+                <SwiperSlide key={product._id}>
+                  <FeaturedProductCard product={product} />
+                </SwiperSlide>
+              ))}
             </Swiper>
 
-            {/* =============================================
-                PREVIOUS BUTTON
-                ============================================= */}
-
+            {/* PREVIOUS BUTTON */}
             <button
               type="button"
               aria-label="Previous product"
               onClick={() => swiperRef.current?.slidePrev()}
-              className="group absolute -left-5 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-purple-100 bg-white shadow-md shadow-purple-900/10 transition-all duration-300 hover:bg-purple-600 md:flex dark:border-purple-800 dark:bg-slate-800 dark:hover:bg-purple-600"
+              className="group absolute -left-5 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-purple-100 bg-white shadow-md shadow-purple-900/10 transition-all duration-300 hover:bg-purple-600 dark:border-purple-800 dark:bg-slate-800 dark:hover:bg-purple-600 md:flex"
             >
               <ChevronLeft
                 size={24}
@@ -363,15 +366,12 @@ export default function FeaturedProducts() {
               />
             </button>
 
-            {/* =============================================
-                NEXT BUTTON
-                ============================================= */}
-
+            {/* NEXT BUTTON */}
             <button
               type="button"
               aria-label="Next product"
               onClick={() => swiperRef.current?.slideNext()}
-              className="group absolute -right-5 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-purple-100 bg-white shadow-md shadow-purple-900/10 transition-all duration-300 hover:bg-purple-600 md:flex dark:border-purple-800 dark:bg-slate-800 dark:hover:bg-purple-600"
+              className="group absolute -right-5 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-purple-100 bg-white shadow-md shadow-purple-900/10 transition-all duration-300 hover:bg-purple-600 dark:border-purple-800 dark:bg-slate-800 dark:hover:bg-purple-600 md:flex"
             >
               <ChevronRight
                 size={24}
@@ -382,10 +382,7 @@ export default function FeaturedProducts() {
           </div>
         )}
 
-        {/* =================================================
-            MOBILE EXPLORE
-            ================================================= */}
-
+        {/* MOBILE EXPLORE */}
         <div className="mt-6 text-center md:hidden">
           <Link
             href="/shop"

@@ -34,7 +34,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const { totalItems } = useCart();
-
+  console.log(session);
   const isDark = theme === "dark";
   const toggleTheme = () => setTheme(isDark ? "light" : "dark");
 
@@ -101,8 +101,8 @@ export default function Navbar() {
 
   const navLinks = [
     { name: "Home", href: "/" },
-    { name: "Products", href: "/products" },
-    { name: "Shop", href: "/shop" },
+    { name: "Product", href: "/products" },
+    { name: "Shop", href: "/shops" },
     { name: "Categories", href: "/categories" },
     { name: "About", href: "/about" },
     { name: "Contact", href: "/contact" },

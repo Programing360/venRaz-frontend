@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  ShoppingCart,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -20,6 +21,8 @@ import type { Swiper as SwiperType } from "swiper";
 import "swiper/css";
 import { useWishlist } from "@/context/WishlistContext";
 import { useRouter } from "next/navigation";
+import { Button } from "@heroui/react";
+import { useCart } from "@/context/CartContext";
 
 /* =========================================================
    TYPES
@@ -92,7 +95,7 @@ function getRatingStars(rating = 0) {
 }
 
 /* =========================================================
-   PRODUCT CARD
+   PRODUCT CARD COMPONENT
 ========================================================= */
 
 function ProductCard({ product }: { product: Product }) {
@@ -101,9 +104,13 @@ function ProductCard({ product }: { product: Product }) {
   const rating = Number(product.rating || 0);
   const stock = Number(product.stock || 0);
   const router = useRouter();
-
+  const { addToCart } = useCart();
   const { isWishlisted, toggleWishlist, pendingId, isAuthenticated } =
     useWishlist();
+
+  // Add to Cart loading states
+  const [adding, setAdding] = useState(false);
+  const [added, setAdded] = useState(false);
 
   const wishlisted = isWishlisted(product._id);
   const wishlistPending = pendingId === product._id;
@@ -114,6 +121,15 @@ function ProductCard({ product }: { product: Product }) {
       return;
     }
     void toggleWishlist(product._id);
+  };
+
+  const handleAddToCart = async () => {
+    if (adding || added) return;
+    setAdding(true);
+    await addToCart(product, 1);
+    setAdding(false);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1500);
   };
 
   return (
@@ -181,7 +197,7 @@ function ProductCard({ product }: { product: Product }) {
           {/* Quick View Button */}
 
           <Link
-            href={`/shop-details/${product._id}`}
+            href={`/products/${product._id}`}
             aria-label="View product"
             className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-purple-950 shadow-md transition hover:bg-[#7E22CE] hover:text-white"
           >
@@ -258,15 +274,42 @@ function ProductCard({ product }: { product: Product }) {
         </div>
 
         {/* =================================================
-            ADD TO CART BUTTON
+            ADD TO CART BUTTON (With Loader & Hover Animation)
         ================================================= */}
 
-        <Link
-          href={`/cart?product=${product._id}`}
-          className="mt-5 flex h-10 w-full items-center justify-center overflow-hidden rounded-lg bg-purple-950 text-[13px] font-semibold uppercase tracking-wide text-white transition-all duration-300 hover:bg-[#7E22CE] shadow-lg shadow-gray-500"
+        <Button
+          onClick={handleAddToCart}
+          isDisabled={adding}
+          className="group/btn relative mt-5 flex h-10 w-full items-center justify-center overflow-hidden rounded-lg bg-purple-950 text-[13px] font-semibold uppercase tracking-wide text-white shadow-lg shadow-gray-500/20 transition-all duration-300 hover:bg-[#7E22CE] disabled:opacity-75"
         >
-          Add To Cart
-        </Link>
+          {adding ? (
+            /* 1. Loading State */
+            <div className="flex items-center gap-2">
+              <Loader2 size={16} className="animate-spin" />
+              <span>ADDING...</span>
+            </div>
+          ) : added ? (
+            /* 2. Success State */
+            <div className="flex items-center gap-2 text-emerald-300">
+              <Check size={16} />
+              <span>ADDED!</span>
+            </div>
+          ) : (
+            /* 3. Normal State with Hover Bottom-to-Top Effect */
+            <>
+              {/* Main text slides up on hover */}
+              <span className="transition-transform duration-300 ease-out group-hover/btn:-translate-y-10">
+                ADD TO CART
+              </span>
+
+              {/* Icon & text slides in from bottom on hover */}
+              <span className="absolute flex translate-y-10 items-center justify-center gap-1.5 transition-transform duration-300 ease-out group-hover/btn:translate-y-0">
+                <ShoppingCart size={16} />
+                <span>ADD TO CART</span>
+              </span>
+            </>
+          )}
+        </Button>
       </div>
     </motion.div>
   );
@@ -331,7 +374,7 @@ export default function TrendingProducts() {
   }, []);
 
   return (
-    <section className="overflow-hidden bg-[#FAF5FF] dark:bg-[#0b1325] py-16 px-4">
+    <section className="overflow-hidden bg-[#FAF5FF] px-4 py-16 dark:bg-[#0b1325]">
       <div className="mx-auto max-w-[1860px] px-5 lg:px-8">
         {/* =================================================
             HEADER
@@ -400,13 +443,13 @@ export default function TrendingProducts() {
         ================================================= */}
 
         {!loading && !error && products.length > 0 && (
-          <div className="mt-10 relative">
+          <div className="relative mt-10">
             {/* Previous Navigation Arrow */}
             <button
               type="button"
               onClick={() => swiperRef.current?.slidePrev()}
               aria-label="Previous products"
-              className="absolute -left-5 top-1/2 z-25 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-purple-200 bg-white text-purple-950 shadow-md transition hover:bg-[#7E22CE] hover:text-white"
+              className="z-25 absolute -left-5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-purple-200 bg-white text-purple-950 shadow-md transition hover:bg-[#7E22CE] hover:text-white"
             >
               <ChevronLeft size={20} />
             </button>
@@ -414,9 +457,9 @@ export default function TrendingProducts() {
             {/* Next Navigation Arrow */}
             <button
               type="button"
-              onClick={() => swiperRef.current?.slideNext()}
               aria-label="Next products"
-              className="absolute -right-5 top-1/2 z-25 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-purple-200 bg-white text-purple-950 shadow-md transition hover:bg-[#7E22CE] hover:text-white"
+              onClick={() => swiperRef.current?.slideNext()}
+              className="z-25 absolute -right-5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-purple-200 bg-white text-purple-950 shadow-md transition hover:bg-[#7E22CE] hover:text-white"
             >
               <ChevronRight size={20} />
             </button>

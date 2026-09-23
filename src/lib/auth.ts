@@ -12,6 +12,7 @@ const db = client.db(process.env.MONGODB_DATABASE || "venraz");
 const ADMIN_EMAIL = "fhlimon360@gmail.com";
 
 export const auth = betterAuth({
+  baseURL: process.env.BETTER_AUTH_URL,
   database: mongodbAdapter(db, {
     client,
   }),
@@ -21,6 +22,7 @@ export const auth = betterAuth({
   },
   socialProviders: {
     google: {
+      prompt: "select_account",
       clientId: (process.env.GOOGLE_CLIENT_ID as string) || "",
       clientSecret: (process.env.GOOGLE_CLIENT_SECRET as string) || "",
     },

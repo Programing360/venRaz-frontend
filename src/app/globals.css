@@ -1,5 +1,5 @@
-
 @import "tailwindcss";
+@tailwind utilities;
 /* @import "@heroui/styles"; */
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -91,3 +91,37 @@ body {
   }
 }
 
+@layer base {
+  /* Smooth transition effect for all color and background changes */
+  *,
+  ::before,
+  ::after {
+    @apply transition-colors duration-300 ease-in-out;
+  }
+}
+
+/* Optional custom scrollbar to match dark/light theme */
+html {
+  color-scheme: light dark;
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}

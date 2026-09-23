@@ -93,7 +93,7 @@ export default function LoginPage() {
         subtitle="Enter your credentials to continue."
         footer={
           <p className="text-sm text-[#6B7268]">
-            Don&apos;t have an account?{" "}
+            Don't have an account?{" "}
             <Link
               href="/register"
               className="font-semibold text-[#0E1B1B] hover:text-[#C08A3E]"

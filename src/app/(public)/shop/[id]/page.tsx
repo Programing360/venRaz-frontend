@@ -11,15 +11,15 @@ import { CatalogProduct } from "@/lib/products/mockCatalog";
 import { Button } from "@heroui/react";
 import { useParams } from "next/navigation";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 export default function ShopDetailPage() {
   const { id: shopId } = useParams<{ id: string }>();
   const { addToCart } = useCart();
-
+  console.log(shopId);
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [addedIds, setAddedIds] = useState<Record<string, boolean>>({});
-
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+  console.log(products);
 
   useEffect(() => {
     if (!shopId) return;
@@ -34,13 +34,16 @@ export default function ShopDetailPage() {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-          const res = await fetch(`${API_URL}/shops/${shopId}/products`, {
-            signal: controller.signal,
-          }).finally(() => clearTimeout(timeoutId));
+          const res = await fetch(
+            `${API_URL}/shops/my-shop/${shopId}`,
+            {},
+          ).finally(() => clearTimeout(timeoutId));
 
           if (res.ok) {
             const data = await res.json();
-            const fetched = data?.data;
+            const fetched = data?.data?.products;
+
+            console.log("Products:", fetched);
             if (Array.isArray(fetched) && !cancelled) {
               setProducts(fetched);
               return;

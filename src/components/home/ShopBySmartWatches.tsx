@@ -11,6 +11,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  ArrowRight,
+  Watch,
+  ShoppingCart,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -20,6 +23,8 @@ import type { Swiper as SwiperType } from "swiper";
 import "swiper/css";
 import { useWishlist } from "@/context/WishlistContext";
 import { useRouter } from "next/navigation";
+import { Button } from "@heroui/react";
+import { useCart } from "@/context/CartContext";
 
 /* =========================================================
    TYPES
@@ -97,13 +102,17 @@ function getRatingStars(rating = 0) {
    PRODUCT CARD
 ========================================================= */
 
-function ProductCard({ product }: { product: Product }) {
+export function ProductCard({ product }: { product: Product }) {
   const rating = product.rating ?? 0;
   const stock = product.stock ?? 0;
   const router = useRouter();
   const price = Number(product.price || 0);
-
+  const { addToCart } = useCart();
   const oldPrice = getOldPrice(price, product.discount);
+
+  // State for Add To Cart loading & success feedback
+  const [adding, setAdding] = useState(false);
+  const [added, setAdded] = useState(false);
 
   const image = getProductImage(product.images);
 
@@ -122,6 +131,15 @@ function ProductCard({ product }: { product: Product }) {
     void toggleWishlist(product._id);
   };
 
+  const handleAddToCart = async () => {
+    if (adding || added || stock <= 0) return;
+    setAdding(true);
+    await addToCart(product, 1);
+    setAdding(false);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1500);
+  };
+
   return (
     <motion.div
       whileHover={{ y: -4 }}
@@ -129,9 +147,8 @@ function ProductCard({ product }: { product: Product }) {
       className="group flex flex-col overflow-hidden rounded-xl border border-purple-100 bg-white p-4 shadow-sm shadow-purple-900/5 transition-shadow hover:shadow-md hover:shadow-purple-950/10"
     >
       {/* =================================================
-          IMAGE
+          IMAGE & BADGES
       ================================================= */}
-
       <div className="relative flex h-[230px] items-center justify-center overflow-hidden rounded-lg bg-[#FAF5FF]">
         <Image
           src={image}
@@ -142,7 +159,6 @@ function ProductCard({ product }: { product: Product }) {
         />
 
         {/* DISCOUNT */}
-
         {product.discount !== undefined && product.discount > 0 && (
           <span className="absolute left-0 top-0 rounded-br-xl bg-[#7E22CE] px-3 py-1 text-xs font-semibold text-white shadow-sm">
             -{product.discount}%
@@ -150,12 +166,10 @@ function ProductCard({ product }: { product: Product }) {
         )}
 
         {/* =================================================
-            ACTION BUTTONS
+            ACTION BUTTONS (WISHLIST / COMPARE / QUICK VIEW)
         ================================================= */}
-
         <div className="absolute right-3 top-3 flex translate-x-10 flex-col gap-2 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
           {/* Wishlist */}
-
           <button
             type="button"
             aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
@@ -175,7 +189,6 @@ function ProductCard({ product }: { product: Product }) {
           </button>
 
           {/* Compare */}
-
           <Link
             href="/compare"
             aria-label="Compare product"
@@ -185,7 +198,6 @@ function ProductCard({ product }: { product: Product }) {
           </Link>
 
           {/* Quick View */}
-
           <Link href={`/products/${product._id}`}>
             <button
               type="button"
@@ -201,10 +213,8 @@ function ProductCard({ product }: { product: Product }) {
       {/* =================================================
           CONTENT
       ================================================= */}
-
       <div className="flex flex-1 flex-col pt-4">
         {/* PRODUCT NAME */}
-
         <h3 className="min-h-[48px] text-[15px] font-semibold leading-6 text-purple-950">
           <Link
             href={`/shop-details/${product._id}`}
@@ -214,10 +224,7 @@ function ProductCard({ product }: { product: Product }) {
           </Link>
         </h3>
 
-        {/* =================================================
-            RATING
-        ========================================================= */}
-
+        {/* RATING */}
         <div className="mt-2 flex items-center gap-3">
           <div
             className="flex gap-[1px] text-[16px] leading-none text-amber-500"
@@ -227,14 +234,10 @@ function ProductCard({ product }: { product: Product }) {
               <span key={index}>{star}</span>
             ))}
           </div>
-
           <span className="text-[13px] text-purple-400">({rating})</span>
         </div>
 
-        {/* =================================================
-            PRICE
-        ========================================================= */}
-
+        {/* PRICE */}
         <div className="mt-3 flex items-center gap-2">
           <span className="text-[17px] font-bold text-purple-950">
             ${price.toFixed(2)}
@@ -247,34 +250,56 @@ function ProductCard({ product }: { product: Product }) {
           )}
         </div>
 
-        {/* =================================================
-            STOCK
-        ========================================================= */}
-
+        {/* STOCK STATUS */}
         <div className="mt-3 flex items-center gap-1.5 text-[13px]">
           <Check
             size={15}
             strokeWidth={2}
             className={stock > 0 ? "text-emerald-600" : "text-rose-500"}
           />
-
           <span className={stock > 0 ? "text-emerald-600" : "text-rose-500"}>
             {stock > 0 ? "In Stock" : "Out of Stock"}
           </span>
-
           {stock > 0 && <span className="text-purple-950">({stock})</span>}
         </div>
 
         {/* =================================================
-            ADD TO CART
-        ========================================================= */}
-
-        <Link
-          href={`/cart?product=${product._id}`}
-          className="mt-5 flex h-10 w-full items-center justify-center overflow-hidden rounded-lg bg-purple-950 text-[13px] font-semibold uppercase tracking-wide text-white transition-all duration-300 hover:bg-[#7E22CE] shadow-sm"
+            ADD TO CART BUTTON (With Hover & Loading Effects)
+        ================================================= */}
+        <button
+          type="button"
+          onClick={handleAddToCart}
+          disabled={adding || stock <= 0}
+          className="group/btn relative mt-5 flex h-10 w-full items-center justify-center overflow-hidden rounded-lg bg-purple-950 text-[13px] font-semibold uppercase tracking-wide text-white shadow-sm transition-all duration-300 hover:bg-[#7E22CE] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Add To Cart
-        </Link>
+          {/* 1. Loading State */}
+          {adding ? (
+            <div className="flex items-center gap-2">
+              <Loader2 size={16} className="animate-spin" />
+              <span>Adding...</span>
+            </div>
+          ) : added ? (
+            /* 2. Added Success State */
+            <div className="flex items-center gap-1.5 text-emerald-300">
+              <Check size={16} />
+              <span>Added!</span>
+            </div>
+          ) : (
+            /* 3. Normal State + Bottom to Top Hover Effect */
+            <>
+              {/* Default Text (Slides up on Hover) */}
+              <span className="transition-transform duration-300 ease-out group-hover/btn:-translate-y-10">
+                Add To Cart
+              </span>
+
+              {/* Hover Cart Icon + Text Container (Slides in from Bottom) */}
+              <span className="absolute flex translate-y-10 items-center justify-center gap-2 transition-transform duration-300 ease-out group-hover/btn:translate-y-0">
+                <ShoppingCart size={16} />
+                <span>Add To Cart</span>
+              </span>
+            </>
+          )}
+        </button>
       </div>
     </motion.div>
   );
@@ -422,23 +447,44 @@ export default function SmartWatches() {
 
   if (products.length === 0) {
     return (
-      <section className="overflow-hidden bg-[#FAF5FF] dark:bg-[#0b1325] py-16">
-        <div className="mx-auto max-w-[1860px] px-5 lg:px-8">
-          <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
-            <h2 className="text-center text-[26px] font-bold text-purple-950 sm:text-left sm:text-[30px]">
-              Shop By Smart Watches
-            </h2>
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#FAF5FF] via-purple-50/30 to-white py-20 dark:from-[#0b1325] dark:via-[#0f1a32] dark:to-[#0b1325]">
+        {/* Subtle Background Glow Decorative Elements */}
+        <div className="pointer-events-none absolute left-1/2 top-0 -z-10 h-72 w-72 -translate-x-1/2 rounded-full bg-purple-200/40 blur-3xl dark:bg-purple-900/20" />
+
+        <div className="mx-auto max-w-[1860px] px-6 lg:px-12">
+          {/* Header Section */}
+          <div className="flex flex-col items-center justify-between gap-4 border-b border-purple-100/80 pb-6 sm:flex-row sm:items-end dark:border-purple-900/30">
+            <div className="space-y-2 text-center sm:text-left">
+              <span className="inline-block rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">
+                Next-Gen Wearables
+              </span>
+              <h2 className="bg-gradient-to-r from-purple-950 via-purple-900 to-indigo-900 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent dark:from-white dark:via-purple-100 dark:to-purple-300 sm:text-4xl">
+                Shop By Smart Watches
+              </h2>
+            </div>
 
             <Link
               href="/shop"
-              className="text-center text-[15px] font-semibold text-[#7E22CE] sm:text-right"
+              className="group inline-flex items-center gap-2 rounded-full border border-purple-200/60 bg-white/60 px-5 py-2.5 text-sm font-semibold text-purple-700 shadow-sm backdrop-blur-md transition-all duration-300 hover:border-purple-400 hover:bg-purple-600 hover:text-white hover:shadow-md dark:border-purple-800/40 dark:bg-purple-950/40 dark:text-purple-300 dark:hover:bg-purple-600 dark:hover:text-white"
             >
-              Explore All
+              <span>Explore All</span>
+              <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
           </div>
 
-          <div className="mt-10 flex min-h-[300px] items-center justify-center">
-            <p className="text-purple-600">No products found.</p>
+          {/* Empty State / Product Area */}
+          <div className="mt-12 flex min-h-[360px] flex-col items-center justify-center rounded-3xl border border-dashed border-purple-200/80 bg-white/50 p-8 text-center shadow-sm backdrop-blur-sm dark:border-purple-800/40 dark:bg-purple-950/10">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-purple-100 text-purple-600 shadow-inner dark:bg-purple-900/40 dark:text-purple-300">
+              <Watch className="h-8 w-8 stroke-[1.5]" />
+            </div>
+
+            <h3 className="mt-4 text-lg font-semibold text-purple-950 dark:text-purple-100">
+              No Smart Watches Available
+            </h3>
+            <p className="mt-1 max-w-sm text-sm text-purple-600/80 dark:text-purple-300/70">
+              We are currently updating our collection. Please check back soon
+              for the latest models.
+            </p>
           </div>
         </div>
       </section>
@@ -460,7 +506,7 @@ export default function SmartWatches() {
           {/* TITLE */}
 
           <div>
-            <h2 className="text-center text-[26px] font-bold leading-tight text-purple-950 sm:text-left sm:text-[30px]">
+            <h2 className="text-center text-[26px] font-bold leading-tight text-purple-950 sm:text-left sm:text-[30px] dark:text-white">
               Shop By Smart Watches
             </h2>
           </div>

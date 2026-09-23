@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Store,
   Phone,
@@ -25,6 +26,18 @@ interface CreateShopFormProps {
   onCancel?: () => void;
 }
 
+interface ExistingShop {
+  _id: string;
+  name: string;
+  description: string;
+  images?: string[];
+  category?: string;
+  phone?: string;
+  status?: string;
+  rating?: number;
+  rejectionReason?: string;
+}
+
 export const CreateShopForm: React.FC<CreateShopFormProps> = ({
   onSaveShop,
   onCancel,
@@ -32,6 +45,65 @@ export const CreateShopForm: React.FC<CreateShopFormProps> = ({
   const { data: session } = useSession();
   const router = useRouter();
   const { success, error: showError } = useToast();
+
+  const [existingShop, setExistingShop] = useState<ExistingShop | null>(null);
+  const [shopLoading, setShopLoading] = useState(true);
+
+  const token = session?.session?.token;
+  const userId = session?.user?.id;
+
+  useEffect(() => {
+    let cancelled = false;
+    const controller = new AbortController();
+
+    (async () => {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      if (!API_URL || !token || !userId) {
+        if (!cancelled) setShopLoading(false);
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_URL}/shops/my-shop/${userId}`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: "include",
+          signal: controller.signal,
+        });
+
+        if (controller.signal.aborted) return;
+
+        if (res.status === 404) {
+          if (!cancelled) setExistingShop(null);
+          return;
+        }
+
+        if (!res.ok) {
+          throw new Error(`Failed to load shop: ${res.status}`);
+        }
+
+        const json = await res.json();
+        if (!cancelled) {
+          setExistingShop(json?.data?.shop ?? json?.data ?? null);
+        }
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") {
+          console.error("Failed to load my existing shop:", err);
+        }
+      } finally {
+        if (!cancelled && !controller.signal.aborted) {
+          setShopLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [token, userId]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -97,11 +169,6 @@ export const CreateShopForm: React.FC<CreateShopFormProps> = ({
       };
 
       // Handle token resolution across common auth client patterns
-      const token =
-        (session as any)?.token ||
-        (session as any)?.session?.token ||
-        (session as any)?.accessToken;
-
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
       };
@@ -119,7 +186,6 @@ export const CreateShopForm: React.FC<CreateShopFormProps> = ({
           body: JSON.stringify(payload),
         },
       );
-   
 
       if (!response.ok) {
         const text = await response.text();
@@ -129,7 +195,9 @@ export const CreateShopForm: React.FC<CreateShopFormProps> = ({
         try {
           const parsed = JSON.parse(text);
           errMsg = parsed.message || parsed.error || errMsg;
-        } catch (_) {}
+        } catch {
+          // ignore parse errors, fall back to errMsg above
+        }
 
         throw new Error(errMsg);
       }
@@ -145,13 +213,18 @@ export const CreateShopForm: React.FC<CreateShopFormProps> = ({
       success("Your shop has been submitted for approval.");
 
       router.push("/shop");
-    } catch (err: any) {
+    } catch (err) {
       console.error("Create Shop Error:", err);
 
-      showError(err.message || "Failed to submit shop for approval.");
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to submit shop for approval.";
+
+      showError(message);
 
       setErrors({
-        api: err.message || "An error occurred during submission.",
+        api: message || "An error occurred during submission.",
       });
     } finally {
       setIsSubmitting(false);
@@ -196,23 +269,137 @@ export const CreateShopForm: React.FC<CreateShopFormProps> = ({
         <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
           <div>
             <h1 className="text-3xl font-bold tracking-[-0.03em] text-slate-950 sm:text-4xl">
-              Create your shop
+              {existingShop ? "Your shop" : "Create your shop"}
             </h1>
 
             <p className="mt-3 max-w-xl text-sm leading-6 text-slate-500">
-              Tell customers what makes your business special. Once submitted,
-              our team will review your application.
+              {existingShop
+                ? "You already have a shop. Manage it from your dashboard."
+                : "Tell customers what makes your business special. Once submitted, our team will review your application."}
             </p>
           </div>
 
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
             <Sparkles className="h-4 w-4 text-amber-500" />
-            Start selling with confidence
+            {existingShop ? "Your storefront is ready" : "Start selling with confidence"}
           </div>
         </div>
       </header>
 
-      {/* ───────────────── Application ───────────────── */}
+      {/* ───────────────── Shop details (already exists) ───────────────── */}
+      {shopLoading ? (
+        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white py-24">
+          <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
+          <p className="text-sm text-slate-500">Loading your shop...</p>
+        </div>
+      ) : existingShop ? (
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex items-center gap-3 border-b border-slate-200 p-5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-950 text-white">
+              <Store size={20} />
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-950">Shop details</h3>
+              <p className="text-xs text-slate-500">
+                Your vendor storefront is active
+              </p>
+            </div>
+
+            <span
+              className={`ml-auto inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize ${
+                existingShop.status === "pending" ||
+                existingShop.status === "draft"
+                  ? "bg-amber-100 text-amber-800"
+                  : existingShop.status === "approved" ||
+                      existingShop.status === "active"
+                    ? "bg-emerald-100 text-emerald-800"
+                    : existingShop.status === "rejected" ||
+                        existingShop.status === "suspended"
+                      ? "bg-rose-100 text-rose-700"
+                      : "bg-slate-100 text-slate-700"
+              }`}
+            >
+              {existingShop.status}
+            </span>
+          </div>
+
+          <div className="flex flex-col gap-5 p-6 sm:flex-row">
+            {existingShop.images?.[0] ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={existingShop.images[0]}
+                alt={existingShop.name}
+                className="h-32 w-32 shrink-0 rounded-xl border border-slate-200 object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="flex h-32 w-32 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-400">
+                <Store size={40} />
+              </div>
+            )}
+
+            <div className="min-w-0 flex-1 space-y-3">
+              <h2 className="text-xl font-bold text-slate-950">
+                {existingShop.name}
+              </h2>
+
+              <p className="text-sm leading-6 text-slate-500">
+                {existingShop.description}
+              </p>
+
+              <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-500">
+                {existingShop.category && (
+                  <span>
+                    Category:{" "}
+                    <strong className="text-slate-900">
+                      {existingShop.category}
+                    </strong>
+                  </span>
+                )}
+
+                {existingShop.phone && (
+                  <span className="inline-flex items-center gap-1">
+                    <Phone size={12} /> {existingShop.phone}
+                  </span>
+                )}
+
+                {existingShop.rating != null && existingShop.rating > 0 && (
+                  <span>
+                    Rating:{" "}
+                    <strong className="text-slate-900">
+                      {existingShop.rating}
+                    </strong>
+                  </span>
+                )}
+              </div>
+
+              {existingShop.status === "rejected" &&
+                existingShop.rejectionReason && (
+                  <div className="flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs text-rose-700">
+                    <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                    {existingShop.rejectionReason}
+                  </div>
+                )}
+            </div>
+          </div>
+
+          <div className="flex flex-col-reverse gap-3 border-t border-slate-200 p-5 sm:flex-row sm:justify-end">
+            <Link
+              href="/userDashboard"
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-950 px-5 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-slate-800"
+            >
+              Go to Dashboard
+            </Link>
+            <Link
+              href="/userDashboard/addProduct"
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-amber-500 px-5 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-amber-600"
+            >
+              Add Product
+            </Link>
+          </div>
+        </div>
+      ) : (
+      /* ───────────────── Application ───────────────── */
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
           {/* Left Rail */}
@@ -539,6 +726,7 @@ export const CreateShopForm: React.FC<CreateShopFormProps> = ({
           </div>
         </div>
       </form>
+      )}
     </motion.div>
   );
 };

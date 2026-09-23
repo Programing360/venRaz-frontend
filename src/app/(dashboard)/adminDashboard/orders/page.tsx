@@ -19,6 +19,7 @@ import {
   updateOrderStatusAPI,
 } from "@/services/adminService";
 import { AdminOrder, AdminOrderStatus } from "@/types/admin";
+import { authClient } from "@/lib/auth-client";
 
 const COURIER_PROVIDERS = [
   "Pathao Courier",
@@ -55,7 +56,9 @@ export default function AdminOrdersPage() {
   const [selectedCourier, setSelectedCourier] = useState(COURIER_PROVIDERS[0]);
   const [trackingIdInput, setTrackingIdInput] = useState("");
   const [estimatedDeliveryInput, setEstimatedDeliveryInput] = useState("");
-
+  const { data: session } = authClient.useSession();
+  const token = session?.session?.token;
+  // console.log(orders, token);
   // Toast
   const [toastMessage, setToastMessage] = useState<{
     text: string;
@@ -67,10 +70,12 @@ export default function AdminOrdersPage() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  const loadOrders = async () => {
+  const loadOrders = async (token?: string) => {
+    if (!token) return;
     setLoading(true);
     try {
-      const res = await fetchAdminOrdersAPI(activeTab);
+      const res = await fetchAdminOrdersAPI(activeTab, token);
+      console.log(res.orders);
       setOrders(res.orders);
     } catch {
       setOrders(getAdminOrders());
@@ -80,11 +85,11 @@ export default function AdminOrdersPage() {
   };
 
   useEffect(() => {
-    loadOrders();
-  }, [activeTab]);
+    loadOrders(token);
+  }, [activeTab, token]);
 
   useEffect(() => {
-    const handleUpdate = () => loadOrders();
+    const handleUpdate = () => loadOrders(token);
     window.addEventListener("venraz_admin_data_updated", handleUpdate);
     return () =>
       window.removeEventListener("venraz_admin_data_updated", handleUpdate);
@@ -96,7 +101,7 @@ export default function AdminOrdersPage() {
     status: AdminOrderStatus,
   ) => {
     try {
-      await updateOrderStatusAPI(orderId, status);
+      await updateOrderStatusAPI(orderId, status, token);
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? { ...o, orderStatus: status } : o)),
       );

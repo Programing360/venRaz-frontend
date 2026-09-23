@@ -163,7 +163,7 @@ export default function ChatWidget() {
   };
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 font-sans">
+    <div className="fixed bottom-5 right-5 z-50 font-sans ">
       {/* 🎯 ৩ টি থ্রি-ডি ট্রিপল মোশন অ্যানিমেশন সমৃদ্ধ বাটন */}
       {!isOpen && (
         <div
@@ -206,11 +206,11 @@ export default function ChatWidget() {
 
       {/* 🎯 চ্যাট উইন্ডো */}
       {isOpen && (
-        <div className="w-[360px] sm:w-[400px] h-[520px] bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-5">
+        <div className="w-[360px] sm:w-[400px] h-[520px] bg-white rounded-4xl shadow-2xl shadow-mist-600  border-gray-100 flex flex-col overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-5">
           {/* চ্যাট হেডার */}
-          <div className="bg-[#ff594d] p-4 text-white flex justify-between items-center shadow-md">
+          <div className="bg-[#7e22ce] p-4 text-white flex justify-between items-center shadow-md">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-[#9556ab] rounded-lg">
+              <div className="p-2 bg-[#261149] rounded-lg">
                 <Bot className="w-6 h-6" />
               </div>
               <div>
@@ -306,7 +306,17 @@ export default function ChatWidget() {
 
                   {msg.sender === "user" && (
                     <div className="w-7 h-7 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-xs mt-1 shrink-0">
-                      <User className="w-4 h-4" />
+                      {currentUser?.image ? (
+                        <Image
+                          src={currentUser.image}
+                          alt={currentUser.name || "Product Image"}
+                          width={600}
+                          height={600}
+                          className="rounded-full"
+                        />
+                      ) : (
+                        <User className="w-4 h-4" />
+                      )}
                     </div>
                   )}
                 </div>

@@ -31,6 +31,7 @@ interface CategoryItem {
 
 interface MyShop {
   _id: string;
+  ownerId: string;
   name: string;
   status: string;
 }
@@ -63,7 +64,7 @@ export default function AddProductPage() {
   const [loadingShop, setLoadingShop] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
-
+  console.log(shop);
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
@@ -115,7 +116,10 @@ export default function AddProductPage() {
       }
       try {
         const res = await fetch(`${API_URL}/shops/my-shop/${userId}`, {
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           credentials: "include",
         });
         if (res.status === 404) {
@@ -126,7 +130,8 @@ export default function AddProductPage() {
           throw new Error(`Failed to load shop: ${res.status}`);
         }
         const json = await res.json();
-        if (!cancelled) setShop(json?.data ?? null);
+        console.log(json);
+        if (!cancelled) setShop(json?.data?.shop ?? null);
       } catch (err) {
         console.error("Failed to load my shop:", err);
       } finally {
@@ -143,7 +148,10 @@ export default function AddProductPage() {
     [categories, formData.category],
   );
 
-  const updateField = (field: keyof typeof formData, value: string | boolean) => {
+  const updateField = (
+    field: keyof typeof formData,
+    value: string | boolean,
+  ) => {
     setFormData((prev) => {
       const next = { ...prev, [field]: value };
       if (field === "name" && typeof value === "string" && !prev.slug) {
@@ -158,7 +166,8 @@ export default function AddProductPage() {
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (!session?.user) newErrors.api = "You must be logged in to add a product.";
+    if (!session?.user)
+      newErrors.api = "You must be logged in to add a product.";
     if (!shop) newErrors.api = "Create a shop first before adding products.";
     if (!formData.name.trim()) newErrors.name = "Product name is required";
     if (!(formData.slug.trim() || slugifyName(formData.name)))
@@ -170,7 +179,8 @@ export default function AddProductPage() {
       newErrors.stock = "Stock must be 0 or more";
     if (!formData.description.trim())
       newErrors.description = "Description is required";
-    if (images.length === 0) newErrors.images = "Add at least one product image";
+    if (images.length === 0)
+      newErrors.images = "Add at least one product image";
     if (formData.isFlashSale) {
       if (!formData.flashSalePrice || Number(formData.flashSalePrice) <= 0)
         newErrors.flashSalePrice = "Enter a flash sale price";
@@ -183,7 +193,10 @@ export default function AddProductPage() {
 
   const handleAIGenerate = async () => {
     if (!formData.name.trim()) {
-      showError("Type a product name first so AI can write a description.", "AI Generator");
+      showError(
+        "Type a product name first so AI can write a description.",
+        "AI Generator",
+      );
       return;
     }
     setAiLoading(true);
@@ -198,7 +211,10 @@ export default function AddProductPage() {
         setFormData((prev) => ({ ...prev, description: generated }));
         success("AI description generated.", "AI Generator");
       } else {
-        showError("AI returned an empty description. Please try again.", "AI Generator");
+        showError(
+          "AI returned an empty description. Please try again.",
+          "AI Generator",
+        );
       }
     } catch (err) {
       console.error("AI generate error:", err);
@@ -226,7 +242,8 @@ export default function AddProductPage() {
 
     setIsSubmitting(true);
     try {
-      const slug = formData.slug.trim().toLowerCase() || slugifyName(formData.name);
+      const slug =
+        formData.slug.trim().toLowerCase() || slugifyName(formData.name);
       const payload = {
         name: formData.name.trim(),
         slug,
@@ -236,12 +253,14 @@ export default function AddProductPage() {
         discount: Number(formData.discount) || 0,
         stock: Number(formData.stock),
         category: formData.category,
-        shop: shop!._id,
+        shop: shop!.ownerId,
         seller: userId!,
         brand: formData.brand.trim(),
         isFeatured: formData.isFeatured,
         isFlashSale: formData.isFlashSale,
-        flashSalePrice: formData.isFlashSale ? Number(formData.flashSalePrice) : undefined,
+        flashSalePrice: formData.isFlashSale
+          ? Number(formData.flashSalePrice)
+          : undefined,
         flashSaleEndDate: formData.isFlashSale
           ? new Date(formData.flashSaleEndDate).toISOString()
           : undefined,
@@ -260,7 +279,9 @@ export default function AddProductPage() {
       const json = await res.json().catch(() => ({}));
 
       if (!res.ok || json.success === false) {
-        throw new Error(json.message || `API returned status ${res.status}`);
+        const message =
+          json.error || json.message || `API returned status ${res.status}`;
+        throw new Error(message);
       }
 
       success(json.message || "Product created successfully!", "Product Added");
@@ -283,7 +304,9 @@ export default function AddProductPage() {
       setPendingImage("");
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Failed to create product. Please try again.";
+        err instanceof Error
+          ? err.message
+          : "Failed to create product. Please try again.";
       console.error("Create product error:", err);
       showError(message, "Error");
       setErrors((prev) => ({ ...prev, api: message }));
@@ -312,8 +335,8 @@ export default function AddProductPage() {
             You need a shop to add products
           </h2>
           <p className="mt-1 max-w-md text-sm text-[#6B7268]">
-            Create a vendor storefront first, then you can start listing products
-            on the marketplace.
+            Create a vendor storefront first, then you can start listing
+            products on the marketplace.
           </p>
         </div>
         <Link
@@ -347,8 +370,8 @@ export default function AddProductPage() {
               Add a new product
             </h1>
             <p className="mt-2 max-w-xl text-sm leading-6 text-[#6B7268]">
-              List a product from your shop. Once created, it goes through review
-              before appearing to customers.
+              List a product from your shop. Once created, it goes through
+              review before appearing to customers.
             </p>
           </div>
 
@@ -406,7 +429,9 @@ export default function AddProductPage() {
                     </span>
                     <span
                       className={`text-xs ${
-                        idx === 0 ? "font-semibold text-slate-700" : "font-medium text-slate-400"
+                        idx === 0
+                          ? "font-semibold text-slate-700"
+                          : "font-medium text-slate-400"
                       }`}
                     >
                       {step.label}
@@ -427,7 +452,9 @@ export default function AddProductPage() {
                 </div>
                 <div>
                   <h2 className="text-base font-bold text-[#0E1B1B]">Basics</h2>
-                  <p className="text-xs text-[#6B7268]">Name, price, stock & category</p>
+                  <p className="text-xs text-[#6B7268]">
+                    Name, price, stock & category
+                  </p>
                 </div>
               </div>
 
@@ -464,7 +491,8 @@ export default function AddProductPage() {
                     className={`${inputCls(!!errors.slug)} font-mono`}
                   />
                   <p className="mt-1 text-[11px] text-[#9A9E96]">
-                    Auto-filled from the product name. Keep it lowercase with hyphens.
+                    Auto-filled from the product name. Keep it lowercase with
+                    hyphens.
                   </p>
                   {errors.slug && (
                     <p className="mt-1 flex items-center gap-1 text-xs text-red-600">
@@ -650,9 +678,11 @@ export default function AddProductPage() {
                     disabled={!pendingImage.trim()}
                     className="mb-1 inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    {images.includes(pendingImage.trim())
-                      ? <Check className="h-3.5 w-3.5" />
-                      : <PlusCircle className="h-3.5 w-3.5" />}
+                    {images.includes(pendingImage.trim()) ? (
+                      <Check className="h-3.5 w-3.5" />
+                    ) : (
+                      <PlusCircle className="h-3.5 w-3.5" />
+                    )}
                     Add to list
                   </button>
                 </div>
@@ -709,7 +739,9 @@ export default function AddProductPage() {
                   <Sparkles size={15} />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-[#0E1B1B]">Promotions</h2>
+                  <h2 className="text-base font-bold text-[#0E1B1B]">
+                    Promotions
+                  </h2>
                   <p className="text-xs text-[#6B7268]">
                     Optional featured and flash sale settings
                   </p>
@@ -722,7 +754,9 @@ export default function AddProductPage() {
                     <input
                       type="checkbox"
                       checked={formData.isFeatured}
-                      onChange={(e) => updateField("isFeatured", e.target.checked)}
+                      onChange={(e) =>
+                        updateField("isFeatured", e.target.checked)
+                      }
                       className="h-4 w-4 rounded border-slate-300 accent-[#0E1B1B]"
                     />
                     Featured product
@@ -732,7 +766,9 @@ export default function AddProductPage() {
                     <input
                       type="checkbox"
                       checked={formData.isFlashSale}
-                      onChange={(e) => updateField("isFlashSale", e.target.checked)}
+                      onChange={(e) =>
+                        updateField("isFlashSale", e.target.checked)
+                      }
                       className="h-4 w-4 rounded border-slate-300 accent-[#C08A3E]"
                     />
                     Include in flash sale
@@ -752,12 +788,15 @@ export default function AddProductPage() {
                         step="0.01"
                         placeholder="120"
                         value={formData.flashSalePrice}
-                        onChange={(e) => updateField("flashSalePrice", e.target.value)}
+                        onChange={(e) =>
+                          updateField("flashSalePrice", e.target.value)
+                        }
                         className={inputCls(!!errors.flashSalePrice)}
                       />
                       {errors.flashSalePrice && (
                         <p className="mt-1 flex items-center gap-1 text-xs text-red-600">
-                          <AlertCircle className="h-3 w-3" /> {errors.flashSalePrice}
+                          <AlertCircle className="h-3 w-3" />{" "}
+                          {errors.flashSalePrice}
                         </p>
                       )}
                     </div>
@@ -770,12 +809,15 @@ export default function AddProductPage() {
                       <input
                         type="datetime-local"
                         value={formData.flashSaleEndDate}
-                        onChange={(e) => updateField("flashSaleEndDate", e.target.value)}
+                        onChange={(e) =>
+                          updateField("flashSaleEndDate", e.target.value)
+                        }
                         className={inputCls(!!errors.flashSaleEndDate)}
                       />
                       {errors.flashSaleEndDate && (
                         <p className="mt-1 flex items-center gap-1 text-xs text-red-600">
-                          <AlertCircle className="h-3 w-3" /> {errors.flashSaleEndDate}
+                          <AlertCircle className="h-3 w-3" />{" "}
+                          {errors.flashSaleEndDate}
                         </p>
                       )}
                     </div>
@@ -800,11 +842,13 @@ export default function AddProductPage() {
                 <Check className="h-4 w-4" />
               </div>
               <div>
-                <h2 className="text-sm font-bold text-[#0E1B1B]">Ready to publish?</h2>
+                <h2 className="text-sm font-bold text-[#0E1B1B]">
+                  Ready to publish?
+                </h2>
                 <p className="mt-1 text-xs leading-5 text-[#6B7268]">
                   Your product will be created under{" "}
-                  <strong className="text-[#0E1B1B]">{shop.name}</strong> and sent
-                  for review before going live.
+                  <strong className="text-[#0E1B1B]">{shop.name}</strong> and
+                  sent for review before going live.
                 </p>
               </div>
             </section>
@@ -812,7 +856,8 @@ export default function AddProductPage() {
             {/* ───── Actions ───── */}
             <div className="flex flex-col-reverse gap-3 border-t border-[#DEDACE] pt-6 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-[11px] text-[#9A9E96]">
-                Fields marked <span className="text-[#C08A3E]">*</span> are required
+                Fields marked <span className="text-[#C08A3E]">*</span> are
+                required
               </p>
 
               <button

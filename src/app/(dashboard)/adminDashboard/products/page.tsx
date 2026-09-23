@@ -10,31 +10,23 @@ import {
   EyeOff,
   AlertCircle,
   Clock,
-  ExternalLink,
-  DollarSign,
   Store,
-  Tag,
-  Filter,
 } from "lucide-react";
 import {
-  getAdminProducts,
-  approveProduct,
-  rejectProduct,
-  toggleProductVisibility,
   fetchAdminProductsAPI,
   approveProductAPI,
   rejectProductAPI,
 } from "@/services/adminService";
 import { AdminProduct } from "@/types/admin";
+import { authClient } from "@/lib/auth-client";
 import Image from "next/image";
 
 export default function AdminProductsPage() {
-  const [products, setProducts] = useState<AdminProduct[]>(() =>
-    getAdminProducts(),
-  );
+  const [products, setProducts] = useState<AdminProduct[]>([]);
   const [activeTab, setActiveTab] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(false);
+  const { data: session } = authClient.useSession();
+  const token = session?.session?.token;
 
   // Modals
   const [previewProduct, setPreviewProduct] = useState<AdminProduct | null>(
@@ -56,14 +48,11 @@ export default function AdminProductsPage() {
   };
 
   const loadProducts = async () => {
-    setLoading(true);
     try {
-      const res = await fetchAdminProductsAPI();
+      const res = await fetchAdminProductsAPI(token);
       setProducts(res.products);
     } catch {
-      setProducts(getAdminProducts());
-    } finally {
-      setLoading(false);
+      setProducts([]);
     }
   };
 
@@ -71,15 +60,8 @@ export default function AdminProductsPage() {
     loadProducts();
   }, []);
 
-  useEffect(() => {
-    const handleUpdate = () => loadProducts();
-    window.addEventListener("venraz_admin_data_updated", handleUpdate);
-    return () =>
-      window.removeEventListener("venraz_admin_data_updated", handleUpdate);
-  }, []);
-
   const handleApprove = async (product: AdminProduct) => {
-    await approveProductAPI(product.id);
+    await approveProductAPI(product.id, token);
     setProducts((prev) =>
       prev.map((p) => (p.id === product.id ? { ...p, status: "Approved" } : p)),
     );
@@ -103,7 +85,11 @@ export default function AdminProductsPage() {
       showToast("Please specify a rejection reason.", "error");
       return;
     }
-    await rejectProductAPI(rejectModalProduct.id, rejectionReason.trim());
+    await rejectProductAPI(
+      rejectModalProduct.id,
+      rejectionReason.trim(),
+      token,
+    );
     setProducts((prev) =>
       prev.map((p) =>
         p.id === rejectModalProduct.id
@@ -127,21 +113,6 @@ export default function AdminProductsPage() {
               rejectionReason: rejectionReason.trim(),
             }
           : null,
-      );
-    }
-  };
-
-  const handleToggleHide = (product: AdminProduct) => {
-    toggleProductVisibility(product.id);
-    const willBeHidden = product.status !== "Hidden";
-    showToast(
-      willBeHidden
-        ? `Product "${product.name}" is now HIDDEN from public catalog.`
-        : `Product "${product.name}" is now UNHIDDEN and live.`,
-    );
-    if (previewProduct?.id === product.id) {
-      setPreviewProduct((prev) =>
-        prev ? { ...prev, status: willBeHidden ? "Hidden" : "Approved" } : null,
       );
     }
   };
@@ -270,13 +241,19 @@ export default function AdminProductsPage() {
             >
               {/* Product Thumbnail Banner */}
               <div className="relative h-44 w-full bg-slate-100 overflow-hidden">
-                <Image
-                  src={product.imageUrl}
-                  alt={product.name}
-                  width={400}
-                  height={400}
-                  className="h-full w-full object-cover"
-                />
+                {product.imageUrl ? (
+                  <Image
+                    src={product.imageUrl}
+                    alt={product.name}
+                    width={400}
+                    height={400}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center">
+                    <Package className="h-10 w-10 text-slate-300" />
+                  </div>
+                )}
 
                 {/* Status Badge */}
                 <div className="absolute top-3 left-3">
@@ -357,27 +334,6 @@ export default function AdminProductsPage() {
                   </button>
 
                   <div className="flex items-center gap-1.5">
-                    {/* Hide/Unhide Toggle */}
-                    <button
-                      onClick={() => handleToggleHide(product)}
-                      className={`p-1.5 rounded-lg border transition-all ${
-                        product.status === "Hidden"
-                          ? "border-red-200 bg-red-50 text-purple-500 hover:bg-red-100"
-                          : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
-                      }`}
-                      title={
-                        product.status === "Hidden"
-                          ? "Unhide listing"
-                          : "Hide listing"
-                      }
-                    >
-                      {product.status === "Hidden" ? (
-                        <Eye className="h-4 w-4" />
-                      ) : (
-                        <EyeOff className="h-4 w-4" />
-                      )}
-                    </button>
-
                     {/* Reject Button */}
                     <button
                       onClick={() => handleOpenReject(product)}
@@ -428,13 +384,19 @@ export default function AdminProductsPage() {
             </div>
 
             <div className="h-56 w-full rounded-xl overflow-hidden bg-slate-100">
-              <Image
-                src={previewProduct.imageUrl}
-                alt={previewProduct.name}
-                width={400}
-                height={400}
-                className="h-full w-full object-cover"
-              />
+              {previewProduct.imageUrl ? (
+                <Image
+                  src={previewProduct.imageUrl}
+                  alt={previewProduct.name}
+                  width={400}
+                  height={400}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center">
+                  <Package className="h-12 w-12 text-slate-300" />
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-xs">
